@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: alzawaj-backend
+    env: node
+    nodeVersion: "20.19"
+    buildCommand: "pnpm install --frozen-lockfile && pnpm run build"
+    startCommand: "pnpm start"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+    autoDeploy: true
+    region: oregon
+    plan: free

@@ -1,0 +1,2013 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-color: #5d1a78 !important;
+  --primary-hover: #4a1660 !important;
+  --primary-light: #7a1e8f !important;
+  --primary-lighter: #c9a9d4 !important;
+  --primary-dark: #1a0a24 !important;
+  --primary-subtle: rgba(55, 16, 72, 0.05);
+
+  --primary-50: #f8f5fa;
+  --primary-100: #f0e9f3;
+  --primary-200: #e1d2e7;
+  --primary-300: #c9a9d4;
+  --primary-400: #a67bb8;
+  --primary-500: #8d2da6;
+  --primary-600: #7a1e8f;
+  --primary-700: #5d1a78;
+  --primary-800: #2a0c36;
+  --primary-900: #1a0a24;
+
+  --secondary-color: #4caf50;
+  --secondary-hover: #388e3c;
+  --accent-color: #fbc02d;
+  --accent-hover: #f9a825;
+  --background-color: #f5f5f5;
+  --background-secondary: #ffffff;
+  --text-color: #212121;
+  --text-secondary: #757575;
+  --error-color: #d32f2f;
+  --error-hover: #b71c1c;
+  --border-color: #e0e0e0;
+  --border-secondary: #b0bec5;
+  --card-bg: #ffffff;
+  --card-shadow: rgba(0, 0, 0, 0.05);
+  --modal-bg: #ffffff;
+  --modal-shadow: rgba(0, 0, 0, 0.2);
+  --disabled-color: #b0bec5;
+  --disabled-bg: #eceff1;
+
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 20px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 32px;
+  --font-size-3xl: 40px;
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.8;
+
+  --spacing-xxs: 0.25rem;
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 3rem;
+  --spacing-2xl: 4rem;
+  --spacing-3xl: 6rem;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 2px 4px var(--card-shadow);
+  --shadow-md: 0 4px 8px var(--card-shadow);
+  --shadow-lg: 0 8px 16px var(--card-shadow);
+  --shadow-xl: 0 12px 24px var(--modal-shadow);
+
+  --transition-fast: 0.2s ease-in-out;
+  --transition-normal: 0.3s ease-in-out;
+  --transition-slow: 0.5s ease-in-out;
+
+  --font-sans:
+    "Noto Kufi Arabic", "Amiri", system-ui, -apple-system, BlinkMacSystemFont,
+    sans-serif;
+  --font-serif: "Amiri", "Times New Roman", serif;
+  --font-display: "Noto Kufi Arabic", system-ui, sans-serif;
+  --font-heading: "Noto Kufi Arabic", "Amiri", system-ui, sans-serif;
+  --font-body: "Noto Kufi Arabic", system-ui, sans-serif;
+  --font-caption: "Noto Kufi Arabic", system-ui, sans-serif;
+}
+
+@font-face {
+  font-family: "Noto Kufi Arabic";
+  src: url("/fonts/Noto_Kufi_Arabic/static/NotoKufiArabic-Light.ttf")
+    format("truetype");
+  font-weight: 300;
+  font-display: swap;
+  unicode-range:
+    U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Noto Kufi Arabic";
+  src: url("/fonts/Noto_Kufi_Arabic/static/NotoKufiArabic-Regular.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-display: swap;
+  unicode-range:
+    U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Noto Kufi Arabic";
+  src: url("/fonts/Noto_Kufi_Arabic/static/NotoKufiArabic-Medium.ttf")
+    format("truetype");
+  font-weight: 500;
+  font-display: swap;
+  unicode-range:
+    U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Noto Kufi Arabic";
+  src: url("/fonts/Noto_Kufi_Arabic/static/NotoKufiArabic-SemiBold.ttf")
+    format("truetype");
+  font-weight: 600;
+  font-display: swap;
+  unicode-range:
+    U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Noto Kufi Arabic";
+  src: url("/fonts/Noto_Kufi_Arabic/static/NotoKufiArabic-Bold.ttf")
+    format("truetype");
+  font-weight: 700;
+  font-display: swap;
+  unicode-range:
+    U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Amiri";
+  src: url("/fonts/Amiri/Amiri-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+  unicode-range:
+    U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Amiri";
+  src: url("/fonts/Amiri/Amiri-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+  unicode-range:
+    U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Amiri";
+  src: url("/fonts/Amiri/Amiri-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-display: swap;
+  unicode-range:
+    U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+0020-007F;
+}
+
+@font-face {
+  font-family: "Amiri";
+  src: url("/fonts/Amiri/Amiri-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+  unicode-range:
+    U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+0020-007F;
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: var(--font-size-md);
+  font-family: var(--font-sans);
+  direction: rtl;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: var(--line-height-normal);
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  margin-bottom: var(--spacing-md);
+}
+
+h2 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  margin-bottom: var(--spacing-sm);
+}
+
+h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+  margin-bottom: var(--spacing-sm);
+}
+
+h4 {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+  margin-bottom: var(--spacing-xs);
+}
+
+p {
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-relaxed);
+  margin-bottom: var(--spacing-sm);
+}
+
+small {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+strong {
+  font-weight: var(--font-weight-bold);
+}
+
+em {
+  font-style: italic;
+}
+
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+a:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+button {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+button:disabled {
+  background-color: var(--disabled-bg);
+  color: var(--disabled-color);
+  cursor: not-allowed;
+}
+
+button:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Inputs */
+input,
+select,
+textarea {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-md);
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: var(--background-secondary);
+  color: var(--text-color);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-subtle);
+  outline: none;
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background-color: var(--disabled-bg);
+  color: var(--disabled-color);
+  cursor: not-allowed;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Labels */
+label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-color);
+  margin-bottom: var(--spacing-xs);
+  display: block;
+}
+
+/* Forms */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+/* Cards */
+.card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-normal);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* Modals */
+.modal {
+  background-color: var(--modal-bg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
+  padding: var(--spacing-lg);
+  max-width: 600px;
+  width: 90%;
+  margin: var(--spacing-lg) auto;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+th {
+  background-color: var(--background-color);
+  padding: var(--spacing-sm);
+  text-align: right;
+  font-weight: var(--font-weight-medium);
+  border-bottom: 1px solid var(--border-color);
+}
+
+td {
+  padding: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color);
+}
+
+tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Lists */
+ul,
+ol {
+  margin-bottom: var(--spacing-sm);
+  padding-right: var(--spacing-md);
+}
+
+li {
+  margin-bottom: var(--spacing-xs);
+}
+
+/* Navigation */
+nav {
+  background-color: var(--background-secondary);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+}
+
+nav a {
+  padding: var(--spacing-sm);
+  font-weight: var(--font-weight-medium);
+  transition: color var(--transition-fast);
+}
+
+nav a:hover {
+  color: var(--primary-hover);
+}
+
+/* Alerts */
+.alert {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.alert-error {
+  background-color: rgba(211, 47, 47, 0.1);
+  color: var(--error-color);
+  border: 1px solid var(--error-color);
+}
+
+.alert-success {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: var(--secondary-color);
+  border: 1px solid var(--secondary-color);
+}
+
+/* Progress Bar */
+.progress-bar {
+  height: 8px;
+  background-color: var(--border-color);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: var(--primary-color);
+  transition: width var(--transition-normal);
+}
+
+/* Tooltips */
+.tooltip {
+  position: relative;
+}
+
+.tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 100%;
+  right: 50%;
+  transform: translateX(50%);
+  background-color: var(--text-color);
+  color: var(--background-secondary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-fast);
+}
+
+.tooltip:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Focus Styles for Accessibility */
+:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Screen Reader Only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-secondary);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
+}
+
+/* Selection Styling */
+::selection {
+  background: var(--primary-color);
+  color: var(--background-secondary);
+}
+
+/* Placeholder Styling */
+::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .text-transition {
+    transition: none;
+  }
+}
+
+/* Dark Mode Preparation (for future use) */
+@media (prefers-color-scheme: dark) {
+  .arabic-optimized {
+    -webkit-font-smoothing: subpixel-antialiased;
+    -moz-osx-font-smoothing: auto;
+  }
+}
+
+/* Print Optimizations */
+@media print {
+  .text-hero,
+  .text-page-title {
+    color: #000000 !important;
+    font-size: 24px !important;
+  }
+
+  .text-body,
+  .text-body-large {
+    color: #000000 !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+  }
+
+  .arabic-optimized {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Mobile Typography Enhancements */
+@media (max-width: 480px) {
+  .text-hero {
+    font-size: clamp(var(--font-size-xl), 5vw, var(--font-size-2xl));
+    line-height: 1.1;
+  }
+
+  .text-body-large {
+    font-size: var(--font-size-md);
+  }
+
+  /* Better touch targets for mobile */
+  .text-button-primary,
+  .text-button-small {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Tablet Optimizations */
+@media (min-width: 481px) and (max-width: 768px) {
+  .text-hero {
+    font-size: clamp(var(--font-size-2xl), 4vw, var(--font-size-3xl));
+  }
+}
+
+/* Large Screen Optimizations */
+@media (min-width: 1200px) {
+  .text-hero {
+    font-size: clamp(var(--font-size-3xl), 3vw, 3.5rem);
+  }
+
+  .prose-arabic {
+    max-width: 65ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Focus and Interaction States */
+.text-interactive:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.text-interactive:hover {
+  color: var(--primary-hover);
+  transition: color var(--transition-fast);
+}
+
+/* Custom Component Styles */
+.button-primary {
+  background-color: var(--primary-color);
+  color: var(--background-secondary);
+}
+
+.button-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.button-secondary {
+  background-color: var(--secondary-color);
+  color: var(--background-secondary);
+}
+
+.button-secondary:hover {
+  background-color: var(--secondary-hover);
+}
+
+.button-danger {
+  background-color: var(--error-color);
+  color: var(--background-secondary);
+}
+
+.button-danger:hover {
+  background-color: var(--error-hover);
+}
+
+.input-error {
+  border-color: var(--error-color);
+  box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.2);
+}
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.checkbox:checked {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.radio {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+}
+
+.radio:checked {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.badge-primary {
+  background: linear-gradient(
+    45deg,
+    var(--primary-color),
+    var(--primary-light)
+  );
+  color: var(--background-secondary);
+}
+
+/* Enhanced Typography for Islamic Content */
+
+/* Heading Hierarchy with Semantic Font Usage */
+.text-hero {
+  font-family: var(--font-display);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.02em;
+}
+
+.text-page-title {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+.text-section-title {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+}
+
+.text-card-title {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+}
+
+.text-body-large {
+  font-family: var(--font-body);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-relaxed);
+}
+
+.text-body {
+  font-family: var(--font-body);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-relaxed);
+}
+
+.text-body-small {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+}
+
+.text-caption {
+  font-family: var(--font-caption);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+}
+
+/* Islamic Content Specific Typography */
+.text-islamic-verse {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-relaxed);
+  font-style: italic;
+  text-align: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--primary-subtle);
+  border-right: 3px solid var(--primary-color);
+  border-radius: var(--radius-sm);
+}
+
+.text-arabic-name {
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.02em;
+}
+
+.text-profile-intro {
+  font-family: var(--font-body);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-relaxed);
+  text-align: justify;
+}
+
+/* Form Text Styles */
+
+.text-input {
+  font-family: var(--font-body);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  color: var(--text-color);
+}
+
+.text-helper {
+  font-family: var(--font-caption);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  color: var(--text-secondary);
+}
+
+.text-error {
+  font-family: var(--font-caption);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+  color: var(--error-color);
+}
+
+/* Status and Badge Text */
+.text-status {
+  font-family: var(--font-caption);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Navigation Text */
+.text-nav-primary {
+  font-family: var(--font-body);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+}
+
+.text-nav-secondary {
+  font-family: var(--font-body);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+}
+
+/* Responsive Typography */
+@media (max-width: 768px) {
+  .text-hero {
+    font-size: var(--font-size-2xl);
+  }
+
+  .text-page-title {
+    font-size: var(--font-size-xl);
+  }
+
+  .text-section-title {
+    font-size: var(--font-size-lg);
+  }
+}
+
+/* Typography Utilities for Better UX */
+.text-balance {
+  text-wrap: balance;
+}
+
+.text-pretty {
+  text-wrap: pretty;
+}
+
+.letter-spacing-wide {
+  letter-spacing: 0.05em;
+}
+
+.letter-spacing-wider {
+  letter-spacing: 0.1em;
+}
+
+/* Arabic Text Optimization */
+.arabic-optimized {
+  font-feature-settings:
+    "liga" 1,
+    "kern" 1,
+    "calt" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.arabic-justify {
+  text-align: justify;
+  text-align-last: right;
+  text-justify: inter-word;
+}
+
+/* Enhanced Focus Styles for Accessibility */
+:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Improved Button Hover Effects */
+.btn-hover-lift {
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
+}
+
+.btn-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Loading Skeleton Animation */
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+/* Mobile-first Responsive Grid Improvements */
+.grid-responsive {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+@media (max-width: 640px) {
+  .grid-responsive {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Enhanced Mobile Responsiveness for Dashboard */
+@media (max-width: 768px) {
+  /* Reduce padding on mobile for dashboard content */
+  .dashboard-content {
+    padding: 0.75rem;
+  }
+
+  /* Better mobile touch targets */
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Mobile-optimized cards */
+  .mobile-card {
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+
+  /* Mobile navigation fixes */
+  .mobile-nav-overlay {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  /* Optimize text sizes for mobile readability */
+  .mobile-text-xs {
+    font-size: 11px;
+  }
+  .mobile-text-sm {
+    font-size: 13px;
+  }
+  .mobile-text-base {
+    font-size: 15px;
+  }
+  .mobile-text-lg {
+    font-size: 17px;
+  }
+  .mobile-text-xl {
+    font-size: 19px;
+  }
+
+  /* Better mobile spacing */
+  .mobile-space-tight {
+    margin-bottom: 8px;
+  }
+  .mobile-space-normal {
+    margin-bottom: 12px;
+  }
+  .mobile-space-loose {
+    margin-bottom: 16px;
+  }
+}
+
+/* Safe area support for iOS devices */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe-area {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pt-safe-area {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .pl-safe-area {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .pr-safe-area {
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Improved mobile scrolling */
+.mobile-scroll-smooth {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Mobile-friendly form elements */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .form-control-mobile {
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 16px;
+  }
+}
+
+/* Enhanced mobile visual hierarchy */
+.mobile-visual-hierarchy h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.mobile-visual-hierarchy h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.mobile-visual-hierarchy h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.mobile-visual-hierarchy h4 {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Mobile button improvements */
+@media (max-width: 640px) {
+  .btn-mobile {
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    min-height: 44px;
+    font-weight: 500;
+  }
+
+  .btn-mobile-full {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background-color: #ffffff;
+  }
+
+  .card,
+  .modal,
+  .dashboard-panel {
+    box-shadow: none;
+    border: none;
+  }
+
+  nav,
+  button,
+  .progress-bar {
+    display: none;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  :root {
+    --text-color: #000000;
+    --background-color: #ffffff;
+    --border-color: #000000;
+  }
+
+  a,
+  button {
+    border: 2px solid #000000;
+  }
+}
+
+/* Additional Placeholder Styles for Forms */
+input[readonly] {
+  background-color: var(--disabled-bg);
+  cursor: not-allowed;
+}
+
+select[multiple] {
+  padding: var(--spacing-sm);
+}
+
+/* Custom Scroll Containers */
+.scroll-container {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-left: var(--spacing-sm);
+}
+
+/* Form Error States */
+.form-error-message {
+  color: var(--error-color);
+  font-size: var(--font-size-xs);
+  margin-top: var(--spacing-xs);
+}
+
+/* Image Upload Preview */
+.image-upload-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-md);
+  border: 2px dashed var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive Containers */
+@media (max-width: 640px) {
+  .container {
+    padding: var(--spacing-sm);
+  }
+
+  .modal {
+    width: 100%;
+    margin: var(--spacing-sm);
+  }
+}
+
+/* Animation Keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Utility Classes for Animations */
+.fade-in {
+  animation: fadeIn var(--transition-normal);
+}
+
+.slide-in {
+  animation: slideIn var(--transition-normal);
+}
+
+/* Extended Component Variations */
+.button-outline-primary {
+  background-color: transparent;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+}
+
+.button-outline-primary:hover {
+  background-color: var(--primary-subtle);
+}
+
+.button-outline-secondary {
+  background-color: transparent;
+  border: 1px solid var(--secondary-color);
+  color: var(--secondary-color);
+}
+
+.button-outline-secondary:hover {
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+/* Form Group */
+.form-group {
+  margin-bottom: var(--spacing-md);
+}
+
+/* Footer */
+.footer {
+  background-color: var(--background-color);
+  padding: var(--spacing-lg);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  border-top: 1px solid var(--border-color);
+}
+
+/* Header */
+.header {
+  background-color: var(--background-secondary);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Loading Spinner */
+.spinner {
+  border: 4px solid var(--border-color);
+  border-top: 4px solid var(--primary-color);
+  border-radius: var(--radius-full);
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Custom Focus Styles for Accessibility */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  box-shadow: 0 0 0 3px var(--primary-subtle);
+}
+
+/* Extended Responsive Adjustments */
+@media (max-width: 1024px) {
+  .section {
+    padding: var(--spacing-lg) 0;
+  }
+
+  .card {
+    padding: var(--spacing-sm);
+  }
+}
+
+/* High DPI Displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .card,
+  .modal {
+    box-shadow: var(--shadow-md);
+  }
+}
+
+/* Print-Specific Adjustments */
+@media print {
+  .alert,
+  .tooltip::after,
+  .spinner {
+    display: none;
+  }
+}
+
+.text-primary {
+  color: var(--primary-color);
+}
+
+.text-primary-hover {
+  color: var(--primary-hover);
+}
+
+.text-primary-light {
+  color: var(--primary-light);
+}
+
+.text-primary-lighter {
+  color: var(--primary-lighter);
+}
+
+.bg-primary {
+  background-color: var(--primary-color);
+}
+
+.bg-primary-hover {
+  background-color: var(--primary-hover);
+}
+
+.bg-primary-light {
+  background-color: var(--primary-light);
+}
+
+.bg-primary-lighter {
+  background-color: var(--primary-lighter);
+}
+
+.bg-primary-subtle {
+  background-color: var(--primary-subtle);
+}
+
+.border-primary {
+  border-color: var(--primary-color);
+}
+
+.border-primary-light {
+  border-color: var(--primary-light);
+}
+
+.border-primary-lighter {
+  border-color: var(--primary-lighter);
+}
+
+/* Gradient Utilities */
+.bg-gradient-primary {
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--primary-light)
+  );
+}
+
+.bg-gradient-primary-vertical {
+  background: linear-gradient(
+    to bottom,
+    var(--primary-color),
+    var(--primary-light)
+  );
+}
+
+.bg-gradient-primary-hover {
+  background: linear-gradient(
+    135deg,
+    var(--primary-hover),
+    var(--primary-color)
+  );
+}
+
+/* Advanced Color Utilities for Professional UI */
+.shadow-primary {
+  box-shadow: 0 4px 14px 0 var(--primary-subtle);
+}
+
+.shadow-primary-lg {
+  box-shadow: 0 10px 25px -3px var(--primary-subtle);
+}
+
+.ring-primary {
+  --tw-ring-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-subtle);
+}
+
+.divide-primary > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--primary-light);
+}
+
+/* Interactive State Utilities */
+.hover-lift:hover {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease-in-out;
+}
+
+.active-primary:active {
+  background-color: var(--primary-hover);
+  transform: scale(0.98);
+}
+
+/* Color-safe text utilities */
+.text-primary-safe {
+  color: var(--primary-600);
+}
+
+.text-on-primary {
+  color: white;
+}
+
+.text-primary-contrast {
+  color: var(--primary-50);
+}
+
+/* Mobile responsive utilities */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-pt {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-pl {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-area-pr {
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Line clamp utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+/* Smooth scrolling for better mobile experience */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better touch targets for mobile */
+@media (max-width: 768px) {
+  button,
+  [role="button"],
+  input[type="submit"],
+  input[type="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Responsive container improvements */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Enhanced focus styles for accessibility */
+:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Improved button hover effects */
+.btn-hover-lift {
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
+}
+
+.btn-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Loading skeleton animation */
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+/* Mobile-first responsive grid improvements */
+.grid-responsive {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+@media (max-width: 640px) {
+  .grid-responsive {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Enhanced mobile responsiveness for dashboard */
+@media (max-width: 768px) {
+  /* Reduce padding on mobile for dashboard content */
+  .dashboard-content {
+    padding: 0.75rem;
+  }
+
+  /* Better mobile touch targets */
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Mobile-optimized cards */
+  .mobile-card {
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+
+  /* Mobile navigation fixes */
+  .mobile-nav-overlay {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  /* Optimize text sizes for mobile readability */
+  .mobile-text-xs {
+    font-size: 11px;
+  }
+  .mobile-text-sm {
+    font-size: 13px;
+  }
+  .mobile-text-base {
+    font-size: 15px;
+  }
+  .mobile-text-lg {
+    font-size: 17px;
+  }
+  .mobile-text-xl {
+    font-size: 19px;
+  }
+
+  /* Better mobile spacing */
+  .mobile-space-tight {
+    margin-bottom: 8px;
+  }
+  .mobile-space-normal {
+    margin-bottom: 12px;
+  }
+  .mobile-space-loose {
+    margin-bottom: 16px;
+  }
+}
+
+/* Safe area support for iOS devices */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe-area {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pt-safe-area {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .pl-safe-area {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .pr-safe-area {
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Improved mobile scrolling */
+.mobile-scroll-smooth {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Mobile-friendly form elements */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .form-control-mobile {
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 16px;
+  }
+}
+
+/* Enhanced mobile visual hierarchy */
+.mobile-visual-hierarchy h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.mobile-visual-hierarchy h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.mobile-visual-hierarchy h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.mobile-visual-hierarchy h4 {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Mobile button improvements */
+@media (max-width: 640px) {
+  .btn-mobile {
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    min-height: 44px;
+    font-weight: 500;
+  }
+
+  .btn-mobile-full {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Enhanced UX and Accessibility Features */
+
+/* Reading Experience Enhancements */
+.prose-arabic {
+  font-family: var(--font-body);
+  line-height: var(--line-height-relaxed);
+  text-align: justify;
+  text-align-last: right;
+  word-spacing: 0.1em;
+}
+
+.prose-arabic h1,
+.prose-arabic h2,
+.prose-arabic h3,
+.prose-arabic h4,
+.prose-arabic h5,
+.prose-arabic h6 {
+  font-family: var(--font-heading);
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.prose-arabic p {
+  margin-bottom: var(--spacing-sm);
+  text-indent: var(--spacing-sm);
+}
+
+.prose-arabic p:first-child {
+  text-indent: 0;
+}
+
+/* Loading States for Fonts */
+.font-loading {
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  opacity: 0.8;
+}
+
+/* Font Performance Optimizations */
+.text-optimized {
+  font-feature-settings:
+    "liga" 1,
+    "kern" 1,
+    "calt" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .arabic-optimized {
+    font-weight: var(--font-weight-medium);
+    text-shadow: none;
+  }
+
+  .text-hero,
+  .text-page-title,
+  .text-section-title {
+    font-weight: var(--font-weight-bold);
+  }
+}
+
+/* Form Text Styles */
+.text-label {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+  color: var(--text-color);
+}
+
+/* Responsive Typography */
+@media (max-width: 768px) {
+  .text-hero {
+    font-size: var(--font-size-2xl);
+  }
+
+  .text-page-title {
+    font-size: var(--font-size-xl);
+  }
+
+  .text-section-title {
+    font-size: var(--font-size-lg);
+  }
+}
+
+/* Typography Utilities for Better UX */
+.text-balance {
+  text-wrap: balance;
+}
+
+.text-pretty {
+  text-wrap: pretty;
+}
+
+.letter-spacing-wide {
+  letter-spacing: 0.05em;
+}
+
+.letter-spacing-wider {
+  letter-spacing: 0.1em;
+}
+
+/* Arabic Text Optimization */
+.arabic-optimized {
+  font-feature-settings:
+    "liga" 1,
+    "kern" 1,
+    "calt" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.arabic-justify {
+  text-align: justify;
+  text-align-last: right;
+  text-justify: inter-word;
+}
+
+/* Enhanced Focus Styles for Accessibility */
+:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Improved Button Hover Effects */
+.btn-hover-lift {
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
+}
+
+.btn-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Loading Skeleton Animation */
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+/* Mobile-first Responsive Grid Improvements */
+.grid-responsive {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+@media (max-width: 640px) {
+  .grid-responsive {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Enhanced Mobile Responsiveness for Dashboard */
+@media (max-width: 768px) {
+  /* Reduce padding on mobile for dashboard content */
+  .dashboard-content {
+    padding: 0.75rem;
+  }
+
+  /* Better mobile touch targets */
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Mobile-optimized cards */
+  .mobile-card {
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+
+  /* Mobile navigation fixes */
+  .mobile-nav-overlay {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  /* Optimize text sizes for mobile readability */
+  .mobile-text-xs {
+    font-size: 11px;
+  }
+  .mobile-text-sm {
+    font-size: 13px;
+  }
+  .mobile-text-base {
+    font-size: 15px;
+  }
+  .mobile-text-lg {
+    font-size: 17px;
+  }
+  .mobile-text-xl {
+    font-size: 19px;
+  }
+
+  /* Better mobile spacing */
+  .mobile-space-tight {
+    margin-bottom: 8px;
+  }
+  .mobile-space-normal {
+    margin-bottom: 12px;
+  }
+  .mobile-space-loose {
+    margin-bottom: 16px;
+  }
+}
+
+/* Safe area support for iOS devices */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe-area {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pt-safe-area {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .pl-safe-area {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .pr-safe-area {
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Improved mobile scrolling */
+.mobile-scroll-smooth {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Mobile-friendly form elements */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .form-control-mobile {
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 16px;
+  }
+}
+
+/* Enhanced mobile visual hierarchy */
+.mobile-visual-hierarchy h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.mobile-visual-hierarchy h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.mobile-visual-hierarchy h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.mobile-visual-hierarchy h4 {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Mobile button improvements */
+@media (max-width: 640px) {
+  .btn-mobile {
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    min-height: 44px;
+    font-weight: 500;
+  }
+
+  .btn-mobile-full {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

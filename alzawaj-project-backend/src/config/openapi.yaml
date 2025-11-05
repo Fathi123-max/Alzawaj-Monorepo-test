@@ -1,0 +1,4327 @@
+openapi: 3.0.0
+info:
+  title: Zawag Islamic Marriage Platform API
+  version: 1.0.0
+  description: API documentation for the Zawag Islamic Marriage Platform
+servers:
+  - url: http://localhost:5001
+    description: Development server
+  - url: https://alzawaj-backend.onrender.com
+    description: Production server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "6051d2d7e1b8a20015d23f5a"
+        email:
+          type: string
+          format: email
+          example: "ahmed.mohamed@example.com"
+        name:
+          type: string
+          example: "أحمد محمد"
+        role:
+          type: string
+          enum: [user, admin, moderator]
+          example: "user"
+        status:
+          type: string
+          enum: [active, pending, suspended]
+          example: "active"
+        isEmailVerified:
+          type: boolean
+          example: true
+        isPhoneVerified:
+          type: boolean
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          example: "2021-03-17T10:30:00Z"
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "6051d2d7e1b8a20015d23f5b"
+        userId:
+          type: string
+          example: "6051d2d7e1b8a20015d23f5a"
+        name:
+          type: string
+          example: "أحمد محمد"
+        age:
+          type: integer
+          example: 30
+        gender:
+          type: string
+          enum: [m, f]
+          example: "m"
+        country:
+          type: string
+          example: "مصر"
+        city:
+          type: string
+          example: "القاهرة"
+        nationality:
+          type: string
+          example: "مصري"
+        maritalStatus:
+          type: string
+          enum: [single, divorced, widowed]
+          example: "single"
+        education:
+          type: string
+          example: "بكالوريوس في علوم الحاسوب"
+        occupation:
+          type: string
+          example: "مهندس برمجيات"
+        religiousLevel:
+          type: string
+          enum: [basic, moderate, practicing, very-religious]
+          example: "practicing"
+        bio:
+          type: string
+          example: "مسلم ملتزم أبحث عن شريك متوافق."
+        profilePicture:
+          type: string
+          example: "https://alzawaj-backend.onrender.com/uploads/profile_6051d2d7e1b8a20015d23f5a.jpg"
+        height:
+          type: integer
+          example: 175
+        weight:
+          type: integer
+          example: 70
+        hasBeard:
+          type: boolean
+          example: true
+        financialSituation:
+          type: string
+          enum: [excellent, good, average, struggling]
+          example: "good"
+        preferences:
+          type: object
+          example:
+            ageMin: 25
+            ageMax: 35
+            country: "مصر"
+            maritalStatus: "single"
+        privacySettings:
+          type: object
+          example:
+            showProfile: true
+            showPhotos: "friends"
+        isComplete:
+          type: boolean
+          example: true
+        isApproved:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: "2021-03-17T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2021-03-17T10:30:00Z"
+    MarriageRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "6051d2d7e1b8a20015d23f5c"
+        senderId:
+          type: string
+          example: "6051d2d7e1b8a20015d23f5a"
+        receiverId:
+          type: string
+          example: "6051d2d7e1b8a20015d23f5d"
+        status:
+          type: string
+          enum: [pending, accepted, rejected]
+          example: "pending"
+        message:
+          type: string
+          example: "Assalamu alaikum, I am interested in getting to know you better inshallah."
+        createdAt:
+          type: string
+          format: date-time
+          example: "2021-03-17T10:30:00Z"
+        expiresAt:
+          type: string
+          format: date-time
+          example: "2021-04-17T10:30:00Z"
+    ChatMessage:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "6051d2d7e1b8a20015d23f5f"
+        chatRoomId:
+          type: string
+          example: "6051d2d7e1b8a20015d23f5e"
+        senderId:
+          type: string
+          example: "6051d2d7e1b8a20015d23f5a"
+        content:
+          type: string
+          example: "Assalamu alaikum! How are you doing today?"
+        status:
+          type: string
+          enum: [pending, approved, rejected, flagged]
+          example: "approved"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2021-03-17T10:30:00Z"
+        approvedAt:
+          type: string
+          format: date-time
+          example: "2021-03-17T10:31:00Z"
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "بيانات التسجيل غير صحيحة"
+        statusCode:
+          type: integer
+          example: 400
+        error:
+          type: array
+          items:
+            type: string
+          example:
+            - "تأكيد كلمة المرور مطلوب"
+            - "الاسم يجب أن يكون بين 2-100 حرف"
+            - "العمر يجب أن يكون بين 18-100 سنة"
+            - "حالة اللحية مطلوبة للذكور"
+            - "الحالة المالية مطلوبة للذكور"
+            - "نوع السكن مطلوب للذكور"
+security:
+  - bearerAuth: []
+tags:
+  - name: Authentication
+    description: User registration, login, and authentication endpoints
+  - name: Profile
+    description: User profile management endpoints
+  - name: Search
+    description: Profile search and discovery endpoints
+  - name: Requests
+    description: Marriage request endpoints
+  - name: Chat
+    description: Chat system endpoints
+  - name: Notifications
+    description: User notification endpoints
+  - name: Admin
+    description: Admin dashboard endpoints
+  - name: Upload
+    description: File upload endpoints
+  - name: Debug
+    description: Debug and development endpoints
+  - name: General
+    description: General and utility endpoints
+paths:
+  /api/auth/register:
+    post:
+      tags: [Authentication]
+      summary: تسجيل مستخدم جديد
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - confirmPassword
+                - phone
+                - gender
+                - basicInfo
+                - location
+                - education
+                - professional
+                - religiousInfo
+                - personalInfo
+                - familyInfo
+                - lifestyle
+                - preferences
+                - privacy
+                - acceptDeclaration
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "ahmed.mohamed@example.com"
+                password:
+                  type: string
+                  minLength: 8
+                  example: "SecurePass123!"
+                confirmPassword:
+                  type: string
+                  example: "SecurePass123!"
+                phone:
+                  type: string
+                  example: "+201234567890"
+                gender:
+                  type: string
+                  enum: [m, f]
+                  example: "m"
+                acceptDeclaration:
+                  type: boolean
+                  example: true
+                basicInfo:
+                  type: object
+                  required:
+                    - name
+                    - age
+                    - hasBeard
+                    - financialSituation
+                    - housingOwnership
+                  properties:
+                    name:
+                      type: string
+                      minLength: 2
+                      maxLength: 100
+                      example: "أحمد محمد"
+                    age:
+                      type: integer
+                      minimum: 18
+                      maximum: 100
+                      example: 30
+                    hasBeard:
+                      type: boolean
+                      example: true
+                    financialSituation:
+                      type: string
+                      enum: [excellent, good, average, struggling]
+                      example: "good"
+                    housingOwnership:
+                      type: string
+                      enum: [owned, rented, family-owned]
+                      example: "owned"
+                location:
+                  type: object
+                  required:
+                    - country
+                    - city
+                    - nationality
+                  properties:
+                    country:
+                      type: string
+                      example: "مصر"
+                    city:
+                      type: string
+                      example: "القاهرة"
+                    nationality:
+                      type: string
+                      example: "مصري"
+                education:
+                  type: object
+                  required:
+                    - education
+                    - occupation
+                  properties:
+                    education:
+                      type: string
+                      enum: [primary, secondary, "high-school", diploma, bachelor, master, doctorate, other]
+                      example: "bachelor"
+                    occupation:
+                      type: string
+                      example: "مهندس برمجيات"
+                professional:
+                  type: object
+                  required:
+                    - occupation
+                    - monthlyIncome
+                  properties:
+                    occupation:
+                      type: string
+                      example: "مهندس برمجيات"
+                    monthlyIncome:
+                      type: integer
+                      example: 8000
+                religiousInfo:
+                  type: object
+                  required:
+                    - religiousLevel
+                    - isPrayerRegular
+                    - areParentsAlive
+                    - parentRelationship
+                    - wantsChildren
+                    - isRegularAtMosque
+                    - smokes
+                  properties:
+                    religiousLevel:
+                      type: string
+                      enum: [basic, moderate, practicing, very-religious]
+                      example: "practicing"
+                    isPrayerRegular:
+                      type: boolean
+                      example: true
+                    areParentsAlive:
+                      type: string
+                      enum: [both, father, mother, none]
+                      example: "both"
+                    parentRelationship:
+                      type: string
+                      enum: [excellent, good, average, poor]
+                      example: "excellent"
+                    wantsChildren:
+                      type: string
+                      enum: [yes, no, maybe]
+                      example: "yes"
+                    isRegularAtMosque:
+                      type: boolean
+                      example: true
+                    smokes:
+                      type: boolean
+                      example: false
+                personalInfo:
+                  type: object
+                  required:
+                    - height
+                    - weight
+                    - appearance
+                    - skinColor
+                    - bodyType
+                    - interests
+                    - marriageGoals
+                    - personalityDescription
+                    - familyPlans
+                    - relocationPlans
+                    - marriageTimeline
+                    - clothingStyle
+                    - workAfterMarriage
+                  properties:
+                    height:
+                      type: integer
+                      example: 175
+                    weight:
+                      type: integer
+                      example: 70
+                    appearance:
+                      type: string
+                      enum: [very-attractive, attractive, average, simple]
+                      example: "average"
+                    skinColor:
+                      type: string
+                      enum: [fair, medium, olive, dark]
+                      example: "medium"
+                    bodyType:
+                      type: string
+                      enum: [slim, average, athletic, heavy]
+                      example: "average"
+                    interests:
+                      type: array
+                      items:
+                        type: string
+                      example: ["القراءة", "السفر", "الطهي"]
+                    marriageGoals:
+                      type: string
+                      example: "أبحث عن شريك حياة متوافق يشاركني القيم والأهداف"
+                    personalityDescription:
+                      type: string
+                      example: "أنا شخص لبق ومتفهم أقدر الصدق والاحترام"
+                    familyPlans:
+                      type: string
+                      example: "أريد أن أكون لدي أطفال وأربّيهم بقيم إسلامية صحيحة"
+                    relocationPlans:
+                      type: string
+                      example: "مفتوح للانتقال داخل نفس البلد"
+                    marriageTimeline:
+                      type: string
+                      example: "6-12 شهر"
+                    clothingStyle:
+                      type: string
+                      example: "محجبة"
+                    workAfterMarriage:
+                      type: string
+                      enum: [yes, no, undecided]
+                      example: "yes"
+                familyInfo:
+                  type: object
+                  required:
+                    - hasChildren
+                    - childrenCount
+                  properties:
+                    hasChildren:
+                      type: string
+                      enum: [yes, no]
+                      example: "no"
+                    childrenCount:
+                      type: integer
+                      example: 0
+                lifestyle:
+                  type: object
+                  required:
+                    - smokingStatus
+                  properties:
+                    smokingStatus:
+                      type: string
+                      enum: [never, quit, occasionally, regularly]
+                      example: "never"
+                preferences:
+                  type: object
+                  required:
+                    - ageMin
+                    - ageMax
+                    - country
+                    - maritalStatus
+                  properties:
+                    ageMin:
+                      type: integer
+                      example: 25
+                    ageMax:
+                      type: integer
+                      example: 35
+                    country:
+                      type: string
+                      example: "مصر"
+                    maritalStatus:
+                      type: array
+                      items:
+                        type: string
+                        enum: [single, divorced, widowed]
+                      example: ["single"]
+                privacy:
+                  type: object
+                  required:
+                    - showProfilePicture
+                    - showAge
+                    - showLocation
+                    - showOccupation
+                    - allowMessagesFrom
+                    - profileVisibility
+                    - requireGuardianApproval
+                    - showOnlineStatus
+                    - allowNearbySearch
+                  properties:
+                    showProfilePicture:
+                      type: string
+                      enum: [everyone, "matches-only", none]
+                      example: "matches-only"
+                    showAge:
+                      type: boolean
+                      example: true
+                    showLocation:
+                      type: boolean
+                      example: true
+                    showOccupation:
+                      type: boolean
+                      example: true
+                    allowMessagesFrom:
+                      type: string
+                      enum: [everyone, "matches-only", none]
+                      example: "matches-only"
+                    profileVisibility:
+                      type: string
+                      enum: [everyone, "verified-only", "premium-only", "guardian-approved", "matches-only"]
+                      example: "everyone"
+                    requireGuardianApproval:
+                      type: boolean
+                      example: false
+                    showOnlineStatus:
+                      type: boolean
+                      example: false
+                    allowNearbySearch:
+                      type: boolean
+                      example: true
+      responses:
+        '200':
+          description: نجاح التسجيل
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+                      requiresVerification:
+                        type: boolean
+                        example: true
+                      message:
+                        type: string
+                        example: "تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني للتحقق."
+        '400':
+          description: خطأ في التحقق
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "بيانات التسجيل غير صحيحة"
+                  statusCode:
+                    type: integer
+                    example: 400
+                  error:
+                    type: array
+                    items:
+                      type: string
+                    example:
+                      - "الاسم يجب أن يكون بين 2-100 حرف"
+                      - "العمر يجب أن يكون بين 18-100 سنة"
+                      - "حالة اللحية مطلوبة للذكور"
+                      - "الحالة المالية مطلوبة للذكور"
+                      - "نوع السكن مطلوب للذكور"
+        '500':
+          description: خطأ في الخادم
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/login:
+    post:
+      tags: [Authentication]
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: "ahmed.mohamed@example.com"
+                password:
+                  type: string
+                  example: "SecurePass123!"
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+                      token:
+                        type: string
+                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MDUxZDJkN2UxYjhhMjAwMTVkMjNmNWEiLCJpYXQiOjE2MTYwNTQ4NjAsImV4cCI6MTYxNjA1ODQ2MH0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/refresh-token:
+    post:
+      tags: [Authentication]
+      summary: تحديث رمز المصادقة
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MDUxZDJkN2UxYjhhMjAwMTVkMjNmNWEiLCJpYXQiOjE2MTYwNTQ4NjAsImV4cCI6MTYxNjA1ODQ2MH0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+      responses:
+        '200':
+          description: نجاح تحديث الرمز
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "تم تحديث الرمز بنجاح"
+                  data:
+                    type: object
+                    properties:
+                      tokens:
+                        type: object
+                        properties:
+                          accessToken:
+                            type: string
+                            example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MDUxZDJkN2UxYjhhMjAwMTVkMjNmNWEiLCJpYXQiOjE2MTYwNTQ4NjAsImV4cCI6MTYxNjA1ODQ2MH0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                          refreshToken:
+                            type: string
+                            example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MDUxZDJkN2UxYjhhMjAwMTVkMjNmNWEiLCJpYXQiOjE2MTYwNTQ4NjAsImV4cCI6MTYxNjA1ODQ2MH0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                          expiresIn:
+                            type: string
+                            example: "15m"
+        '401':
+          description: رمز التحديث غير صحيح أو منتهي الصلاحية
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "رمز التحديث غير صحيح"
+        '500':
+          description: خطأ في الخادم
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/logout:
+    post:
+      tags: [Authentication]
+      summary: تسجيل الخروج من الجهاز الحالي
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MDUxZDJkN2UxYjhhMjAwMTVkMjNmNWEiLCJpYXQiOjE2MTYwNTQ4NjAsImV4cCI6MTYxNjA1ODQ2MH0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+      responses:
+        '200':
+          description: نجاح تسجيل الخروج
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "تم تسجيل الخروج بنجاح"
+        '401':
+          description: غير مصرح
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: خطأ في الخادم
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/logout-all:
+    post:
+      tags: [Authentication]
+      summary: تسجيل الخروج من جميع الأجهزة
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: نجاح تسجيل الخروج من جميع الأجهزة
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "تم تسجيل الخروج من جميع الأجهزة بنجاح"
+        '401':
+          description: غير مصرح
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: خطأ في الخادم
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/forgot-password:
+    post:
+      tags: [Authentication]
+      summary: Request password reset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Password reset email sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/reset-password:
+    post:
+      tags: [Authentication]
+      summary: Reset password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                newPassword:
+                  type: string
+                  minLength: 8
+      responses:
+        '200':
+          description: Password successfully reset
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/verify-email:
+    post:
+      tags: [Authentication]
+      summary: Verify email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  example: "verification-token-here"
+      responses:
+        '200':
+          description: Email successfully verified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "تم التحقق من البريد الإلكتروني بنجاح"
+        '400':
+          description: Validation error or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/send-email-verification:
+    post:
+      tags: [Authentication]
+      summary: Send email verification
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Email verification sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/send-phone-verification:
+    post:
+      tags: [Authentication]
+      summary: Send phone verification
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Phone verification sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/verify-phone:
+    post:
+      tags: [Authentication]
+      summary: Verify phone
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                otp:
+                  type: string
+                  example: "123456"
+      responses:
+        '200':
+          description: Phone successfully verified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error or invalid OTP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/change-password:
+    post:
+      tags: [Authentication]
+      summary: Change password
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currentPassword:
+                  type: string
+                newPassword:
+                  type: string
+                  minLength: 8
+      responses:
+        '200':
+          description: Password successfully changed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/me:
+    get:
+      tags: [Authentication]
+      summary: Get current user information
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Development endpoints (only available in development environment)
+  /api/auth/dev-confirm-email:
+    post:
+      tags: [Authentication]
+      summary: تأكيد البريد الإلكتروني مباشرة (تطوير)
+      description: |
+        نقطة نهاية مخصصة للتطوير لتأكيد البريد الإلكتروني مباشرة دون الحاجة إلى رمز التحقق.
+        متوفرة فقط في بيئة التطوير (NODE_ENV=development).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: string
+                  example: "6051d2d7e1b8a20015d23f5a"
+                  description: معرف المستخدم الذي تريد تأكيد بريده الإلكتروني
+      responses:
+        '200':
+          description: تم تأكيد البريد الإلكتروني بنجاح
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "تم تأكيد البريد الإلكتروني بنجاح (تطوير)"
+        '400':
+          description: خطأ في التحقق
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "معرف المستخدم مطلوب"
+        '404':
+          description: المستخدم غير موجود
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "المستخدم غير موجود"
+        '500':
+          description: خطأ في الخادم
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/dev-confirm-phone:
+    post:
+      tags: [Authentication]
+      summary: تأكيد رقم الهاتف مباشرة (تطوير)
+      description: |
+        نقطة نهاية مخصصة للتطوير لتأكيد رقم الهاتف مباشرة دون الحاجة إلى رمز التحقق.
+        متوفرة فقط في بيئة التطوير (NODE_ENV=development).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: string
+                  example: "6051d2d7e1b8a20015d23f5a"
+                  description: معرف المستخدم الذي تريد تأكيد رقم هاتفه
+      responses:
+        '200':
+          description: تم تأكيد رقم الهاتف بنجاح
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "تم تأكيد رقم الهاتف بنجاح (تطوير)"
+        '400':
+          description: خطأ في التحقق
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "معرف المستخدم مطلوب"
+        '404':
+          description: المستخدم غير موجود
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "المستخدم غير موجود"
+        '500':
+          description: خطأ في الخادم
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/profile:
+    get:
+      tags: [Profile]
+      summary: Get current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Profile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      tags: [Profile]
+      summary: Update user profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                basicInfo:
+                  type: object
+                  example:
+                    name: "Ahmed Mohamed"
+                    age: 30
+                location:
+                  type: object
+                  example:
+                    country: "Egypt"
+                    city: "Cairo"
+                education:
+                  type: object
+                  example:
+                    education: "Bachelor's Degree in Computer Science"
+                    occupation: "Software Engineer"
+                professional:
+                  type: object
+                  example:
+                    occupation: "Software Engineer"
+                    monthlyIncome: 8000
+                religiousInfo:
+                  type: object
+                  example:
+                    religiousLevel: "practicing"
+                    isPrayerRegular: true
+                    hasBeard: true
+                personalInfo:
+                  type: object
+                  example:
+                    bio: "A practicing Muslim looking for a compatible partner."
+                    interests: ["reading", "traveling", "cooking"]
+                preferences:
+                  type: object
+                  example:
+                    ageMin: 25
+                    ageMax: 35
+                    country: "Egypt"
+                    maritalStatus: "single"
+                privacy:
+                  type: object
+                  example:
+                    showProfile: true
+                    showPhotos: "friends"
+      responses:
+        '200':
+          description: Profile successfully updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Profile'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [Profile]
+      summary: Delete user profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirmPassword:
+                  type: string
+      responses:
+        '200':
+          description: Profile successfully deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/profile/picture:
+    post:
+      tags: [Profile]
+      summary: Upload profile picture
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Profile picture successfully uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      profilePicture:
+                        type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/profile/photos:
+    post:
+      tags: [Profile]
+      summary: Upload additional photos
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200':
+          description: Photos successfully uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      photos:
+                        type: array
+                        items:
+                          type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/profile/photos/{photoUrl}:
+    delete:
+      tags: [Profile]
+      summary: Delete additional photo
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: photoUrl
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Photo successfully deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Photo not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/profile/{profileId}:
+    get:
+      tags: [Profile]
+      summary: Get public profile by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Profile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Profile not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/profile/privacy:
+    patch:
+      tags: [Profile]
+      summary: Update privacy settings
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                privacySettings:
+                  type: object
+      responses:
+        '200':
+          description: Privacy settings successfully updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Profile'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/profile/completion:
+    get:
+      tags: [Profile]
+      summary: Get profile completion status
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      completionPercentage:
+                        type: integer
+                      sections:
+                        type: object
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/profile/stats:
+    get:
+      tags: [Profile]
+      summary: Get profile statistics
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/profile/block:
+    post:
+      tags: [Profile]
+      summary: Block user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userIdToBlock:
+                  type: string
+      responses:
+        '200':
+          description: User successfully blocked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/profile/unblock:
+    post:
+      tags: [Profile]
+      summary: Unblock user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userIdToUnblock:
+                  type: string
+      responses:
+        '200':
+          description: User successfully unblocked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/profile/blocked:
+    get:
+      tags: [Profile]
+      summary: Get blocked users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/profile/all:
+    get:
+      tags: [Profile]
+      summary: Get all profiles with pagination for normal users
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            example: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            example: 20
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            default: "newest"
+            enum: [newest, oldest, completion, age]
+            example: "newest"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      profiles:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            profile:
+                              $ref: '#/components/schemas/Profile'
+                            compatibilityScore:
+                              type: number
+                              example: 85.5
+                            canSendRequest:
+                              type: boolean
+                              example: true
+                      pagination:
+                        type: object
+                        example:
+                          currentPage: 1
+                          totalPages: 5
+                          totalCount: 100
+                          hasNextPage: true
+                          hasPrevPage: false
+                          limit: 20
+                      sortBy:
+                        type: string
+                        example: "newest"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/profile/photo/{fileId}:
+    delete:
+      tags: [Profile]
+      summary: Delete photo by fileId
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Photo successfully deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Photo not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/profile/verify/{profileId}:
+    patch:
+      tags: [Profile]
+      summary: Verify profile (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                verificationStatus:
+                  type: string
+                  enum: [verified, rejected]
+                adminNotes:
+                  type: string
+      responses:
+        '200':
+          description: Profile successfully verified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Profile not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/search/profiles:
+    get:
+      tags: [Search]
+      summary: Search profiles
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            example: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            example: 20
+        - name: ageMin
+          in: query
+          schema:
+            type: integer
+            example: 25
+        - name: ageMax
+          in: query
+          schema:
+            type: integer
+            example: 35
+        - name: country
+          in: query
+          schema:
+            type: string
+            example: "Egypt"
+        - name: city
+          in: query
+          schema:
+            type: string
+            example: "Cairo"
+        - name: maritalStatus
+          in: query
+          schema:
+            type: string
+            example: "single"
+        - name: religiousLevel
+          in: query
+          schema:
+            type: string
+            example: "practicing"
+        - name: education
+          in: query
+          schema:
+            type: string
+            example: "Bachelor's Degree"
+        - name: hasBeard
+          in: query
+          schema:
+            type: boolean
+            example: true
+        - name: wearHijab
+          in: query
+          schema:
+            type: boolean
+            example: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      profiles:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Profile'
+                      pagination:
+                        type: object
+                        example:
+                          currentPage: 1
+                          totalPages: 5
+                          totalProfiles: 100
+                          hasNextPage: true
+                          hasPrevPage: false
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/search/recommendations:
+    get:
+      tags: [Search]
+      summary: Get recommended profiles
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      profiles:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Profile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/search/quick:
+    get:
+      tags: [Search]
+      summary: Quick search by name or basic criteria
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      profiles:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Profile'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/search/filters:
+    get:
+      tags: [Search]
+      summary: Get search filters options
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/search/save:
+    post:
+      tags: [Search]
+      summary: Save search criteria as favorites
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                criteria:
+                  type: object
+      responses:
+        '200':
+          description: Search criteria successfully saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/search/saved:
+    get:
+      tags: [Search]
+      summary: Get saved search criteria
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [Search]
+      summary: Delete saved search
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: searchName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Saved search successfully deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Saved search not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/search/stats:
+    get:
+      tags: [Search]
+      summary: Get search statistics
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/requests/send:
+    post:
+      tags: [Requests]
+      summary: Send marriage request
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                receiverId:
+                  type: string
+                  example: "6051d2d7e1b8a20015d23f5d"
+                message:
+                  type: string
+                  example: "Assalamu alaikum, I am interested in getting to know you better inshallah."
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/MarriageRequest'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/requests/received:
+    get:
+      tags: [Requests]
+      summary: Get received marriage requests
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MarriageRequest'
+                    example:
+                      - id: "6051d2d7e1b8a20015d23f5c"
+                        senderId: "6051d2d7e1b8a20015d23f5a"
+                        receiverId: "6051d2d7e1b8a20015d23f5d"
+                        status: "pending"
+                        message: "Assalamu alaikum, I am interested in getting to know you better inshallah."
+                        createdAt: "2021-03-17T10:30:00Z"
+                        expiresAt: "2021-04-17T10:30:00Z"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/requests/sent:
+    get:
+      tags: [Requests]
+      summary: Get sent marriage requests
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MarriageRequest'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/requests/respond/{requestId}/accept:
+    post:
+      tags: [Requests]
+      summary: Accept a marriage request
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                response:
+                  type: string
+                  enum: [accepted]
+                message:
+                  type: string
+      responses:
+        '200':
+          description: Marriage request successfully accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/MarriageRequest'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/requests/respond/{requestId}/reject:
+    post:
+      tags: [Requests]
+      summary: Reject a marriage request
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                response:
+                  type: string
+                  enum: [rejected]
+                message:
+                  type: string
+      responses:
+        '200':
+          description: Marriage request successfully rejected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/MarriageRequest'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/requests/cancel/{requestId}:
+    post:
+      tags: [Requests]
+      summary: Cancel a sent marriage request
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Marriage request successfully cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/requests/read/{requestId}:
+    post:
+      tags: [Requests]
+      summary: Mark request as read
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Request successfully marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/requests/meeting/{requestId}:
+    post:
+      tags: [Requests]
+      summary: Arrange meeting
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                  format: date-time
+                time:
+                  type: string
+                location:
+                  type: string
+                meetingType:
+                  type: string
+                  enum: [family_meeting, guardian_meeting, public_meeting]
+      responses:
+        '200':
+          description: Meeting successfully arranged
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/requests/meeting/{requestId}/confirm:
+    post:
+      tags: [Requests]
+      summary: Confirm meeting
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirm:
+                  type: boolean
+      responses:
+        '200':
+          description: Meeting successfully confirmed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/requests/{requestId}:
+    get:
+      tags: [Requests]
+      summary: Get request details
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/MarriageRequest'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/requests/stats:
+    get:
+      tags: [Requests]
+      summary: Get request statistics
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/chat/rooms:
+    get:
+      tags: [Chat]
+      summary: Get chat rooms
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/chat/messages/{chatRoomId}:
+    get:
+      tags: [Chat]
+      summary: Get chat messages
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatRoomId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      messages:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ChatMessage'
+                      pagination:
+                        type: object
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Chat room not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/chat/send:
+    post:
+      tags: [Chat]
+      summary: Send message
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chatRoomId:
+                  type: string
+                  example: "6051d2d7e1b8a20015d23f5e"
+                content:
+                  type: string
+                  example: "Assalamu alaikum! How are you doing today?"
+      responses:
+        '200':
+          description: Message successfully sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/ChatMessage'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/chat/limits:
+    get:
+      tags: [Chat]
+      summary: Get chat limits
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/chat/read/{chatRoomId}:
+    post:
+      tags: [Chat]
+      summary: Mark messages as read
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatRoomId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Messages successfully marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Chat room not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/chat/archive/{chatRoomId}:
+    post:
+      tags: [Chat]
+      summary: Archive chat room
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatRoomId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Chat room successfully archived
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Chat room not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/chat/unarchive/{chatRoomId}:
+    post:
+      tags: [Chat]
+      summary: Unarchive chat room
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatRoomId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Chat room successfully unarchived
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Chat room not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/chat/{chatRoomId}:
+    delete:
+      tags: [Chat]
+      summary: Delete chat room
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chatRoomId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Chat room successfully deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Chat room not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/notifications:
+    get:
+      tags: [Notifications]
+      summary: Get notifications
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            example: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            example: 20
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      notifications:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "6051d2d7e1b8a20015d23f60"
+                            userId:
+                              type: string
+                              example: "6051d2d7e1b8a20015d23f5a"
+                            type:
+                              type: string
+                              example: "marriage_request"
+                            message:
+                              type: string
+                              example: "You have received a new marriage request from Ahmed Mohamed"
+                            isRead:
+                              type: boolean
+                              example: false
+                            createdAt:
+                              type: string
+                              format: date-time
+                              example: "2021-03-17T10:30:00Z"
+                      pagination:
+                        type: object
+                        example:
+                          currentPage: 1
+                          totalPages: 1
+                          totalNotifications: 3
+                          hasNextPage: false
+                          hasPrevPage: false
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/notifications/{notificationId}/read:
+    patch:
+      tags: [Notifications]
+      summary: Mark notification as read
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Notification successfully marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Notification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/notifications/read:
+    patch:
+      tags: [Notifications]
+      summary: Mark all notifications as read
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: All notifications successfully marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/notifications/unread-count:
+    get:
+      tags: [Notifications]
+      summary: Get unread count
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      unreadCount:
+                        type: integer
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/notifications/{notificationId}:
+    delete:
+      tags: [Notifications]
+      summary: Delete notification
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Notification successfully deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Notification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/admin/stats:
+    get:
+      tags: [Admin]
+      summary: Get admin stats
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/admin/users:
+    get:
+      tags: [Admin]
+      summary: Get users
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      users:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+                      pagination:
+                        type: object
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/admin/users/action:
+    post:
+      tags: [Admin]
+      summary: User actions
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                action:
+                  type: string
+                  enum: [suspend, activate, delete, verify]
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: User action successfully processed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/admin/requests:
+    get:
+      tags: [Admin]
+      summary: Get marriage requests
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      requests:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/MarriageRequest'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/admin/messages/pending:
+    get:
+      tags: [Admin]
+      summary: Get pending messages
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      messages:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ChatMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/admin/messages/{messageId}/approve:
+    post:
+      tags: [Admin]
+      summary: Approve message
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Message successfully approved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Message not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/admin/messages/{messageId}/reject:
+    post:
+      tags: [Admin]
+      summary: Reject message
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Message successfully rejected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Message not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/admin/reports:
+    get:
+      tags: [Admin]
+      summary: Get reports
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      reports:
+                        type: array
+                        items:
+                          type: object
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/admin/reports/{reportId}/action:
+    post:
+      tags: [Admin]
+      summary: Report actions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [assign, resolve, dismiss]
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Report action successfully processed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Report not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/admin/settings:
+    get:
+      tags: [Admin]
+      summary: Get admin settings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [Admin]
+      summary: Update admin settings
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                messageLimits:
+                  type: object
+                chatSettings:
+                  type: object
+                moderationSettings:
+                  type: object
+                themeSettings:
+                  type: object
+      responses:
+        '200':
+          description: Settings successfully updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/upload/profile-picture:
+    post:
+      tags: [Upload]
+      summary: Upload profile picture
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Profile picture successfully uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      profilePicture:
+                        type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/upload/additional-photos:
+    post:
+      tags: [Upload]
+      summary: Upload additional photos
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200':
+          description: Photos successfully uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      photos:
+                        type: array
+                        items:
+                          type: string
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/upload/photo/{photoUrl}:
+    delete:
+      tags: [Upload]
+      summary: Delete photo
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: photoUrl
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Photo successfully deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Photo not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/debug/all:
+    get:
+      tags: [Debug]
+      summary: Get all profiles (debug)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Profile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/debug/search:
+    get:
+      tags: [Debug]
+      summary: Search profiles by name (debug)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search query
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Profile'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /health:
+    get:
+      tags: [General]
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: Server health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "OK"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2023-01-01T12:00:00Z"
+                  uptime:
+                    type: number
+                    example: 3600.5
+                  environment:
+                    type: string
+                    example: "development"
+                  version:
+                    type: string
+                    example: "1.0.0"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /:
+    get:
+      tags: [General]
+      summary: Root endpoint
+      responses:
+        '200':
+          description: Server information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Zawag Islamic Marriage Platform API"
+                  version:
+                    type: string
+                    example: "1.0.0"
+                  status:
+                    type: string
+                    example: "Running"
+                  documentation:
+                    type: string
+                    example: "/api-docs"

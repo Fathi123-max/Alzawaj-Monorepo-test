@@ -1,0 +1,7 @@
+packages:
+  - .
+ignoredBuiltDependencies:
+  - aws-sdk
+  - bcrypt
+  - mongodb-memory-server
+  - sharp

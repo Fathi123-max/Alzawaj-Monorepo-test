@@ -1,0 +1,124 @@
+/** @type {import('next').NextConfig} */
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+  enabled: process.env.ANALYZE === "true",
+});
+
+const nextConfig = {
+  // Enable experimental features for better performance
+  experimental: {
+    // optimizeCss: true, // Disabled due to missing critters dependency
+    scrollRestoration: true,
+  },
+
+  // Turbopack configuration for Next.js 16
+  // Set to use Webpack to avoid Turbopack issues with custom config
+  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
+    // Optimize for Arabic fonts
+    config.module.rules.push({
+      test: /\.(woff|woff2|eot|ttf|otf)$/,
+      use: {
+        loader: "file-loader",
+        options: {
+          publicPath: "/_next/static/fonts/",
+          outputPath: "static/fonts/",
+        },
+      },
+    });
+
+    // Bundle analyzer for production builds
+    if (!dev && !isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        "@": require("path").resolve(__dirname),
+      };
+    }
+
+    return config;
+  },
+
+  // Performance optimizations
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
+  },
+
+  // Image optimization for profile pictures
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "localhost",
+      },
+      {
+        protocol: "https",
+        hostname: "s3.amazonaws.com",
+      },
+      {
+        protocol: "https",
+        hostname: "zawaj-platform.s3.amazonaws.com",
+      },
+    ],
+    formats: ["image/webp", "image/avif"],
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
+    dangerouslyAllowSVG: false,
+  },
+
+  // Security headers
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "X-Frame-Options",
+            value: "DENY",
+          },
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
+          },
+        ],
+      },
+    ];
+  },
+
+  // Environment variables validation
+  env: {
+    CUSTOM_KEY: process.env.CUSTOM_KEY,
+  },
+
+  // Static file serving optimization
+  trailingSlash: false,
+  poweredByHeader: false,
+
+  // Redirect configuration for better SEO
+  async redirects() {
+    return [
+      {
+        source: "/home",
+        destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/login",
+        destination: "/auth/register",
+        permanent: false,
+      },
+    ];
+  },
+
+  // Output configuration for deployment
+  output: "standalone",
+
+  // Strict mode for better development experience
+  reactStrictMode: true,
+};
+
+module.exports = withBundleAnalyzer(nextConfig);

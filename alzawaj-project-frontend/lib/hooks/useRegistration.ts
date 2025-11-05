@@ -1,0 +1,771 @@
+"use client";
+import { useCallback, useReducer } from "react";
+import { authApi } from "@/lib/api";
+import { showToast } from "@/components/ui/toaster";
+import { AuthenticationError, ValidationError } from "@/lib/types/auth.types";
+import { RegistrationData } from "@/lib/types";
+
+// Registration State Management
+interface RegistrationState {
+  currentStep: number;
+  totalSteps: number;
+  data: RegistrationData;
+  completedSteps: Set<number>;
+  isSubmitting: boolean;
+  error: string | null;
+  validationErrors: string[] | null; // Add support for multiple validation errors
+  otpSent: boolean;
+  profilePicture: File | null;
+}
+
+type RegistrationAction =
+  | { type: "SET_STEP"; payload: number }
+  | { type: "UPDATE_DATA"; payload: Partial<RegistrationData> }
+  | { type: "MARK_STEP_COMPLETED"; payload: number }
+  | { type: "SET_SUBMITTING"; payload: boolean }
+  | { type: "SET_ERROR"; payload: string | null }
+  | { type: "SET_VALIDATION_ERRORS"; payload: string[] | null }
+  | { type: "SET_OTP_SENT"; payload: boolean }
+  | { type: "SET_PROFILE_PICTURE"; payload: File | null }
+  | { type: "RESET" };
+
+const initialState: RegistrationState = {
+  currentStep: 1,
+  totalSteps: 3,
+  data: {
+    email: `test${Date.now()}@example.com`,
+    password: "TestPass123",
+    confirmPassword: "TestPass123",
+    firstname: "أحمد",
+    lastname: "محمد",
+    age: 28,
+    gender: "m",
+    phone: "+966501234567",
+    otpCode: "",
+    country: "السعودية",
+    city: "الرياض",
+    nationality: "سعودي",
+    maritalStatus: "single",
+    religiousLevel: "practicing",
+    isPrayerRegular: true,
+    areParentsAlive: "both",
+    parentRelationship: "good",
+    wantsChildren: "yes",
+    height: 175,
+    weight: 75,
+    appearance: "attractive",
+    skinColor: "fair",
+    bodyType: "average",
+    interests: "القراءة، السفر، الرياضة",
+    marriageGoals: "أسعى للزواج لتكوين أسرة المسلمة متماسكة",
+    personalityDescription: "شخص هادئ ومتفهم، أحب الاستقرار والأسرة",
+    familyPlans: "أتمنى إنجاب 2-3 أطفال وتربيتهم على القيم الإسلامية",
+    relocationPlans: "مستعد للانتقال داخل المملكة",
+    marriageTimeline: "خلال 6-12 شهر",
+    preferences: {
+      ageRange: { min: 22, max: 30 },
+    },
+    education: "bachelor",
+    occupation: "مهندس",
+    bio: "مهندس برمجيات، أحب القراءة والسفر، أسعى لتكوين أسرة مسلمة متماسكة",
+    acceptDeclaration: true,
+    // Male-specific
+    hasBeard: true,
+    prayingLocation: "البيت",
+    isRegularAtMosque: true,
+    smokes: false,
+    financialSituation: "good",
+    housingLocation: "الرياض",
+    housingOwnership: "owned",
+    housingType: "شقة",
+    monthlyIncome: 12000,
+    providerView: "أحب توفير احتياجات الأسرة",
+    householdChores: "أساعد في الأعمال المنزلية",
+    // Female-specific
+    guardianName: "",
+    guardianPhone: "",
+    guardianRelationship: "",
+    wearHijab: "",
+    wearNiqab: false,
+    clothingStyle: "",
+    guardianEmail: "",
+    guardianNotes: "",
+    mahramAvailable: false,
+    workAfterMarriage: "",
+    childcarePreference: "",
+  },
+  completedSteps: new Set(),
+  isSubmitting: false,
+  error: null,
+  validationErrors: null,
+  otpSent: false,
+  profilePicture: null,
+};
+
+function registrationReducer(
+  state: RegistrationState,
+  action: RegistrationAction,
+): RegistrationState {
+  switch (action.type) {
+    case "SET_STEP":
+      return { ...state, currentStep: action.payload, error: null };
+    case "UPDATE_DATA":
+      return {
+        ...state,
+        data: { ...state.data, ...action.payload },
+        error: null,
+      };
+    case "MARK_STEP_COMPLETED":
+      return {
+        ...state,
+        completedSteps: new Set([...state.completedSteps, action.payload]),
+      };
+    case "SET_SUBMITTING":
+      return { ...state, isSubmitting: action.payload };
+    case "SET_ERROR":
+      return { ...state, error: action.payload, validationErrors: null };
+    case "SET_VALIDATION_ERRORS":
+      return { ...state, validationErrors: action.payload, error: null };
+    case "SET_OTP_SENT":
+      return { ...state, otpSent: action.payload };
+    case "SET_PROFILE_PICTURE":
+      return { ...state, profilePicture: action.payload };
+    case "RESET":
+      return initialState;
+    default:
+      return state;
+  }
+}
+
+interface UseRegistrationResult {
+  currentStep: number;
+  totalSteps: number;
+  data: RegistrationData;
+  completedSteps: Set<number>;
+  isSubmitting: boolean;
+  error: string | null;
+  validationErrors: string[] | null;
+  otpSent: boolean;
+  profilePicture: File | null;
+  goToStep: (step: number) => void;
+  nextStep: () => Promise<boolean>;
+  prevStep: () => void;
+  updateData: (data: Partial<RegistrationData>) => void;
+  setProfilePicture: (file: File | null) => void;
+  sendOTP: () => Promise<boolean>;
+  submitRegistration: () => Promise<boolean>;
+  reset: () => void;
+  clearError: () => void;
+  validateCurrentStep: () => Promise<boolean>;
+  isStepCompleted: (step: number) => boolean;
+  canProceedToStep: (step: number) => boolean;
+}
+
+const useRegistration = (): UseRegistrationResult => {
+  const [state, dispatch] = useReducer(registrationReducer, initialState);
+
+  const handleError = useCallback((error: any) => {
+    console.error("Registration error:", error);
+
+    // Handle backend validation errors (array of error messages)
+    if (
+      error.response?.data?.error &&
+      Array.isArray(error.response.data.error)
+    ) {
+      dispatch({
+        type: "SET_VALIDATION_ERRORS",
+        payload: error.response.data.error,
+      });
+      showToast.error(
+        error.response.data.message || "بيانات التسجيل غير صحيحة",
+      );
+      return;
+    }
+
+    if (error instanceof ValidationError) {
+      // Check if we have validation errors array in fields.general
+      if (error.fields?.["general"] && Array.isArray(error.fields["general"])) {
+        dispatch({
+          type: "SET_VALIDATION_ERRORS",
+          payload: error.fields["general"],
+        });
+        showToast.error(error.message || "بيانات التسجيل غير صحيحة");
+        return;
+      }
+
+      // Handle other field validation errors
+      const firstFieldError = Object.values(error.fields || {})[0]?.[0];
+      const errorMessage = firstFieldError || error.message;
+      dispatch({ type: "SET_ERROR", payload: errorMessage });
+      showToast.error(errorMessage);
+      return;
+    }
+    if (error instanceof AuthenticationError) {
+      dispatch({ type: "SET_ERROR", payload: error.message });
+      showToast.error(error.message);
+      return;
+    }
+    const errorMessage = error.message || "حدث خطأ غير متوقع";
+    dispatch({ type: "SET_ERROR", payload: errorMessage });
+    showToast.error(errorMessage);
+  }, []);
+
+  const validateCurrentStep = useCallback(async (): Promise<boolean> => {
+    try {
+      // Step 1: Validate basic auth fields
+      if (state.currentStep === 1) {
+        if (!state.data.email) {
+          dispatch({ type: "SET_ERROR", payload: "البريد الإلكتروني مطلوب" });
+          return false;
+        }
+        if (!state.data.password) {
+          dispatch({ type: "SET_ERROR", payload: "كلمة المرور مطلوبة" });
+          return false;
+        }
+        if (!state.data.gender) {
+          dispatch({ type: "SET_ERROR", payload: "يرجى اختيار الجنس" });
+          return false;
+        }
+        if (!state.data.firstname) {
+          dispatch({ type: "SET_ERROR", payload: "الاسم الأول مطلوب" });
+          return false;
+        }
+        if (!state.data.lastname) {
+          dispatch({ type: "SET_ERROR", payload: "الاسم الأخير مطلوب" });
+          return false;
+        }
+
+        // if (!state.data.phone) {
+        //   dispatch({ type: "SET_ERROR", payload: "رقم الهاتف مطلوب" });
+        //   return false;
+        // }
+        // if (!state.otpSent) {
+        // dispatch({
+        //   type: "SET_ERROR",
+        //   payload: "يرجى إرسال رمز التحقق للبريد الإلكتروني",
+        // });
+        // return false;
+        // }
+        // if (!state.data.otpCode) {
+        //   dispatch({ type: "SET_ERROR", payload: "يرجى إدخال رمز التحقق" });
+        //   return false;
+        // }
+      }
+
+      // Step 2: Validate personal data
+      if (state.currentStep === 2) {
+        const requiredFields: (keyof RegistrationData)[] = [
+          "firstname",
+          "lastname",
+          "age",
+          "nationality",
+          "maritalStatus",
+          "country",
+          "city",
+          "religiousLevel",
+          "height",
+          "weight",
+          "skinColor",
+          "bodyType",
+          "appearance",
+          "areParentsAlive",
+          "parentRelationship",
+          "wantsChildren",
+          "interests",
+          "marriageGoals",
+          "personalityDescription",
+          "familyPlans",
+          "marriageTimeline",
+        ];
+
+        for (const field of requiredFields) {
+          if (!state.data[field]) {
+            dispatch({ type: "SET_ERROR", payload: `الحقل ${field} مطلوب` });
+            return false;
+          }
+        }
+
+        // Gender-specific validations
+        if (state.data.gender === "m") {
+          const maleRequiredFields: (keyof RegistrationData)[] = [
+            "hasBeard",
+            "smokes",
+            "financialSituation",
+            "housingOwnership",
+            "isRegularAtMosque",
+          ];
+          for (const field of maleRequiredFields) {
+            if (state.data[field] === undefined) {
+              dispatch({
+                type: "SET_ERROR",
+                payload: `يرجى ملء جميع البيانات المطلوبة للذكور`,
+              });
+              return false;
+            }
+          }
+        }
+
+        if (state.data.gender === "f") {
+          const femaleRequiredFields: (keyof RegistrationData)[] = [
+            "wearHijab",
+            "guardianName",
+            "guardianPhone",
+          ];
+          for (const field of femaleRequiredFields) {
+            if (state.data[field] === undefined) {
+              dispatch({
+                type: "SET_ERROR",
+                payload: `يرجى ملء جميع البيانات المطلوبة للإناث`,
+              });
+              return false;
+            }
+          }
+        }
+
+        // Preferences validation
+        if (
+          !state.data.preferences.ageRange.min ||
+          !state.data.preferences.ageRange.max
+        ) {
+          dispatch({
+            type: "SET_ERROR",
+            payload: "يرجى تحديد المدى العمري المفضل",
+          });
+          return false;
+        }
+      }
+
+      // Step 3: Review, no additional validation
+      dispatch({ type: "SET_ERROR", payload: null });
+      return true;
+    } catch (error: any) {
+      handleError(error);
+      return false;
+    }
+  }, [state.currentStep, state.data, state.otpSent, handleError]);
+
+  const goToStep = useCallback(
+    (step: number) => {
+      if (step >= 1 && step <= state.totalSteps) {
+        dispatch({ type: "SET_STEP", payload: step });
+      }
+    },
+    [state.totalSteps],
+  );
+
+  const nextStep = useCallback(async (): Promise<boolean> => {
+    const isValid = await validateCurrentStep();
+    if (!isValid) return false;
+
+    dispatch({ type: "MARK_STEP_COMPLETED", payload: state.currentStep });
+
+    if (state.currentStep < state.totalSteps) {
+      const nextStepNumber = state.currentStep + 1;
+      dispatch({ type: "SET_STEP", payload: nextStepNumber });
+    }
+
+    return true;
+  }, [validateCurrentStep, state.currentStep, state.totalSteps]);
+
+  const prevStep = useCallback(() => {
+    if (state.currentStep > 1) {
+      const prevStepNumber = state.currentStep - 1;
+      dispatch({ type: "SET_STEP", payload: prevStepNumber });
+    }
+  }, [state.currentStep]);
+
+  const updateData = useCallback((data: Partial<RegistrationData>) => {
+    dispatch({ type: "UPDATE_DATA", payload: data });
+  }, []);
+
+  const setProfilePicture = useCallback((file: File | null) => {
+    dispatch({ type: "SET_PROFILE_PICTURE", payload: file });
+  }, []);
+
+  const sendOTP = useCallback(async (): Promise<boolean> => {
+    try {
+      dispatch({ type: "SET_SUBMITTING", payload: true });
+      dispatch({ type: "SET_ERROR", payload: null });
+
+      if (!state.data.email) {
+        dispatch({ type: "SET_ERROR", payload: "البريد الإلكتروني مطلوب" });
+        return false;
+      }
+
+      // Simulated OTP sending (replace with actual API call)
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      dispatch({ type: "SET_OTP_SENT", payload: true });
+      showToast.success("تم إرسال رمز التحقق");
+      return true;
+    } catch (error) {
+      handleError(error);
+      return false;
+    } finally {
+      dispatch({ type: "SET_SUBMITTING", payload: false });
+    }
+  }, [state.data.email, handleError]);
+
+  const submitRegistration = useCallback(async (): Promise<boolean> => {
+    try {
+      dispatch({ type: "SET_SUBMITTING", payload: true });
+      dispatch({ type: "SET_ERROR", payload: null });
+
+      // Validate form data
+      const isValid = await validateCurrentStep();
+      if (!isValid) {
+        showToast.error("يرجى ملء جميع الحقول المطلوبة بشكل صحيح");
+        return false;
+      }
+
+      // Transform RegistrationData to match the exact structure from TODO.md
+      const regData = state.data; // Use the full registration data from state
+
+      // Comprehensive validation before sending
+      const validationErrors: string[] = [];
+
+      if (!regData.email) validationErrors.push("البريد الإلكتروني مطلوب");
+      if (!regData.password) validationErrors.push("كلمة المرور مطلوبة");
+      if (!regData.firstname) validationErrors.push("الاسم الأول مطلوب");
+      if (!regData.lastname) validationErrors.push("الاسم الأخير مطلوب");
+      if (!regData.phone) validationErrors.push("رقم الهاتف مطلوب");
+      if (!regData.country) validationErrors.push("البلد مطلوب");
+      if (!regData.city) validationErrors.push("المدينة مطلوبة");
+      if (!regData.nationality) validationErrors.push("الجنسية مطلوبة");
+      if (!regData.acceptDeclaration)
+        validationErrors.push("يجب الموافقة على الإقرار والتعهد");
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (regData.email && !emailRegex.test(regData.email)) {
+        validationErrors.push("تنسيق البريد الإلكتروني غير صحيح");
+      }
+
+      // Validate password strength
+      if (regData.password && regData.password.length < 8) {
+        validationErrors.push("كلمة المرور يجب أن تكون 8 أحرف على الأقل");
+      }
+
+      // Validate password confirmation
+      if (regData.password !== regData.confirmPassword) {
+        validationErrors.push("كلمة المرور وتأكيد كلمة المرور غير متطابقين");
+      }
+
+      // Validate age
+      if (regData.age < 18 || regData.age > 100) {
+        validationErrors.push("العمر يجب أن يكون بين 18 و 100 سنة");
+      }
+
+      // Validate height and weight
+      if (regData.height < 120 || regData.height > 220) {
+        validationErrors.push("الطول يجب أن يكون بين 120 و 220 سم");
+      }
+
+      if (regData.weight < 30 || regData.weight > 200) {
+        validationErrors.push("الوزن يجب أن يكون بين 30 و 200 كيلو");
+      }
+
+      // Validate required text fields
+      if (!regData.marriageGoals?.trim())
+        validationErrors.push("أهداف الزواج مطلوبة");
+      if (!regData.personalityDescription?.trim())
+        validationErrors.push("وصف الشخصية مطلوب");
+      if (!regData.familyPlans?.trim())
+        validationErrors.push("خطط العائلة مطلوبة");
+
+      // Gender-specific validations
+      if (regData.gender === "f") {
+        if (!regData.guardianName?.trim())
+          validationErrors.push("اسم الولي مطلوب للنساء");
+        if (!regData.guardianPhone?.trim())
+          validationErrors.push("رقم هاتف الولي مطلوب للنساء");
+        if (!regData.guardianRelationship)
+          validationErrors.push("علاقة الولي مطلوبة للنساء");
+        if (!regData.wearHijab || regData.wearHijab === "")
+          validationErrors.push("حالة الحجاب مطلوبة للنساء");
+      }
+
+      if (regData.gender === "m") {
+        if (!regData.financialSituation)
+          validationErrors.push("الوضع المالي مطلوب للرجال");
+        if (!regData.housingOwnership)
+          validationErrors.push("ملكية السكن مطلوبة للرجال");
+        if (regData.monthlyIncome === undefined || regData.monthlyIncome < 0) {
+          validationErrors.push("الدخل الشهري مطلوب للرجال");
+        }
+      }
+
+      if (validationErrors.length > 0) {
+        dispatch({ type: "SET_VALIDATION_ERRORS", payload: validationErrors });
+        showToast.error("يرجى تصحيح الأخطاء المذكورة");
+        return false;
+      }
+
+      // Format data to match the exact structure from TODO.md
+      const backendData = {
+        email: regData.email.trim(),
+        password: regData.password,
+        confirmPassword: regData.password, // Add confirmPassword field
+        phone: (regData.phone || "").trim(),
+        gender: regData.gender,
+        acceptDeclaration: regData.acceptDeclaration || false,
+        basicInfo: {
+          name: `${regData.firstname.trim()} ${regData.lastname.trim()}`, // Combine names to single field
+          age: regData.age,
+          ...(regData.gender === "m" && { hasBeard: regData.hasBeard ?? true }), // Only include for males
+          ...(regData.gender === "f" && {
+            guardianName: regData.guardianName?.trim() || "",
+            guardianPhone: regData.guardianPhone?.trim() || "",
+            guardianRelationship: regData.guardianRelationship || "",
+            guardianEmail: regData.guardianEmail?.trim() || "",
+            wearHijab:
+              regData.wearHijab === "hijab" || regData.wearHijab === "niqab",
+            wearNiqab: regData.wearHijab === "niqab",
+          }), // Include guardian info and hijab status for females
+          financialSituation:
+            (regData.financialSituation as
+              | "excellent"
+              | "good"
+              | "average"
+              | "struggling") || "excellent",
+          housingOwnership:
+            (regData.housingOwnership as "owned" | "rented" | "family-owned") ||
+            "owned",
+        },
+        location: {
+          country: regData.country || "مصر",
+          city: regData.city || "القاهرة",
+          nationality: regData.nationality || "مصري",
+        },
+        education: {
+          education: regData.education || "primary",
+          occupation: regData.occupation || "مهندس برمجيات",
+        },
+        professional: {
+          occupation: regData.occupation || "مهندس برمجيات",
+          monthlyIncome: regData.monthlyIncome || 8000,
+        },
+        religiousInfo: {
+          religiousLevel: regData.religiousLevel || "basic",
+          isPrayerRegular: regData.isPrayerRegular ?? true,
+          areParentsAlive: regData.areParentsAlive || "both",
+          parentRelationship: regData.parentRelationship || "excellent",
+          wantsChildren: regData.wantsChildren || "yes",
+          isRegularAtMosque: regData.isRegularAtMosque ?? true,
+          smokes: regData.smokes ?? false,
+        },
+        personalInfo: {
+          height: regData.height || 175,
+          weight: regData.weight || 70,
+          appearance: regData.appearance || "very-attractive",
+          skinColor: regData.skinColor || "fair",
+          bodyType: regData.bodyType || "slim",
+          interests: regData.interests
+            ? regData.interests
+                .split(",")
+                .map((s) => s.trim())
+                .filter((s) => s)
+            : ["القراءة", "السفر", "الطهي"],
+          marriageGoals: regData.marriageGoals.trim(),
+          personalityDescription: regData.personalityDescription.trim(),
+          familyPlans: regData.familyPlans.trim(),
+          relocationPlans:
+            regData.relocationPlans || "مفتوح للانتقال داخل نفس البلد",
+          marriageTimeline: regData.marriageTimeline || "6-12 شهر",
+          ...(regData.gender === "f" && {
+            clothingStyle:
+              regData.wearHijab === "niqab"
+                ? "منتقبة"
+                : regData.wearHijab === "hijab"
+                  ? "محجبة"
+                  : "غير محجبة",
+            workAfterMarriage:
+              (regData.workAfterMarriage as "yes" | "no" | "maybe") || "yes",
+          }),
+        },
+        familyInfo: {
+          hasChildren: (regData.wantsChildren === "yes" ? "yes" : "no") as
+            | "yes"
+            | "no",
+          childrenCount: 0,
+        },
+        lifestyle: {
+          smokingStatus: (regData.smokes ? "occasionally" : "never") as
+            | "never"
+            | "quit"
+            | "occasionally"
+            | "regularly",
+        },
+        preferences: {
+          ageMin: regData.preferences?.ageRange?.min || 25,
+          ageMax: regData.preferences?.ageRange?.max || 35,
+          country: regData.country || "مصر",
+          maritalStatus: [regData.maritalStatus || "single"],
+        },
+        privacy: {
+          showProfilePicture: "everyone" as const,
+          showAge: true,
+          showLocation: true,
+          showOccupation: true,
+          allowMessagesFrom: "everyone" as const,
+          profileVisibility: "everyone" as const,
+          requireGuardianApproval: regData.gender === "f",
+          showOnlineStatus: false,
+          allowNearbySearch: true,
+        },
+      };
+
+      // Send JSON data directly to the API
+      console.log(
+        "Submitting registration with backend data:",
+        JSON.stringify(backendData, null, 2),
+      );
+      const response = await authApi.register(backendData);
+      console.log("Registration response:", response);
+
+      if (response.success) {
+        showToast.success(response.message || "تم إنشاء الحساب بنجاح");
+
+        // Save user data to localStorage
+        if (response.data?.user) {
+          localStorage.setItem("user_data", JSON.stringify(response.data.user));
+        }
+
+        // Handle verification if needed
+        if (
+          !response.data?.user?.isEmailVerified ||
+          !response.data?.user?.isPhoneVerified
+        ) {
+          showToast.info("يرجى تأكيد البريد الإلكتروني ورقم الهاتف");
+        }
+      } else {
+        throw new Error(response.message || "فشل في إنشاء الحساب");
+      }
+
+      return true;
+    } catch (error: any) {
+      console.error("Registration submission error:", error);
+
+      // Enhanced error handling
+      let errorMessage = "حدث خطأ أثناء إنشاء الحساب";
+      let backendValidationErrors: string[] = [];
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      // Handle validation errors from backend
+      if (error.response?.data) {
+        const responseData = error.response.data;
+        if (responseData.error && Array.isArray(responseData.error)) {
+          backendValidationErrors = responseData.error;
+        }
+        if (responseData.message) {
+          errorMessage = responseData.message;
+        }
+      }
+      // Handle network errors
+      if (error.code === "ERR_NETWORK" || error.message === "Network Error") {
+        errorMessage =
+          "خطأ في الشبكة. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى";
+      }
+
+      // Handle timeout errors
+      if (error.code === "ECONNABORTED") {
+        errorMessage = "انتهت مهلة الطلب. يرجى المحاولة مرة أخرى";
+      }
+
+      // Handle 400 status (bad request)
+      if (error.response?.status === 400) {
+        errorMessage =
+          "بيانات التسجيل غير صالحة. يرجى التحقق من المعلومات المدخلة";
+      }
+
+      // Handle 409 status (conflict - user already exists)
+      if (error.response?.status === 409) {
+        errorMessage = "هذا البريد الإلكتروني أو رقم الهاتف مستخدم مسبقاً";
+      }
+
+      // Handle 422 status (validation error)
+      if (error.response?.status === 422) {
+        errorMessage = "فشل في التحقق من البيانات. يرجى تصحيح الأخطاء";
+      }
+
+      // Handle 500 status (server error)
+      if (error.response?.status >= 500) {
+        errorMessage = "خطأ في الخادم. يرجى المحاولة مرة أخرى لاحقاً";
+      }
+
+      // Set errors in state
+      dispatch({ type: "SET_ERROR", payload: errorMessage });
+      if (backendValidationErrors.length > 0) {
+        dispatch({
+          type: "SET_VALIDATION_ERRORS",
+          payload: backendValidationErrors,
+        });
+      }
+
+      // Show error toast
+      showToast.error(errorMessage);
+
+      return false;
+    } finally {
+      dispatch({ type: "SET_SUBMITTING", payload: false });
+    }
+  }, [state, validateCurrentStep, handleError]);
+
+  const reset = useCallback(() => {
+    dispatch({ type: "RESET" });
+  }, []);
+
+  const clearError = useCallback(() => {
+    dispatch({ type: "SET_ERROR", payload: null });
+    dispatch({ type: "SET_VALIDATION_ERRORS", payload: null });
+  }, []);
+
+  const isStepCompleted = useCallback(
+    (step: number): boolean => {
+      return state.completedSteps.has(step);
+    },
+    [state.completedSteps],
+  );
+
+  const canProceedToStep = useCallback(
+    (step: number): boolean => {
+      for (let i = 1; i < step; i++) {
+        if (!state.completedSteps.has(i)) {
+          return false;
+        }
+      }
+      return true;
+    },
+    [state.completedSteps],
+  );
+
+  return {
+    currentStep: state.currentStep,
+    totalSteps: state.totalSteps,
+    data: state.data,
+    completedSteps: state.completedSteps,
+    isSubmitting: state.isSubmitting,
+    error: state.error,
+    validationErrors: state.validationErrors,
+    otpSent: state.otpSent,
+    profilePicture: state.profilePicture,
+    goToStep,
+    nextStep,
+    prevStep,
+    updateData,
+    setProfilePicture,
+    sendOTP,
+    submitRegistration,
+    reset,
+    clearError,
+    validateCurrentStep,
+    isStepCompleted,
+    canProceedToStep,
+  };
+};
+
+export { useRegistration };
+export default useRegistration;
