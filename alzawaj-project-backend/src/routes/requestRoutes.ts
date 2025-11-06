@@ -15,7 +15,7 @@ const sendRequestValidation = [
 
 const respondRequestValidation = [
   param("requestId").isMongoId().withMessage("معرف الطلب غير صحيح"),
-  body("response").isIn(["accepted", "rejected"]).withMessage("الرد يجب أن يكون مقبول أو مرفوض"),
+  body("response").isIn(["accept", "reject"]).withMessage("الرد يجب أن يكون قبول أو رفض"),
   body("message").optional().isLength({ max: 500 }).withMessage("الرسالة لا يجب أن تتجاوز 500 حرف"),
 ];
 

@@ -147,6 +147,88 @@ export const getMarriageRequests = async (
 };
 
 /**
+ * Approve marriage request
+ */
+export const approveMarriageRequest = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { requestId } = req.params;
+
+    const request = await MarriageRequest.findById(requestId);
+
+    if (!request) {
+      res.status(404).json(createErrorResponse("طلب الزواج غير موجود"));
+      return;
+    }
+
+    if (request.status !== "pending") {
+      res.status(400).json(
+        createErrorResponse("يمكن فقط اعتماد طلبات الزواج المعلقة")
+      );
+      return;
+    }
+
+    request.status = "accepted";
+    request.moderatedBy = req.user?.id || "";
+    request.moderatedAt = new Date();
+    await request.save();
+
+    res.json(
+      createSuccessResponse("تم اعتماد طلب الزواج بنجاح", {
+        request,
+      })
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Reject marriage request
+ */
+export const rejectMarriageRequest = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { requestId } = req.params;
+    const { reason } = req.body;
+
+    const request = await MarriageRequest.findById(requestId);
+
+    if (!request) {
+      res.status(404).json(createErrorResponse("طلب الزواج غير موجود"));
+      return;
+    }
+
+    if (request.status !== "pending") {
+      res.status(400).json(
+        createErrorResponse("يمكن فقط رفض طلبات الزواج المعلقة")
+      );
+      return;
+    }
+
+    request.status = "rejected";
+    request.moderatedBy = req.user?.id || "";
+    request.moderatedAt = new Date();
+    request.rejectionReason = reason;
+    await request.save();
+
+    res.json(
+      createSuccessResponse("تم رفض طلب الزواج بنجاح", {
+        request,
+      })
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Get pending messages
  */
 export const getPendingMessages = async (

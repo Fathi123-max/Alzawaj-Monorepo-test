@@ -400,6 +400,25 @@ class AdminApiService {
     };
   }
 
+  async approveMarriageRequest(
+    requestId: string
+  ): Promise<ApiResponse<null>> {
+    return this.request<ApiResponse<null>>(`/requests/${requestId}/approve`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+  }
+
+  async rejectMarriageRequest(
+    requestId: string,
+    reason?: string
+  ): Promise<ApiResponse<null>> {
+    return this.request<ApiResponse<null>>(`/requests/${requestId}/reject`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    });
+  }
+
   // Message Moderation
   async getPendingMessages(): Promise<
     ApiResponse<{ messages: ChatMessage[] }>

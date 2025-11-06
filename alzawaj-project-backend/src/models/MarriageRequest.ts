@@ -62,6 +62,12 @@ export interface IMarriageRequest extends Document {
   isDeleted: boolean;
   deletedAt?: Date;
   deletedBy?: mongoose.Types.ObjectId;
+
+  // Admin moderation fields
+  moderatedBy?: mongoose.Types.ObjectId;
+  moderatedAt?: Date;
+  rejectionReason?: string;
+
   createdAt?: Date; // Added for virtual fields
   updatedAt?: Date; // Added for virtual fields
 
@@ -329,6 +335,21 @@ const marriageRequestSchema = new Schema<
     deletedBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
+      default: null,
+    },
+
+    // Admin moderation fields
+    moderatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    moderatedAt: {
+      type: Date,
+      default: null,
+    },
+    rejectionReason: {
+      type: String,
       default: null,
     },
   },

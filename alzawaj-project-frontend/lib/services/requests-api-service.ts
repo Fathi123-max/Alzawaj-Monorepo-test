@@ -144,7 +144,11 @@ class RequestsApiService {
       "response:",
       data.response,
     );
-    return this.request<SingleRequestResponse>("/respond", {
+
+    // Use the correct endpoint based on response type
+    const endpoint = `/respond/${data.requestId}/${data.response}`;
+
+    return this.request<SingleRequestResponse>(endpoint, {
       method: "POST",
       body: JSON.stringify(data),
     });

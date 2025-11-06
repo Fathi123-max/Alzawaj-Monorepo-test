@@ -79,6 +79,30 @@ export function RequestsTable() {
     }
   };
 
+  const handleApprove = async (requestId: string) => {
+    try {
+      await adminApiService.approveMarriageRequest(requestId);
+      showToast.success("تم اعتماد طلب الزواج بنجاح");
+      loadRequests(); // Refresh the list
+    } catch (error: any) {
+      console.error("Error approving request:", error);
+      const errorMessage = handleApiError(error);
+      showToast.error(errorMessage);
+    }
+  };
+
+  const handleReject = async (requestId: string, reason?: string) => {
+    try {
+      await adminApiService.rejectMarriageRequest(requestId, reason);
+      showToast.success("تم رفض طلب الزواج بنجاح");
+      loadRequests(); // Refresh the list
+    } catch (error: any) {
+      console.error("Error rejecting request:", error);
+      const errorMessage = handleApiError(error);
+      showToast.error(errorMessage);
+    }
+  };
+
   const getStatusBadge = (status: MarriageRequest["status"]) => {
     const statusConfig = {
       pending: {
@@ -383,6 +407,8 @@ export function RequestsTable() {
                                 size="sm"
                                 variant="ghost"
                                 className="text-green-600 hover:text-green-800"
+                                onClick={() => handleApprove(request._id || request.id)}
+                                title="قبول الطلب"
                               >
                                 <CheckCircle className="w-4 h-4" />
                               </Button>
@@ -390,6 +416,8 @@ export function RequestsTable() {
                                 size="sm"
                                 variant="ghost"
                                 className="text-red-600 hover:text-red-800"
+                                onClick={() => handleReject(request._id || request.id)}
+                                title="رفض الطلب"
                               >
                                 <XCircle className="w-4 h-4" />
                               </Button>
@@ -497,13 +525,24 @@ export function RequestsTable() {
 
                             {selectedRequest.status === "pending" && (
                               <div className="pt-4 space-y-2">
-                                <Button variant="default" className="w-full">
+                                <Button
+                                  variant="default"
+                                  className="w-full"
+                                  onClick={() => {
+                                    handleApprove(selectedRequest._id || selectedRequest.id);
+                                    setShowRequestDetails(false);
+                                  }}
+                                >
                                   <CheckCircle className="w-4 h-4 ml-2" />
                                   قبول الطلب
                                 </Button>
                                 <Button
                                   variant="destructive"
                                   className="w-full"
+                                  onClick={() => {
+                                    handleReject(selectedRequest._id || selectedRequest.id);
+                                    setShowRequestDetails(false);
+                                  }}
                                 >
                                   <XCircle className="w-4 h-4 ml-2" />
                                   رفض الطلب

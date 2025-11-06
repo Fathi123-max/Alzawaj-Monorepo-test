@@ -29,11 +29,26 @@ const reportActionValidation = [
   body("notes").optional().isLength({ max: 1000 }).withMessage("الملاحظات لا يجب أن تتجاوز 1000 حرف"),
 ];
 
+const requestActionValidation = [
+  param("requestId").isMongoId().withMessage("معرف طلب الزواج غير صحيح"),
+  body("reason")
+    .optional({ values: "falsy" })
+    .isLength({ max: 500 })
+    .withMessage("السبب لا يجب أن يتجاوز 500 حرف"),
+];
+
 const updateSettingsValidation = [
   body("messageLimits").optional().isObject(),
   body("chatSettings").optional().isObject(),
   body("moderationSettings").optional().isObject(),
   body("themeSettings").optional().isObject(),
+];
+
+const chatActionValidation = [
+  param("chatRoomId").isMongoId().withMessage("معرف غرفة الدردشة غير صحيح"),
+  body("action").isIn(["extend", "close", "archive"]).withMessage("الإجراء غير صحيح"),
+  body("days").optional().isInt({ min: 1, max: 30 }).withMessage("عدد الأيام يجب أن يكون بين 1-30"),
+  body("reason").optional().isLength({ max: 500 }).withMessage("السبب لا يجب أن يتجاوز 500 حرف"),
 ];
 
 // Routes
@@ -49,6 +64,72 @@ router.post("/users/action", protect, adminOnly, userActionValidation, validateR
 
 // Get marriage requests
 router.get("/requests", protect, adminOnly, adminController.getMarriageRequests);
+
+// Approve marriage request
+router.post(
+  "/requests/:requestId/approve",
+  protect,
+  adminOnly,
+  requestActionValidation,
+  validateRequest,
+  adminController.approveMarriageRequest
+);
+
+// Reject marriage request
+router.post(
+  "/requests/:requestId/reject",
+  protect,
+  adminOnly,
+  requestActionValidation,
+  validateRequest,
+  adminController.rejectMarriageRequest
+);
+
+// Get active chat rooms
+router.get(
+  "/chats",
+  protect,
+  adminOnly,
+  adminController.getActiveChats
+);
+
+// Get chat room details
+router.get(
+  "/chats/:chatRoomId",
+  protect,
+  adminOnly,
+  adminController.getChatRoomDetails
+);
+
+// Extend chat room
+router.post(
+  "/chats/:chatRoomId/extend",
+  protect,
+  adminOnly,
+  chatActionValidation,
+  validateRequest,
+  adminController.extendChatRoom
+);
+
+// Close chat room
+router.post(
+  "/chats/:chatRoomId/close",
+  protect,
+  adminOnly,
+  chatActionValidation,
+  validateRequest,
+  adminController.closeChatRoom
+);
+
+// Archive chat room
+router.post(
+  "/chats/:chatRoomId/archive",
+  protect,
+  adminOnly,
+  chatActionValidation,
+  validateRequest,
+  adminController.archiveChatRoom
+);
 
 // Get pending messages
 router.get("/messages/pending", protect, adminOnly, adminController.getPendingMessages);
