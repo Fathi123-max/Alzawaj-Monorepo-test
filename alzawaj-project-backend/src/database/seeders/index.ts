@@ -17,6 +17,7 @@ import { Profile } from '../../models/Profile';
 import { AdminSettings } from '../../models/AdminSettings';
 import { MarriageRequest } from '../../models/MarriageRequest';
 import { Notification } from '../../models/Notification';
+import { ChatRoom } from '../../models/ChatRoom';
 
 // Import your seeder functions
 import { seedUsers } from './userSeeder';
@@ -24,6 +25,7 @@ import { seedProfiles } from './profileSeeder';
 import { seedAdminSettings } from './adminSettingsSeeder';
 import { seedMarriageRequests } from './marriageRequestSeeder';
 import { seedNotifications } from './notificationSeeder';
+import { seedChatRooms } from './chatRoomSeeder';
 
 export const seedDatabase = async () => {
   try {
@@ -34,6 +36,7 @@ export const seedDatabase = async () => {
 
     // Clear existing data (optional - comment out if you don't want to clear)
     logger.info('🗑️  Clearing existing data...');
+    await ChatRoom.deleteMany({});
     await Notification.deleteMany({});
     await MarriageRequest.deleteMany({});
     await Profile.deleteMany({});
@@ -45,6 +48,7 @@ export const seedDatabase = async () => {
     await seedProfiles();
     await seedAdminSettings();
     await seedMarriageRequests();
+    await seedChatRooms();
     await seedNotifications();
 
     logger.info('✅ Database seeding completed successfully!');

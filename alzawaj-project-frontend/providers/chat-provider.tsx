@@ -21,6 +21,7 @@ interface ChatContextType {
   activeRoom: ChatRoom | null;
   messages: Record<string, Message[]>;
   isTyping: Record<string, boolean>;
+  rateLimited: boolean;
   setActiveRoom: (room: ChatRoom | null) => void;
   sendMessage: (content: string) => Promise<void>;
   startTyping: (roomId: string) => void;
@@ -38,6 +39,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [activeRoom, setActiveRoom] = useState<ChatRoom | null>(null);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [isTyping, setIsTyping] = useState<Record<string, boolean>>({});
+  const [rateLimited, setRateLimited] = useState(false);
 
   const { user, isAuthenticated } = useAuth();
   const { addNotification } = useNotifications();
@@ -148,29 +150,48 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   const sendMessage = useCallback(
     async (content: string) => {
-      if (!activeRoom || !socket) return;
+      if (!activeRoom) {
+        showToast.error("لا توجد غرفة محادثة نشطة");
+        return;
+      }
 
       try {
-        // Send via API first for persistence
+        // Send message via API
         const response = await chatApi.sendMessage({
           type: "text",
           chatRoomId: activeRoom.id,
           content,
         });
 
-        if (response.success && response.data) {
-          // Socket will handle real-time delivery
-          socket.emit("sendMessage", {
-            roomId: activeRoom.id,
-            content,
-            messageId: response.data.id,
-          });
+        if (response.success && response.data?.message) {
+          // Add the new message to the local state
+          const newMessage = response.data.message;
+          setMessages((prev) => ({
+            ...prev,
+            [activeRoom.id]: [
+              ...(prev[activeRoom.id] || []),
+              newMessage,
+            ],
+          }));
+
+          showToast.success("تم إرسال الرسالة بنجاح");
+
+          // Optionally refresh messages to ensure we have the latest data
+          // await fetchMessages(activeRoom.id);
         }
       } catch (error: any) {
-        showToast.error(error.message || "خطأ في إرسال الرسالة");
+        console.error("Send message error:", error);
+        const errorMessage = error.response?.data?.message || error.message || "خطأ في إرسال الرسالة";
+        showToast.error(errorMessage);
+
+        // Handle rate limiting
+        if (errorMessage.includes("rate limit") || errorMessage.includes("حد أقصى")) {
+          setRateLimited(true);
+          setTimeout(() => setRateLimited(false), 60000); // Reset after 1 minute
+        }
       }
     },
-    [activeRoom, socket],
+    [activeRoom],
   );
 
   const startTyping = useCallback(
@@ -198,6 +219,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     activeRoom,
     messages,
     isTyping,
+    rateLimited,
     setActiveRoom,
     sendMessage,
     startTyping,

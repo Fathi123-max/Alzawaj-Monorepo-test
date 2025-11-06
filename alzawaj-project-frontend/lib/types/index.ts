@@ -235,7 +235,21 @@ export interface MarriageRequest {
 export interface ChatRoom {
   id: string;
   requestId: string;
-  participants: string[];
+  participants: (string | {
+    user: string | {
+      _id: string;
+      id: string;
+      firstname?: string;
+      lastname?: string;
+      fullName?: string;
+    };
+    joinedAt: string;
+    lastSeen: string;
+    isActive: boolean;
+    role: string;
+    _id?: string;
+    id: string;
+  })[];
   status: "active" | "expired" | "closed";
   createdAt: string;
   updatedAt: string;
@@ -247,7 +261,10 @@ export interface Message {
   id: string;
   chatRoomId: string;
   senderId: string;
-  content: string;
+  content: {
+    text: string;
+    messageType: string;
+  };
   status: "pending" | "approved" | "rejected" | "flagged";
   createdAt: string;
   approvedAt?: string;

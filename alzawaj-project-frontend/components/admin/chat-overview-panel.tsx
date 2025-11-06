@@ -1,84 +1,83 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { adminApi } from "@/lib/api/admin";
-import { MessageCircle, Users, Clock, AlertTriangle, Eye } from "lucide-react";
-import { MarriageRequest } from "@/lib/types";
+import { adminApiService, ChatRoom, handleApiError } from "@/lib/services/admin-api-service";
+import { showToast } from "@/components/ui/toaster";
+import { MessageCircle, Users, Clock, AlertTriangle, Eye, RefreshCw } from "lucide-react";
 
 export function ChatOverviewPanel() {
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
-  const [selectedChat, setSelectedChat] = useState<MarriageRequest | null>(
-    null,
-  );
-  const [chats, setChats] = useState<MarriageRequest[]>([]);
+  const [selectedChat, setSelectedChat] = useState<ChatRoom | null>(null);
+  const [chats, setChats] = useState<ChatRoom[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch active chats
-  const {
-    data: chatsData,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["admin-chats"],
-    queryFn: () => adminApi.getRequests(),
-  });
-
-  // Update local chats state when query data changes
-  useEffect(() => {
-    if (chatsData?.data?.requests) {
-      setChats(chatsData.data.requests);
+  // Load chats
+  const loadChats = async () => {
+    setLoading(true);
+    try {
+      const response = await adminApiService.getActiveChats();
+      if (response.success && response.data) {
+        setChats(response.data.chats);
+      } else {
+        throw new Error("Failed to load chats");
+      }
+    } catch (error: any) {
+      console.error("Error loading chats:", error);
+      const errorMessage = handleApiError(error);
+      showToast.error(errorMessage);
+      setChats([]);
+    } finally {
+      setLoading(false);
     }
-  }, [chatsData]);
+  };
+
+  useEffect(() => {
+    loadChats();
+  }, []);
 
   const filteredChats =
     selectedStatus === "all"
       ? chats
-      : chats.filter((chat) => chat.status === selectedStatus);
+      : chats.filter((chat) => {
+          if (selectedStatus === "active") return chat.isActive;
+          if (selectedStatus === "archived") return !chat.isActive;
+          return true;
+        });
 
-  const getStatusBadge = (status: MarriageRequest["status"]) => {
-    const statusConfig = {
-      pending: {
-        label: "معلق",
-        variant: "default" as const,
+  const getStatusBadge = (chat: ChatRoom) => {
+    const isExpired = chat.expiresAt && new Date(chat.expiresAt) < new Date();
+    const config = {
+      active: {
+        label: chat.isActive ? "نشط" : "غير نشط",
+        className: chat.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800",
         icon: MessageCircle,
-      },
-      accepted: {
-        label: "نشط",
-        variant: "default" as const,
-        icon: MessageCircle,
-      },
-      rejected: {
-        label: "مرفوض",
-        variant: "secondary" as const,
-        icon: Clock,
-      },
-      cancelled: {
-        label: "ملغي",
-        variant: "secondary" as const,
-        icon: Clock,
-      },
-      expired: {
-        label: "منتهي",
-        variant: "error" as const,
-        icon: AlertTriangle,
       },
     };
 
-    const config = statusConfig[status];
-    const Icon = config.icon;
+    if (isExpired && chat.isActive) {
+      config.active = {
+        label: "منتهي الصلاحية",
+        className: "bg-red-100 text-red-800",
+        icon: AlertTriangle,
+      };
+    }
+
+    const config_result = config.active;
+    const Icon = config_result.icon;
 
     return (
-      <Badge variant={config.variant} className="flex items-center gap-1">
-        <Icon className="h-3 w-3" />
-        {config.label}
+      <Badge className={config_result.className}>
+        <Icon className="w-3 h-3 ml-1" />
+        {config_result.label}
       </Badge>
     );
   };
 
-  const getTimeRemaining = (expiresAt: string) => {
+  const getTimeRemaining = (expiresAt?: string) => {
+    if (!expiresAt) return "غير محدد";
     const now = new Date();
     const expiry = new Date(expiresAt);
     const diffTime = expiry.getTime() - now.getTime();
@@ -93,42 +92,50 @@ export function ChatOverviewPanel() {
   const getCounts = () => {
     return {
       all: chats.length,
-      active: chats.filter((c) => c.status === "accepted").length,
-      expired: chats.filter((c) => c.status === "expired").length,
-      reported: chats.filter((c) => c.status === "rejected").length,
-      expiringToday: chats.filter((c) => {
-        const createdDate = new Date(c.createdAt);
-        const expiryDate = new Date(createdDate);
-        expiryDate.setDate(expiryDate.getDate() + 7);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const expiryOnlyDate = new Date(expiryDate);
-        expiryOnlyDate.setHours(0, 0, 0, 0);
-        return expiryOnlyDate.getTime() === today.getTime();
-      }).length,
+      active: chats.filter((c) => c.isActive).length,
+      archived: chats.filter((c) => !c.isActive).length,
     };
   };
 
   const counts = getCounts();
 
-  const handleChatAction = (
-    requestId: string,
-    action: "suspend" | "extend" | "close",
-  ) => {
-    setChats((prev) =>
-      prev.map((chat) =>
-        chat.id === requestId
-          ? {
-              ...chat,
-              status: action === "close" ? "expired" : chat.status,
-              expiresAt:
-                action === "extend"
-                  ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-                  : chat.expiresAt,
-            }
-          : chat,
-      ),
-    );
+  // Handle extend chat room
+  const handleExtend = async (chatRoomId: string, days: number = 7) => {
+    try {
+      await adminApiService.extendChatRoom(chatRoomId, days);
+      showToast.success(`تم تمديد المحادثة لمدة ${days} يوم`);
+      loadChats(); // Refresh the list
+    } catch (error: any) {
+      console.error("Error extending chat:", error);
+      const errorMessage = handleApiError(error);
+      showToast.error(errorMessage);
+    }
+  };
+
+  // Handle close chat room
+  const handleClose = async (chatRoomId: string) => {
+    try {
+      await adminApiService.closeChatRoom(chatRoomId);
+      showToast.success("تم إغلاق المحادثة بنجاح");
+      loadChats(); // Refresh the list
+    } catch (error: any) {
+      console.error("Error closing chat:", error);
+      const errorMessage = handleApiError(error);
+      showToast.error(errorMessage);
+    }
+  };
+
+  // Handle archive chat room
+  const handleArchive = async (chatRoomId: string) => {
+    try {
+      await adminApiService.archiveChatRoom(chatRoomId);
+      showToast.success("تم أرشفة المحادثة بنجاح");
+      loadChats(); // Refresh the list
+    } catch (error: any) {
+      console.error("Error archiving chat:", error);
+      const errorMessage = handleApiError(error);
+      showToast.error(errorMessage);
+    }
   };
 
   return (
@@ -136,11 +143,17 @@ export function ChatOverviewPanel() {
       {/* Header with statistics */}
       <Card>
         <CardHeader>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <MessageCircle className="h-6 w-6 text-primary" />
-            المحادثات النشطة
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <MessageCircle className="h-6 w-6 text-primary" />
+              المحادثات النشطة
+            </h2>
+            <Button onClick={loadChats} disabled={loading} variant="outline" size="sm">
+              <RefreshCw className={`w-4 h-4 ml-2 ${loading ? "animate-spin" : ""}`} />
+              تحديث
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
             <div className="text-center p-3 bg-primary-subtle rounded-lg">
               <div className="text-2xl font-bold text-primary">
                 {counts.active}
@@ -149,21 +162,15 @@ export function ChatOverviewPanel() {
             </div>
             <div className="text-center p-3 bg-orange-50 rounded-lg">
               <div className="text-2xl font-bold text-orange-600">
-                {counts.expiringToday}
+                {chats.filter((c) => c.expiresAt && new Date(c.expiresAt) < new Date()).length}
               </div>
-              <div className="text-sm text-orange-600">تنتهي اليوم</div>
-            </div>
-            <div className="text-center p-3 bg-red-50 rounded-lg">
-              <div className="text-2xl font-bold text-red-600">
-                {counts.reported}
-              </div>
-              <div className="text-sm text-red-600">مبلغ عنها</div>
+              <div className="text-sm text-orange-600">منتهية الصلاحية</div>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
               <div className="text-2xl font-bold text-gray-600">
-                {counts.expired}
+                {counts.archived}
               </div>
-              <div className="text-sm text-gray-600">منتهية</div>
+              <div className="text-sm text-gray-600">مؤرشفة</div>
             </div>
           </div>
         </CardHeader>
@@ -181,25 +188,18 @@ export function ChatOverviewPanel() {
               جميع المحادثات ({counts.all})
             </Button>
             <Button
-              variant={selectedStatus === "accepted" ? "default" : "outline"}
-              onClick={() => setSelectedStatus("accepted")}
+              variant={selectedStatus === "active" ? "default" : "outline"}
+              onClick={() => setSelectedStatus("active")}
               size="sm"
             >
               نشطة ({counts.active})
             </Button>
             <Button
-              variant={selectedStatus === "rejected" ? "default" : "outline"}
-              onClick={() => setSelectedStatus("rejected")}
+              variant={selectedStatus === "archived" ? "default" : "outline"}
+              onClick={() => setSelectedStatus("archived")}
               size="sm"
             >
-              مرفوضة ({counts.reported})
-            </Button>
-            <Button
-              variant={selectedStatus === "expired" ? "default" : "outline"}
-              onClick={() => setSelectedStatus("expired")}
-              size="sm"
-            >
-              منتهية ({counts.expired})
+              مؤرشفة ({counts.archived})
             </Button>
           </div>
         </CardContent>
@@ -208,109 +208,134 @@ export function ChatOverviewPanel() {
       {/* Chats Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    المشاركان
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    الحالة
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    عدد الرسائل
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    آخر رسالة
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    الوقت المتبقي
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    الإجراءات
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredChats.map((chat) => (
-                  <tr key={chat.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-3">
-                        <Users className="h-5 w-5 text-gray-400" />
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {chat.sender?.fullName || "غير محدد"}
-                          </div>
-                        </div>
-                        <div className="text-gray-400">→</div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {chat.receiver?.fullName || "غير محدد"}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(chat.status)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      -
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(chat.updatedAt).toLocaleDateString("ar-SA")}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div
-                        className={`${
-                          getTimeRemaining(chat.expiresAt).includes("منتهي")
-                            ? "text-red-600"
-                            : getTimeRemaining(chat.expiresAt).includes("اليوم")
-                              ? "text-orange-600"
-                              : "text-gray-600"
-                        }`}
-                      >
-                        {getTimeRemaining(chat.expiresAt)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex gap-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedChat(chat)}
-                        >
-                          <Eye className="h-3 w-3" />
-                        </Button>
-                        {chat.status === "accepted" && (
-                          <>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() =>
-                                handleChatAction(chat.id, "extend")
-                              }
-                              title="تمديد الطلب"
-                            >
-                              +7
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleChatAction(chat.id, "close")}
-                              title="إنهاء الطلب"
-                            >
-                              إنهاء
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </td>
+          {loading ? (
+            <div className="p-8 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+              <p className="text-lg text-gray-600 mt-4">جارٍ تحميل المحادثات...</p>
+            </div>
+          ) : filteredChats.length === 0 ? (
+            <div className="p-8 text-center">
+              <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">لا توجد محادثات</h3>
+              <p className="text-gray-500">
+                {selectedStatus === "all"
+                  ? "لا توجد محادثات نشطة حالياً"
+                  : `لا توجد محادثات ${selectedStatus === "active" ? "نشطة" : "مؤرشفة"} حالياً`}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      المشاركان
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      الحالة
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      آخر رسالة
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      الوقت المتبقي
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      الإجراءات
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredChats.map((chat) => (
+                    <tr key={chat._id || chat.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center space-x-3">
+                          <Users className="h-5 w-5 text-gray-400" />
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {chat.participants[0]?.user?.fullName || "غير محدد"}
+                            </div>
+                          </div>
+                          <div className="text-gray-400">→</div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {chat.participants[1]?.user?.fullName || "غير محدد"}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(chat)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {chat.lastMessage?.content ? (
+                          <div className="max-w-xs truncate">
+                            {chat.lastMessage.content}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">لا توجد رسائل</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div
+                          className={`${
+                            getTimeRemaining(chat.expiresAt).includes("منتهي")
+                              ? "text-red-600"
+                              : getTimeRemaining(chat.expiresAt).includes("اليوم")
+                                ? "text-orange-600"
+                                : "text-gray-600"
+                          }`}
+                        >
+                          {getTimeRemaining(chat.expiresAt)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedChat(chat)}
+                          >
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                          {chat.isActive && (
+                            <>
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => handleExtend(chat._id || chat.id, 7)}
+                                title="تمديد 7 أيام"
+                              >
+                                +7
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleClose(chat._id || chat.id)}
+                                title="إغلاق المحادثة"
+                              >
+                                إنهاء
+                              </Button>
+                            </>
+                          )}
+                          {!chat.archivedBy.includes("admin") && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleArchive(chat._id || chat.id)}
+                              title="أرشفة"
+                            >
+                              أرشيف
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -319,7 +344,7 @@ export function ChatOverviewPanel() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <Card className="max-w-2xl w-full m-4 max-h-[90vh] overflow-y-auto">
             <CardHeader>
-              <h3 className="text-lg font-semibold">تفاصيل طلب الزواج</h3>
+              <h3 className="text-lg font-semibold">تفاصيل المحادثة</h3>
               <Button
                 variant="outline"
                 size="sm"
@@ -332,114 +357,122 @@ export function ChatOverviewPanel() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <h4 className="font-medium text-gray-900">المرسل</h4>
+                  <h4 className="font-medium text-gray-900">المشارك الأول</h4>
                   <div className="text-sm text-gray-600">
                     <div>
                       <strong>الاسم:</strong>{" "}
-                      {selectedChat.sender?.fullName || "غير محدد"}
+                      {selectedChat.participants[0]?.user?.fullName || "غير محدد"}
                     </div>
                     <div>
-                      <strong>الاسم الأول:</strong>{" "}
-                      {selectedChat.sender?.firstname || "غير محدد"}
+                      <strong>تاريخ الانضمام:</strong>{" "}
+                      {selectedChat.participants[0]?.joinedAt
+                        ? new Date(selectedChat.participants[0].joinedAt).toLocaleDateString("ar-SA")
+                        : "غير محدد"}
                     </div>
                     <div>
-                      <strong>الاسم الأخير:</strong>{" "}
-                      {selectedChat.sender?.lastname || "غير محدد"}
-                    </div>
-                    <div>
-                      <strong>المعرف:</strong>{" "}
-                      {selectedChat.sender?.id || "غير محدد"}
+                      <strong>آخر ظهور:</strong>{" "}
+                      {selectedChat.participants[0]?.lastSeen
+                        ? new Date(selectedChat.participants[0].lastSeen).toLocaleDateString("ar-SA")
+                        : "غير محدد"}
                     </div>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <h4 className="font-medium text-gray-900">المستقبل</h4>
+                  <h4 className="font-medium text-gray-900">المشارك الثاني</h4>
                   <div className="text-sm text-gray-600">
                     <div>
                       <strong>الاسم:</strong>{" "}
-                      {selectedChat.receiver?.fullName || "غير محدد"}
+                      {selectedChat.participants[1]?.user?.fullName || "غير محدد"}
                     </div>
                     <div>
-                      <strong>الاسم الأول:</strong>{" "}
-                      {selectedChat.receiver?.firstname || "غير محدد"}
+                      <strong>تاريخ الانضمام:</strong>{" "}
+                      {selectedChat.participants[1]?.joinedAt
+                        ? new Date(selectedChat.participants[1].joinedAt).toLocaleDateString("ar-SA")
+                        : "غير محدد"}
                     </div>
                     <div>
-                      <strong>الاسم الأخير:</strong>{" "}
-                      {selectedChat.receiver?.lastname || "غير محدد"}
-                    </div>
-                    <div>
-                      <strong>المعرف:</strong>{" "}
-                      {selectedChat.receiver?.id || "غير محدد"}
+                      <strong>آخر ظهور:</strong>{" "}
+                      {selectedChat.participants[1]?.lastSeen
+                        ? new Date(selectedChat.participants[1].lastSeen).toLocaleDateString("ar-SA")
+                        : "غير محدد"}
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <h4 className="font-medium text-gray-900">معلومات الطلب</h4>
+                <h4 className="font-medium text-gray-900">معلومات المحادثة</h4>
                 <div className="text-sm text-gray-600 space-y-1">
                   <div>
                     <strong>تاريخ الإنشاء:</strong>{" "}
-                    {new Date(selectedChat.createdAt).toLocaleDateString(
-                      "ar-SA",
-                    )}
+                    {new Date(selectedChat.createdAt).toLocaleDateString("ar-SA")}
                   </div>
                   <div>
                     <strong>آخر تحديث:</strong>{" "}
-                    {new Date(selectedChat.updatedAt).toLocaleDateString(
-                      "ar-SA",
-                    )}
+                    {new Date(selectedChat.updatedAt).toLocaleDateString("ar-SA")}
+                  </div>
+                  {selectedChat.expiresAt && (
+                    <>
+                      <div>
+                        <strong>تاريخ الانتهاء:</strong>{" "}
+                        {new Date(selectedChat.expiresAt).toLocaleDateString("ar-SA")}
+                      </div>
+                      <div>
+                        <strong>الوقت المتبقي:</strong>
+                        <span
+                          className={`font-medium ${
+                            getTimeRemaining(selectedChat.expiresAt).includes("منتهي")
+                              ? "text-red-600"
+                              : getTimeRemaining(selectedChat.expiresAt).includes("اليوم")
+                                ? "text-orange-600"
+                                : "text-green-600"
+                          }`}
+                        >
+                          {" " + getTimeRemaining(selectedChat.expiresAt)}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                  <div>
+                    <strong>النوع:</strong> {selectedChat.type}
                   </div>
                   <div>
-                    <strong>تاريخ الانتهاء:</strong>{" "}
-                    {new Date(selectedChat.expiresAt).toLocaleDateString(
-                      "ar-SA",
-                    )}
+                    <strong>الحالة:</strong> {selectedChat.isActive ? "نشط" : "غير نشط"}
                   </div>
                   <div>
-                    <strong>الوقت المتبقي:</strong>
-                    <span
-                      className={`font-medium ${
-                        getTimeRemaining(selectedChat.expiresAt).includes(
-                          "منتهي",
-                        )
-                          ? "text-red-600"
-                          : getTimeRemaining(selectedChat.expiresAt).includes(
-                                "اليوم",
-                              )
-                            ? "text-orange-600"
-                            : "text-green-600"
-                      }`}
-                    >
-                      {" " + getTimeRemaining(selectedChat.expiresAt)}
-                    </span>
-                  </div>
-                  <div>
-                    <strong>الحالة:</strong>{" "}
-                    {getStatusBadge(selectedChat.status)}
-                  </div>
-                  <div>
-                    <strong>معرف الطلب:</strong> {selectedChat.id}
-                  </div>
-                  <div>
-                    <strong>الرسالة:</strong>{" "}
-                    {selectedChat.message || "بدون رسالة"}
+                    <strong>المعرف:</strong> {selectedChat._id || selectedChat.id}
                   </div>
                 </div>
               </div>
 
-              {selectedChat.status === "accepted" && (
+              {selectedChat.lastMessage && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-gray-900">آخر رسالة</h4>
+                  <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                    <div>
+                      <strong>المرسل:</strong>{" "}
+                      {selectedChat.lastMessage.sender?.firstname || "غير محدد"}
+                    </div>
+                    <div>
+                      <strong>المحتوى:</strong> {selectedChat.lastMessage.content || "غير محدد"}
+                    </div>
+                    <div>
+                      <strong>التاريخ:</strong>{" "}
+                      {selectedChat.lastMessage.timestamp
+                        ? new Date(selectedChat.lastMessage.timestamp).toLocaleDateString("ar-SA")
+                        : "غير محدد"}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedChat.isActive && (
                 <div className="flex gap-2 pt-4">
                   <Button
                     variant="secondary"
                     onClick={() => {
-                      handleChatAction(selectedChat.id, "extend");
-                      setSelectedChat({
-                        ...selectedChat,
-                        expiresAt: new Date(
-                          Date.now() + 7 * 24 * 60 * 60 * 1000,
-                        ).toISOString(),
-                      });
+                      handleExtend(selectedChat._id || selectedChat.id, 7);
+                      setSelectedChat(null);
                     }}
                     className="flex-1"
                   >
@@ -449,30 +482,14 @@ export function ChatOverviewPanel() {
                   <Button
                     variant="destructive"
                     onClick={() => {
-                      handleChatAction(selectedChat.id, "close");
+                      handleClose(selectedChat._id || selectedChat.id);
                       setSelectedChat(null);
                     }}
                     className="flex-1"
                   >
                     <AlertTriangle className="h-4 w-4 ml-1" />
-                    إنهاء الطلب
+                    إغلاق المحادثة
                   </Button>
-                </div>
-              )}
-
-              {selectedChat.status === "rejected" && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <AlertTriangle className="h-5 w-5 text-red-400" />
-                    <div className="mr-3">
-                      <h3 className="text-sm font-medium text-red-800">
-                        طلب مرفوض
-                      </h3>
-                      <div className="mt-2 text-sm text-red-700">
-                        <p>هذا الطلب تم رفضه</p>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               )}
             </CardContent>

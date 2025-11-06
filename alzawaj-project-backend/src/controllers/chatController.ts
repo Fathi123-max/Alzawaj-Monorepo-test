@@ -213,10 +213,20 @@ export const sendMessage = async (
         text: content,
         messageType: "text",
       },
+      status: "approved", // Auto-approve messages by default
+      approvedAt: new Date(),
+      approvedBy: userId,
     });
 
     // Check content compliance
     (message as any).checkCompliance();
+
+    // If content is inappropriate, mark as pending for moderation
+    if (!message.islamicCompliance.isAppropriate) {
+      message.status = "pending";
+      message.approvedAt = undefined;
+      message.approvedBy = undefined;
+    }
 
     await message.save();
 

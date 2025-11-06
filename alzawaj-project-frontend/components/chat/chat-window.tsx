@@ -39,7 +39,7 @@ function MessageBubble({
         }`}
       >
         <p className="text-body leading-relaxed arabic-optimized">
-          {message.content}
+          {message.content?.text || ""}
         </p>
         <div className="flex items-center justify-between mt-1 sm:mt-2">
           <span
@@ -47,26 +47,22 @@ function MessageBubble({
           >
             {formatTime(message.createdAt)}
           </span>
-          {message.status && (
+          {message.status && message.status !== "approved" && (
             <Badge
               variant={
-                message.status === "approved"
-                  ? "success"
-                  : message.status === "pending"
-                    ? "outline"
-                    : message.status === "rejected"
-                      ? "error"
-                      : "secondary"
+                message.status === "pending"
+                  ? "outline"
+                  : message.status === "rejected"
+                    ? "error"
+                    : "secondary"
               }
               className="text-xs"
             >
-              {message.status === "approved"
-                ? "تم الإرسال"
-                : message.status === "pending"
-                  ? "في الانتظار"
-                  : message.status === "rejected"
-                    ? "مرفوض"
-                    : message.status}
+              {message.status === "pending"
+                ? "في الانتظار"
+                : message.status === "rejected"
+                  ? "مرفوض"
+                  : message.status}
             </Badge>
           )}
         </div>
@@ -150,9 +146,8 @@ function MessageInput({
 
 export function ChatWindow({ chatRoom }: ChatWindowProps) {
   const { user } = useAuth();
-  const { messages, sendMessage, fetchMessages } = useChat();
+  const { messages, sendMessage, fetchMessages, rateLimited } = useChat();
   const [loading, setLoading] = useState(true);
-  const [rateLimited, setRateLimited] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const roomMessages = messages[chatRoom.id] || [];
@@ -179,13 +174,9 @@ export function ChatWindow({ chatRoom }: ChatWindowProps) {
   const handleSendMessage = async (content: string) => {
     try {
       await sendMessage(content);
-      // TODO: Implement rate limiting check
     } catch (error: any) {
-      if (error.message.includes("rate limit")) {
-        setRateLimited(true);
-        setTimeout(() => setRateLimited(false), 60000); // Reset after 1 minute
-      }
-      showToast.error(error.message || "خطأ في إرسال الرسالة");
+      // Error is already handled in the provider with showToast
+      console.error("Failed to send message:", error);
     }
   };
 
@@ -208,7 +199,37 @@ export function ChatWindow({ chatRoom }: ChatWindowProps) {
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-base sm:text-lg truncate">
               محادثة مع{" "}
-              {chatRoom.participants.find((p) => p !== user?.id) || "مستخدم"}
+              {(() => {
+                // Handle both string and object participant formats
+                const otherParticipant = chatRoom.participants.find((p) => {
+                  // If participant is a string (ID)
+                  if (typeof p === "string") {
+                    return p !== user?.id;
+                  }
+                  // If participant is an object
+                  if (typeof p === "object" && p) {
+                    return (p.id || p._id) !== user?.id;
+                  }
+                  return false;
+                });
+                // Extract user info from the participant
+                if (typeof otherParticipant === "string") {
+                  return "مستخدم";
+                }
+                if (typeof otherParticipant === "object" && otherParticipant) {
+                  // Try to get user name if available
+                  if (typeof otherParticipant.user === "object" && otherParticipant.user) {
+                    const userObj = otherParticipant.user;
+                    if (userObj.fullName) return userObj.fullName;
+                    if (userObj.firstname || userObj.lastname) {
+                      return `${userObj.firstname || ""} ${userObj.lastname || ""}`.trim() || "مستخدم";
+                    }
+                  }
+                  // Fallback to ID
+                  return otherParticipant.id || otherParticipant._id || "مستخدم";
+                }
+                return "مستخدم";
+              })()}
             </h3>
             <p className="text-xs sm:text-sm text-gray-600 truncate">
               تنتهي في: {formatExpiryDate(chatRoom.expiresAt)}

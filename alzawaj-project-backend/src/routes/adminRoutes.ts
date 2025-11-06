@@ -46,7 +46,6 @@ const updateSettingsValidation = [
 
 const chatActionValidation = [
   param("chatRoomId").isMongoId().withMessage("معرف غرفة الدردشة غير صحيح"),
-  body("action").isIn(["extend", "close", "archive"]).withMessage("الإجراء غير صحيح"),
   body("days").optional().isInt({ min: 1, max: 30 }).withMessage("عدد الأيام يجب أن يكون بين 1-30"),
   body("reason").optional().isLength({ max: 500 }).withMessage("السبب لا يجب أن يتجاوز 500 حرف"),
 ];
