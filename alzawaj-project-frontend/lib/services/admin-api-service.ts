@@ -60,6 +60,41 @@ export interface ChatMessage {
   approvedAt?: string;
 }
 
+export interface ChatRoom {
+  _id: string;
+  id: string;
+  participants: Array<{
+    user: {
+      _id: string;
+      id: string;
+      firstname: string;
+      lastname: string;
+      fullName: string;
+    };
+    joinedAt: string;
+    lastSeen: string;
+    isActive: boolean;
+    role: "member" | "admin";
+  }>;
+  name?: string;
+  type: "direct" | "group" | "guardian";
+  lastMessage?: {
+    content?: string;
+    sender?: {
+      _id: string;
+      firstname: string;
+      lastname: string;
+    };
+    timestamp?: string;
+    type: "text" | "image" | "file" | "system";
+  };
+  isActive: boolean;
+  archivedBy: string[];
+  expiresAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AdminReport {
   id: string;
   reporterId: string;
@@ -414,6 +449,77 @@ class AdminApiService {
     reason?: string
   ): Promise<ApiResponse<null>> {
     return this.request<ApiResponse<null>>(`/requests/${requestId}/reject`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  // Chat Management
+  async getActiveChats(): Promise<ApiResponse<{ chats: ChatRoom[] }>> {
+    const response = await this.request<{
+      success: boolean;
+      data: {
+        chats: ChatRoom[];
+        pagination?: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
+      };
+      message?: string;
+    }>("/chats");
+
+    return {
+      success: response.success,
+      data: {
+        chats: response.data.chats,
+      },
+      message: response.message || "",
+    };
+  }
+
+  async getChatRoomDetails(chatRoomId: string): Promise<ApiResponse<{ chatRoom: ChatRoom }>> {
+    const response = await this.request<{
+      success: boolean;
+      data: { chatRoom: ChatRoom };
+      message?: string;
+    }>(`/chats/${chatRoomId}`);
+
+    return {
+      success: response.success,
+      data: {
+        chatRoom: response.data.chatRoom,
+      },
+      message: response.message || "",
+    };
+  }
+
+  async extendChatRoom(
+    chatRoomId: string,
+    days: number = 7
+  ): Promise<ApiResponse<null>> {
+    return this.request<ApiResponse<null>>(`/chats/${chatRoomId}/extend`, {
+      method: "POST",
+      body: JSON.stringify({ days }),
+    });
+  }
+
+  async closeChatRoom(
+    chatRoomId: string,
+    reason?: string
+  ): Promise<ApiResponse<null>> {
+    return this.request<ApiResponse<null>>(`/chats/${chatRoomId}/close`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  async archiveChatRoom(
+    chatRoomId: string,
+    reason?: string
+  ): Promise<ApiResponse<null>> {
+    return this.request<ApiResponse<null>>(`/chats/${chatRoomId}/archive`, {
       method: "POST",
       body: JSON.stringify({ reason }),
     });
