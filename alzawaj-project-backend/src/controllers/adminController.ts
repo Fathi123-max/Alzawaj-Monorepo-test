@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { User } from "../models/User";
 import { Profile } from "../models/Profile";
 import { MarriageRequest } from "../models/MarriageRequest";
+import { ChatRoom } from "../models/ChatRoom";
 import { Message } from "../models/Message";
 import { Report } from "../models/Report";
 import { AdminSettings } from "../models/AdminSettings";
@@ -446,11 +447,216 @@ export const updateAdminSettings = async (
   }
 };
 
+/**
+ * Get active chat rooms
+ */
+export const getActiveChats = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { page = 1, limit = 20, status } = req.query as any;
+
+    // Build query for active chats
+    const query: any = { isActive: true };
+
+    if (status) {
+      query.isActive = status === "active";
+    }
+
+    // Calculate pagination
+    const skip = (Number(page) - 1) * Number(limit);
+
+    // Get chat rooms
+    const chatRooms = await ChatRoom.find(query)
+      .populate("participants.user", "firstname lastname")
+      .populate({
+        path: "lastMessage.sender",
+        select: "firstname lastname",
+      })
+      .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(Number(limit));
+
+    // Get total count
+    const totalChats = await ChatRoom.countDocuments(query);
+
+    res.json(
+      createSuccessResponse("تم جلب المحادثات النشطة بنجاح", {
+        chats: chatRooms,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total: totalChats,
+          totalPages: Math.ceil(totalChats / Number(limit)),
+        },
+      })
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get chat room details
+ */
+export const getChatRoomDetails = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { chatRoomId } = req.params;
+
+    const chatRoom = await ChatRoom.findById(chatRoomId)
+      .populate("participants.user", "firstname lastname")
+      .populate({
+        path: "lastMessage.sender",
+        select: "firstname lastname",
+      });
+
+    if (!chatRoom) {
+      res.status(404).json(createErrorResponse("غرفة الدردشة غير موجودة"));
+      return;
+    }
+
+    res.json(
+      createSuccessResponse("تم جلب تفاصيل غرفة الدردشة بنجاح", {
+        chatRoom,
+      })
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Extend chat room
+ */
+export const extendChatRoom = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { chatRoomId } = req.params;
+    const { days = 7 } = req.body;
+
+    const chatRoom = await ChatRoom.findById(chatRoomId);
+
+    if (!chatRoom) {
+      res.status(404).json(createErrorResponse("غرفة الدردشة غير موجودة"));
+      return;
+    }
+
+    if (!chatRoom.expiresAt) {
+      chatRoom.expiresAt = new Date();
+    }
+
+    // Extend expiry date
+    chatRoom.expiresAt = new Date(
+      chatRoom.expiresAt.getTime() + days * 24 * 60 * 60 * 1000
+    );
+    await chatRoom.save();
+
+    res.json(
+      createSuccessResponse(
+        `تم تمديد غرفة الدردشة لمدة ${days} يوم`,
+        {
+          chatRoom,
+        }
+      )
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Close chat room
+ */
+export const closeChatRoom = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { chatRoomId } = req.params;
+    const { reason } = req.body;
+
+    const chatRoom = await ChatRoom.findById(chatRoomId);
+
+    if (!chatRoom) {
+      res.status(404).json(createErrorResponse("غرفة الدردشة غير موجودة"));
+      return;
+    }
+
+    // Archive the chat room
+    chatRoom.isActive = false;
+    await chatRoom.save();
+
+    res.json(
+      createSuccessResponse("تم إغلاق غرفة الدردشة بنجاح", {
+        chatRoom,
+      })
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Archive chat room
+ */
+export const archiveChatRoom = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { chatRoomId } = req.params;
+    const { reason } = req.body;
+
+    const chatRoom = await ChatRoom.findById(chatRoomId);
+
+    if (!chatRoom) {
+      res.status(404).json(createErrorResponse("غرفة الدردشة غير موجودة"));
+      return;
+    }
+
+    const userId = req.user?.id || "";
+
+    // Add to archivedBy if not already there
+    if (!chatRoom.archivedBy.includes(userId as any)) {
+      chatRoom.archivedBy.push(userId as any);
+    }
+
+    chatRoom.isActive = false;
+    await chatRoom.save();
+
+    res.json(
+      createSuccessResponse("تم أرشفة غرفة الدردشة بنجاح", {
+        chatRoom,
+      })
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getAdminStats,
   getUsers,
   userAction,
   getMarriageRequests,
+  approveMarriageRequest,
+  rejectMarriageRequest,
+  getActiveChats,
+  getChatRoomDetails,
+  extendChatRoom,
+  closeChatRoom,
+  archiveChatRoom,
   getPendingMessages,
   approveMessage,
   rejectMessage,
