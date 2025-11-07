@@ -23,10 +23,17 @@ const markAsReadValidation = [
   param("chatRoomId").isMongoId().withMessage("معرف غرفة الدردشة غير صحيح"),
 ];
 
+const getOrCreateRoomByRequestIdValidation = [
+  param("requestId").isMongoId().withMessage("معرف طلب الزواج غير صحيح"),
+];
+
 // Routes
 
 // Get chat rooms
 router.get("/rooms", protect, chatController.getChatRooms);
+
+// Get or create chat room by marriage request ID
+router.get("/room-by-request/:requestId", protect, getOrCreateRoomByRequestIdValidation, validateRequest, chatController.getOrCreateChatRoomByRequest);
 
 // Get chat messages
 router.get("/messages/:chatRoomId", protect, getMessagesValidation, validateRequest, chatController.getChatMessages);

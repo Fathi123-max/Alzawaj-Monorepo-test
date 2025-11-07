@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ChatRoom } from "@/lib/types";
@@ -9,11 +10,9 @@ import { ChatWindow } from "./chat-window";
 
 function ChatRoomItem({
   room,
-  isActive,
   onClick,
 }: {
   room: ChatRoom;
-  isActive: boolean;
   onClick: () => void;
 }) {
   const formatDate = (dateString: string) => {
@@ -28,11 +27,7 @@ function ChatRoomItem({
   return (
     <div
       onClick={onClick}
-      className={`p-3 sm:p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors duration-200 ${
-        isActive
-          ? "bg-primary-subtle border-l-4 border-l-primary shadow-sm"
-          : ""
-      }`}
+      className="p-3 sm:p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
     >
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center gap-2">
@@ -42,7 +37,7 @@ function ChatRoomItem({
           </h4>
         </div>
         <Badge
-          variant={isExpired ? "error" : "success"}
+          variant={isExpired ? "destructive" : "default"}
           className="text-xs flex-shrink-0"
         >
           {isExpired ? "منتهية" : "نشطة"}
@@ -90,7 +85,8 @@ function ChatRoomItem({
 }
 
 export function ChatList() {
-  const { chatRooms, activeRoom, setActiveRoom, fetchChatRooms } = useChat();
+  const router = useRouter();
+  const { chatRooms, fetchChatRooms } = useChat();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -107,6 +103,11 @@ export function ChatList() {
 
     loadChatRooms();
   }, [fetchChatRooms]);
+
+  const handleSelectChat = (roomId: string) => {
+    // Navigate to the specific chat
+    router.push(`/dashboard/chat?chatRoomId=${roomId}`);
+  };
 
   if (loading) {
     return (
@@ -174,8 +175,7 @@ export function ChatList() {
                     <ChatRoomItem
                       key={room.id}
                       room={room}
-                      isActive={activeRoom?.id === room.id}
-                      onClick={() => setActiveRoom(room)}
+                      onClick={() => handleSelectChat(room.id)}
                     />
                   ))}
                 </div>
@@ -186,27 +186,21 @@ export function ChatList() {
 
         {/* Chat Window */}
         <div className="lg:col-span-2 lg:h-full">
-          {activeRoom ? (
-            <div className="h-full">
-              <ChatWindow chatRoom={activeRoom} />
+          <Card className="h-80 sm:h-96 lg:h-[600px] flex items-center justify-center">
+            <div className="text-center px-4">
+              <div className="text-4xl sm:text-6xl mb-4">💬</div>
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
+                اختر محادثة
+              </h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                اختر محادثة من القائمة لبدء الحديث
+              </p>
+              {/* Mobile hint */}
+              <p className="text-xs text-gray-500 mt-2 lg:hidden">
+                انقر على أي محادثة أعلاه للبدء
+              </p>
             </div>
-          ) : (
-            <Card className="h-80 sm:h-96 lg:h-[600px] flex items-center justify-center">
-              <div className="text-center px-4">
-                <div className="text-4xl sm:text-6xl mb-4">💬</div>
-                <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
-                  اختر محادثة
-                </h3>
-                <p className="text-sm sm:text-base text-gray-600">
-                  اختر محادثة من القائمة لبدء الحديث
-                </p>
-                {/* Mobile hint */}
-                <p className="text-xs text-gray-500 mt-2 lg:hidden">
-                  انقر على أي محادثة أعلاه للبدء
-                </p>
-              </div>
-            </Card>
-          )}
+          </Card>
         </div>
       </div>
     </div>

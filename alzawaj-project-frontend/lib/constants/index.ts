@@ -46,6 +46,7 @@ export const API_ENDPOINTS = {
   // Chat
   CHAT: {
     GET_ROOMS: "/chat/rooms",
+    GET_ROOM_BY_REQUEST: "/chat/room-by-request",
     GET_MESSAGES: "/chat/messages",
     SEND_MESSAGE: "/chat/send",
     GET_LIMITS: "/chat/limits",

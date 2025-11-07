@@ -10,16 +10,16 @@ function ChatPageContent() {
   const requestId = searchParams.get("requestId");
   const chatRoomId = searchParams.get("chatRoomId");
 
-  // If we have a request ID, show the chat interface
-  if (requestId && chatRoomId) {
+  // If we have a chatRoomId, show the chat interface for that specific chat
+  if (chatRoomId) {
     return (
       <div className="h-full">
-        <ChatInterface requestId={requestId} chatRoomId={chatRoomId} />
+        <ChatInterface requestId={requestId || undefined} chatRoomId={chatRoomId} />
       </div>
     );
   }
 
-  // Otherwise, show the regular chat list
+  // Otherwise, show the regular chat list (all chats)
   return (
     <div className="h-full">
       {/* Header - Mobile optimized */}

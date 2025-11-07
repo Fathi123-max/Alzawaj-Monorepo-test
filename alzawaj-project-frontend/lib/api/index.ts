@@ -231,6 +231,8 @@ export const requestsApi = {
 // Chat API (unchanged)
 export const chatApi = {
   getChatRooms: () => ApiClient.get<ChatRoom[]>(API_ENDPOINTS.CHAT.GET_ROOMS),
+  getOrCreateRoomByRequest: (requestId: string) =>
+    ApiClient.get<ChatRoom>(`${API_ENDPOINTS.CHAT.GET_ROOM_BY_REQUEST}/${requestId}`),
   getMessages: (chatRoomId: string, page = 1, limit = 50) =>
     ApiClient.get<{
       messages: Message[];

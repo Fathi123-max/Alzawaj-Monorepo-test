@@ -21,9 +21,10 @@ import { showToast } from "@/components/ui/toaster";
 import { ChatMenu } from "./chat-menu";
 import { TypingIndicator } from "./typing-indicator";
 import { MobileChatInterface } from "./mobile-chat-interface";
+import { chatApi } from "@/lib/api";
 
 interface ChatInterfaceProps {
-  requestId: string;
+  requestId?: string;
   chatRoomId: string;
 }
 
@@ -58,17 +59,41 @@ export function ChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
   return <DesktopChatInterface requestId={requestId} chatRoomId={chatRoomId} />;
 }
 
+
+function MobileChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
+  const router = useRouter();
+
+  return (
+    <div className="h-full flex flex-col">
+      <div className="p-4 border-b bg-white">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.back()}
+          className="mb-2"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          العودة
+        </Button>
+        <h2 className="text-lg font-semibold">المحادثة</h2>
+      </div>
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-gray-500">الواجهة المحمولة قيد التطوير</p>
+      </div>
+    </div>
+  );
+}
+
 function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
   const router = useRouter();
   const { user } = useAuth();
-  const { sendMessage, isConnected } = useChat();
+  const { isConnected } = useChat();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [chatRoom, setChatRoom] = useState<ChatRoom | null>(null);
-  const [request, setRequest] = useState<MarriageRequest | null>(null);
   const [otherUser, setOtherUser] = useState<Profile | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [showChatMenu, setShowChatMenu] = useState(false);
@@ -77,96 +102,84 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    loadChatData();
-  }, [requestId, chatRoomId]);
+    // Only load when user is available
+    if (user?.id) {
+      const fetchData = async () => {
+        setIsLoading(true);
+        try {
+          // Load messages from API
+          const messagesResponse = await chatApi.getMessages(chatRoomId, 1, 50);
+
+          if (messagesResponse.success && messagesResponse.data) {
+            // Set messages with sender info
+            // IMPORTANT: Don't set isCurrentUser here, it will be calculated on the client
+            const loadedMessages = messagesResponse.data.messages.map((msg: any) => {
+              return {
+                ...msg,
+                // Keep the original sender object! Don't overwrite it.
+                // Just add a name property if it doesn't exist
+                sender: {
+                  ...msg.sender,  // ← Keep ALL original sender properties
+                  name: msg.sender?.firstname && msg.sender?.lastname
+                    ? `${msg.sender.firstname} ${msg.sender.lastname}`
+                    : msg.sender?.fullName || "مستخدم"
+                }
+              };
+            });
+
+            setMessages(loadedMessages);
+
+            // Get chat room details to show other user
+            if (chatRoom) {
+              const otherParticipant = chatRoom.participants.find(
+                (p: any) => p.user?.id !== user?.id
+              );
+              if (otherParticipant?.user) {
+                setOtherUser({
+                  id: otherParticipant.user.id,
+                  name: otherParticipant.user.firstname && otherParticipant.user.lastname
+                    ? `${otherParticipant.user.firstname} ${otherParticipant.user.lastname}`
+                    : "مستخدم"
+                } as Profile);
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Failed to load chat data:", error);
+          showToast.error("خطأ في تحميل بيانات المحادثة");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchData();
+    }
+  }, [chatRoomId, user?.id]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const loadChatData = async () => {
-    setIsLoading(true);
-    try {
-      // Load mock data for development
-      const { mockRequestsApi } = await import(
-        "@/lib/static-data/marriage-requests"
-      );
+  // Rate limiting state
+  const [rateLimited, setRateLimited] = useState(false);
 
-      // Get the request details
-      const requestData = await mockRequestsApi.getRequestById(requestId);
-      if (requestData.success && requestData.data) {
-        const requestDetails = requestData.data;
-        setRequest(requestDetails);
-
-        // Determine the other user
-        const otherUserId: string =
-          requestDetails.senderId === user?.id
-            ? requestDetails.receiverId || "unknown"
-            : requestDetails.senderId || "unknown";
-
-        const otherUserProfile =
-          requestDetails.senderId === user?.id
-            ? requestDetails.receiver
-            : requestDetails.sender;
-
-        if (otherUserProfile) {
-          setOtherUser(otherUserProfile as unknown as Profile);
-        }
-
-        // Create mock chat room
-        const mockChatRoom: ChatRoom = {
-          id: chatRoomId,
-          requestId: requestId,
-          participants: [user?.id || "unknown", otherUserId],
-          status: "active",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          expiresAt: new Date(
-            Date.now() + 7 * 24 * 60 * 60 * 1000,
-          ).toISOString(), // 7 days from now
-        };
-
-        setChatRoom(mockChatRoom);
-
-        // Mock messages
-        const mockMessages: ChatMessage[] = [
-          {
-            id: "1",
-            chatRoomId: chatRoomId,
-            senderId: otherUserId,
-            content: "السلام عليكم ورحمة الله وبركاته",
-            createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-            status: "approved",
-            isCurrentUser: false,
-          },
-          {
-            id: "2",
-            chatRoomId: chatRoomId,
-            senderId: user?.id || "unknown",
-            content: "وعليكم السلام ورحمة الله وبركاته، أهلاً وسهلاً",
-            createdAt: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
-            status: "approved",
-            isCurrentUser: true,
-          },
-          {
-            id: "3",
-            chatRoomId: chatRoomId,
-            senderId: otherUserId,
-            content: "بارك الله فيك، كيف حالك؟ أتمنى أن تكون بخير وصحة جيدة",
-            createdAt: new Date(Date.now() - 1000 * 60 * 20).toISOString(),
-            status: "approved",
-            isCurrentUser: false,
-          },
-        ];
-
-        setMessages(mockMessages);
+  // Helper function to check if a message is from current user
+  const isMessageFromCurrentUser = (message: any): boolean => {
+    // Check populated sender object first (MongoDB populated relationship)
+    // This is more reliable than senderId which might be undefined
+    if (message.sender) {
+      const senderId = message.sender._id || message.sender.id;
+      if (senderId && user?.id && senderId === user.id) {
+        return true;
       }
-    } catch (error) {
-      console.error("Failed to load chat data:", error);
-      showToast.error("خطأ في تحميل بيانات المحادثة");
-    } finally {
-      setIsLoading(false);
     }
+
+    // Fallback: Check senderId (if it exists)
+    if (message.senderId && user?.id && message.senderId === user.id) {
+      return true;
+    }
+
+    return false;
   };
 
   const scrollToBottom = () => {
@@ -178,34 +191,40 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
 
     setIsSending(true);
     try {
-      // Create temporary message for immediate display
-      const tempMessage: ChatMessage = {
-        id: Date.now().toString(),
-        chatRoomId: chatRoomId,
-        senderId: user?.id || "",
+      // Send message via API
+      const response = await chatApi.sendMessage({
+        type: "text",
+        chatRoomId,
         content: newMessage.trim(),
-        createdAt: new Date().toISOString(),
-        status: "pending",
-        isCurrentUser: true,
-      };
+      });
 
-      setMessages((prev) => [...prev, tempMessage]);
-      setNewMessage("");
+      if (response.success && response.data?.message) {
+        // Add the new message to the local state
+        const newMsg = {
+          ...response.data.message,
+          isCurrentUser: true,
+          sender: {
+            id: user?.id,
+            name: "أنت"
+          }
+        };
+        setMessages((prev) => [...prev, newMsg]);
+        setNewMessage("");
+        showToast.success("تم إرسال الرسالة");
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Update message status
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === tempMessage.id ? { ...msg, status: "approved" } : msg,
-        ),
-      );
-
-      // Focus input
-      inputRef.current?.focus();
+        // Check if rate limited
+        if (response.data.rateLimited) {
+          setRateLimited(true);
+        }
+      }
     } catch (error: any) {
-      showToast.error(error.message || "خطأ في إرسال الرسالة");
+      console.error("Failed to send message:", error);
+      if (error.message?.includes("rate") || error.message?.includes("limit")) {
+        setRateLimited(true);
+        showToast.error("تم الوصول للحد الأقصى من الرسائل. حاول مرة أخرى لاحقاً");
+      } else {
+        showToast.error(error.message || "خطأ في إرسال الرسالة");
+      }
     } finally {
       setIsSending(false);
     }
@@ -234,29 +253,16 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
     });
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "approved":
-        return "text-green-500";
-      case "pending":
-        return "text-yellow-500";
-      case "rejected":
-        return "text-red-500";
-      default:
-        return "text-gray-500";
-    }
-  };
-
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "approved":
-        return "✓✓";
       case "pending":
-        return "⏳";
+        return <span className="text-xs opacity-70">🕐</span>;
+      case "approved":
+        return <span className="text-xs opacity-70">✓</span>;
       case "rejected":
-        return "✗";
+        return <span className="text-xs opacity-70">✕</span>;
       default:
-        return "";
+        return null;
     }
   };
 
@@ -346,89 +352,214 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
                 </div>
                 <div className="flex items-center">
                   <Clock className="h-3 w-3 sm:h-4 sm:w-4 ml-1" />
-                  <span className="hidden sm:inline">تنتهي في 7 أيام</span>
-                  <span className="sm:hidden">7 أيام</span>
+                  <span className="hidden sm:inline">
+                    {(() => {
+                      if (chatRoom && chatRoom.expiresAt) {
+                        const expiryDate = new Date(chatRoom.expiresAt);
+                        const now = new Date();
+                        const diffMs = expiryDate.getTime() - now.getTime();
+                        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                        if (diffDays > 0) {
+                          return `تنتهي في ${diffDays} ${diffDays === 1 ? "يوم" : "أيام"}`;
+                        }
+                      }
+                      return "تنتهي في 7 أيام";
+                    })()}
+                  </span>
+                  <span className="sm:hidden">
+                    {(() => {
+                      if (chatRoom && chatRoom.expiresAt) {
+                        const expiryDate = new Date(chatRoom.expiresAt);
+                        const now = new Date();
+                        const diffMs = expiryDate.getTime() - now.getTime();
+                        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                        if (diffDays > 0) {
+                          return `${diffDays} يوم`;
+                        }
+                      }
+                      return "7 أيام";
+                    })()}
+                  </span>
                 </div>
               </div>
               <div className="text-primary font-medium text-xs sm:text-sm">
-                #{requestId.substring(0, 6)}
+                #{chatRoomId.substring(0, 6)}
               </div>
             </div>
           </div>
         </CardHeader>
 
         {/* Messages Area */}
-        <CardContent className="flex-1 overflow-y-auto p-3 sm:p-4 bg-gray-50">
-          <div className="space-y-3 sm:space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.isCurrentUser ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[85%] sm:max-w-xs lg:max-w-md xl:max-w-lg px-3 sm:px-4 py-2 sm:py-3 rounded-2xl shadow-sm ${
-                    message.isCurrentUser
-                      ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md"
-                      : "bg-white text-gray-800 border border-gray-200 rounded-bl-md"
-                  }`}
-                >
-                  <p className="text-sm sm:text-base leading-relaxed">
-                    {message.content}
-                  </p>
-                  <div
-                    className={`flex items-center justify-between mt-1 sm:mt-2 text-xs ${
-                      message.isCurrentUser
-                        ? "text-primary-lighter"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    <span>{formatTime(message.createdAt)}</span>
-                    {message.isCurrentUser && (
-                      <span
-                        className={`${getStatusColor(message.status)} font-medium`}
-                      >
-                        {getStatusIcon(message.status)}
-                      </span>
+        <CardContent className="flex-1 overflow-y-auto p-3 sm:p-4 bg-gradient-to-b from-gray-50 to-gray-100">
+          {messages.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center px-4">
+                <div className="text-3xl sm:text-4xl mb-4">💬</div>
+                <p className="text-sm sm:text-base text-gray-600 mb-1">
+                  لا توجد رسائل بعد
+                </p>
+                <p className="text-xs sm:text-sm text-gray-500">
+                  ابدأ المحادثة بإرسال رسالة
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {messages.map((message, index) => {
+                // Check if we need a date separator (new day)
+                const showDateSeparator = index === 0 ||
+                  new Date(message.createdAt).toDateString() !==
+                    new Date(messages[index - 1].createdAt).toDateString();
+
+                // Always recalculate on client side to avoid SSR hydration issues
+                // Only calculate if user is available
+                const isCurrentUser = user?.id ? isMessageFromCurrentUser(message) : false;
+
+                return (
+                  <div key={message.id}>
+                    {showDateSeparator && (
+                      <div className="flex items-center justify-center my-4">
+                        <div className="bg-gray-200 px-3 py-1 rounded-full">
+                          <span className="text-xs text-gray-600 arabic-optimized">
+                            {new Date(message.createdAt).toLocaleDateString("ar-SA", {
+                              weekday: "long",
+                              month: "long",
+                              day: "numeric",
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {isCurrentUser ? (
+                      // Sender's message (right side) with tail decoration
+                      <div className="flex justify-end mb-4 message-sender">
+                        <div className="flex items-end gap-2 max-w-[85%] sm:max-w-xs lg:max-w-md xl:max-w-lg">
+                          {/* Status and Time */}
+                          <div className="flex flex-col items-end gap-1 min-w-[60px]">
+                            <span className="text-[10px] text-gray-500 arabic-optimized">
+                              {formatTime(message.createdAt)}
+                            </span>
+                            <span className="text-xs opacity-70">
+                              {getStatusIcon(message.status)}
+                            </span>
+                          </div>
+
+                          {/* Message Bubble with tail */}
+                          <div className="relative">
+                            <div className="absolute bottom-0 right-0 w-0 h-0 border-l-[8px] border-l-transparent border-b-[8px] border-b-primary translate-x-2"></div>
+                            <div className="bg-gradient-to-br from-primary via-primary-hover to-primary-600 text-white px-4 py-3 rounded-2xl rounded-br-sm shadow-lg hover:shadow-xl transition-shadow">
+                              <p className="text-sm leading-relaxed arabic-optimized break-words">
+                                {message.content?.text || message.content}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Avatar */}
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-primary to-primary-700 flex items-center justify-center text-white font-semibold shadow-md flex-shrink-0">
+                            أ
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      // Receiver's message (left side) with tail decoration
+                      <div className="flex justify-start mb-4 message-receiver">
+                        <div className="flex items-end gap-2 max-w-[85%] sm:max-w-xs lg:max-w-md xl:max-w-lg">
+                          {/* Avatar */}
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center text-gray-700 font-semibold shadow-md flex-shrink-0">
+                            {message.sender?.name?.charAt(0) || "م"}
+                          </div>
+
+                          {/* Message Bubble with tail */}
+                          <div className="relative">
+                            {/* Sender name */}
+                            {message.sender?.name && (
+                              <span className="text-xs text-gray-600 mb-1 block px-1 arabic-optimized font-medium">
+                                {message.sender.name}
+                              </span>
+                            )}
+
+                            <div className="absolute bottom-0 left-0 w-0 h-0 border-r-[8px] border-r-transparent border-b-[8px] border-b-gray-200 -translate-x-2"></div>
+                            <div className="bg-white hover:bg-gray-50 text-gray-800 px-4 py-3 rounded-2xl rounded-bl-sm shadow-md hover:shadow-lg border border-gray-100 transition-all">
+                              <p className="text-sm leading-relaxed arabic-optimized break-words">
+                                {message.content?.text || message.content}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Time */}
+                          <div className="flex flex-col items-start gap-1 min-w-[60px]">
+                            <span className="text-[10px] text-gray-500 arabic-optimized">
+                              {formatTime(message.createdAt)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
-                </div>
-              </div>
-            ))}
-            {isTyping && <TypingIndicator />}
-            <div ref={messagesEndRef} />
-          </div>
+                );
+              })}
+              {isTyping && <TypingIndicator />}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
         </CardContent>
 
+        {/* Rate Limit Warning */}
+        {rateLimited && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 mx-3 sm:mx-4 mb-3 sm:mb-4 rounded-r-md">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <span className="text-yellow-400 text-sm">⚠️</span>
+              </div>
+              <div className="mr-3 flex-1">
+                <p className="text-xs sm:text-sm text-yellow-700">
+                  تم الوصول للحد الأقصى من الرسائل. يمكنك الإرسال مرة أخرى بعد
+                  ساعة.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Message Input */}
-        <div className="border-t bg-white p-3 sm:p-4 flex-shrink-0">
-          <div className="flex items-end space-x-2 sm:space-x-3 space-x-reverse">
-            <div className="flex-1">
+        <div className="border-t border-gray-200 p-3 sm:p-4 bg-white">
+          <div className="flex gap-2 sm:gap-3 items-stretch">
+            {/* Text Input Area */}
+            <div className="flex-1 flex flex-col">
               <textarea
                 ref={inputRef}
                 value={newMessage}
                 onChange={handleInputChange}
                 onKeyPress={handleKeyPress}
-                placeholder="اكتب رسالتك هنا..."
-                className="w-full resize-none border border-gray-300 rounded-lg px-3 sm:px-4 py-2 sm:py-3 focus:ring-2 focus:ring-primary focus:border-transparent min-h-[40px] sm:min-h-[44px] max-h-24 sm:max-h-32 text-sm sm:text-base"
+                placeholder={
+                  rateLimited ? "تم الوصول للحد الأقصى من الرسائل" : "اكتب رسالتك..."
+                }
+                disabled={rateLimited || isSending}
+                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm resize-none focus:ring-2 focus:ring-primary focus:border-primary min-h-[48px] max-h-32 arabic-optimized transition-all"
                 rows={1}
-                disabled={isSending}
+                maxLength={500}
               />
-              <div className="flex justify-between items-center mt-1 text-xs text-gray-500">
-                <span>{newMessage.length}/500</span>
-                <span className="hidden sm:inline">Enter للإرسال</span>
+              <div className="text-xs text-gray-500 mt-1.5 px-1 flex justify-between">
+                <span>{newMessage.length}/500 حرف</span>
+                <span className="text-gray-400 hidden sm:inline">
+                  Enter للإرسال
+                </span>
               </div>
             </div>
+
+            {/* Send Button */}
             <Button
               onClick={handleSendMessage}
-              disabled={!newMessage.trim() || isSending}
-              className="px-3 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 flex-shrink-0 min-h-[40px] sm:min-h-[44px]"
+              disabled={rateLimited || !newMessage.trim() || isSending}
+              className="h-auto min-h-[48px] w-[48px] sm:w-auto px-4 flex items-center justify-center flex-shrink-0 bg-primary hover:bg-primary-hover transition-all"
             >
               {isSending ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               ) : (
                 <>
-                  <span className="hidden sm:inline ml-1">إرسال</span>
-                  <Send className="h-4 w-4" />
+                  <span className="hidden sm:inline ml-1 text-sm">إرسال</span>
+                  <Send className="w-5 h-5 sm:ml-1" />
                 </>
               )}
             </Button>

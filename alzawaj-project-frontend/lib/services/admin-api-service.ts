@@ -376,6 +376,11 @@ class AdminApiService {
           flaggedMessages: number;
           totalReports: number;
           pendingReports: number;
+          notifications: {
+            total: number;
+            unread: number;
+            unreadImportant: number;
+          };
         };
       };
       message?: string;

@@ -85,6 +85,71 @@ export const getChatRooms = async (
 };
 
 /**
+ * Get or create chat room for a marriage request
+ */
+export const getOrCreateChatRoomByRequest = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const { requestId } = req.params;
+
+    if (!userId) {
+      res.status(401).json(createErrorResponse("غير مصرح"));
+      return;
+    }
+
+    // Find the marriage request
+    const marriageRequest = await MarriageRequest.findById(requestId);
+    if (!marriageRequest) {
+      res.status(404).json(createErrorResponse("طلب الزواج غير موجود"));
+      return;
+    }
+
+    // Check if user is a participant in this request
+    if (
+      marriageRequest.sender.toString() !== userId &&
+      marriageRequest.receiver.toString() !== userId
+    ) {
+      res.status(403).json(createErrorResponse("غير مصرح لك بالوصول إلى هذا الطلب"));
+      return;
+    }
+
+    // Check if chat room already exists for this request
+    let chatRoom = await ChatRoom.findOne({
+      marriageRequest: requestId,
+      isActive: true,
+    }).populate("participants.user", "firstname lastname");
+
+    // If chat room doesn't exist, create one
+    if (!chatRoom) {
+      const senderId = marriageRequest.sender;
+      const recipientId = marriageRequest.receiver;
+
+      const newChatRoom = await ChatRoom.createDirectChat(
+        senderId,
+        recipientId,
+        new mongoose.Types.ObjectId(requestId)
+      );
+
+      // Populate participants
+      chatRoom = await ChatRoom.findById(newChatRoom._id).populate(
+        "participants.user",
+        "firstname lastname"
+      );
+    }
+
+    res.json(
+      createSuccessResponse("تم جلب غرفة الدردشة بنجاح", chatRoom)
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Get messages in a chat room
  */
 export const getChatMessages = async (
@@ -485,6 +550,7 @@ export const deleteChat = async (
 
 export default {
   getChatRooms,
+  getOrCreateChatRoomByRequest,
   getChatMessages,
   sendMessage,
   getChatLimits,

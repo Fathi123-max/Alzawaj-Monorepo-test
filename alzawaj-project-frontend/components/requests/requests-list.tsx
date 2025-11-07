@@ -6,7 +6,7 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MarriageRequest } from "@/lib/types";
-import { requestsApi } from "@/lib/api";
+import { requestsApi, chatApi } from "@/lib/api";
 import { requestsApiService } from "@/lib/services/requests-api-service";
 import { showToast } from "@/components/ui/toaster";
 import { useChat } from "@/providers/chat-provider";
@@ -24,15 +24,19 @@ function RequestCard({ request, type, onUpdate }: RequestCardProps) {
 
   const handleStartChat = async (request: MarriageRequest) => {
     try {
-      // Create or find existing chat room for this request
-      const chatRoomId = `chat_${request.id}`;
+      // Find or create chat room for this request
+      const chatRoomResponse = await chatApi.getOrCreateRoomByRequest(request.id);
 
-      // Navigate to chat page with the request ID
-      router.push(
-        `/dashboard/chat?requestId=${request.id}&chatRoomId=${chatRoomId}`,
-      );
-      showToast.success("جاري تحميل المحادثة...");
+      if (chatRoomResponse.success && chatRoomResponse.data) {
+        const chatRoom = chatRoomResponse.data;
+        // Navigate to main chat page with the specific chat room
+        router.push(`/dashboard/chat?chatRoomId=${chatRoom.id}`);
+        showToast.success("جاري تحميل المحادثة...");
+      } else {
+        showToast.error("فشل في إنشاء غرفة المحادثة");
+      }
     } catch (error) {
+      console.error("Error starting chat:", error);
       showToast.error("خطأ في بدء المحادثة");
     }
   };
@@ -182,7 +186,8 @@ function RequestCard({ request, type, onUpdate }: RequestCardProps) {
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons - TEMPORARILY HIDDEN */}
+        {/* TODO: Re-enable accept/reject functionality later
         {type === "received" && request.status === "pending" && (
           <div className="flex gap-3">
             <Button
@@ -200,6 +205,16 @@ function RequestCard({ request, type, onUpdate }: RequestCardProps) {
             >
               {isLoading ? "جاري الرفض..." : "رفض"}
             </Button>
+          </div>
+        )}
+        */}
+
+        {/* Temporary notice */}
+        {type === "received" && request.status === "pending" && (
+          <div className="mt-4 p-3 bg-blue-50 rounded-md border border-blue-200">
+            <p className="text-sm text-blue-800 text-center">
+              ⚠️ وظائف القبول والرفض معطلة مؤقتاً
+            </p>
           </div>
         )}
 
