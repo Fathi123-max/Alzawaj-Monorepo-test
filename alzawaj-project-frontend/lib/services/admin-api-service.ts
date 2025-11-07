@@ -19,6 +19,11 @@ export interface AdminStats {
     flaggedMessages: number;
     totalReports: number;
     pendingReports: number;
+    notifications?: {
+      total: number;
+      unread: number;
+      unreadImportant: number;
+    };
   };
 }
 
@@ -104,6 +109,28 @@ export interface AdminReport {
   description: string;
   status: string;
   createdAt: string;
+}
+
+export interface AdminNotification {
+  _id: string;
+  id: string;
+  type: "new_user" | "user_report" | "flagged_message" | "system_alert" | "marriage_request";
+  title: string;
+  message: string;
+  priority: "low" | "medium" | "high";
+  isRead: boolean;
+  readAt?: string;
+  actionRequired: boolean;
+  relatedId?: string;
+  data?: {
+    userId?: string;
+    reportId?: string;
+    messageId?: string;
+    requestId?: string;
+    url?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AdminSettings {
@@ -568,6 +595,68 @@ class AdminApiService {
       method: "POST",
       body: JSON.stringify({ action, notes }),
     });
+  }
+
+  // Notifications Management
+  async getNotifications(filter?: "all" | "unread" | "important"): Promise<
+    ApiResponse<{ notifications: AdminNotification[] }>
+  > {
+    const params = filter ? `?filter=${filter}` : "";
+    const response = await this.request<{
+      success: boolean;
+      data: {
+        notifications: AdminNotification[];
+        pagination?: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
+      };
+      message?: string;
+    }>(`/admin/notifications${params}`);
+
+    return {
+      success: response.success,
+      data: {
+        notifications: response.data.notifications,
+      },
+      message: response.message || "",
+    };
+  }
+
+  async getUnreadNotificationCount(): Promise<
+    ApiResponse<{ unreadCount: number; unreadImportantCount: number }>
+  > {
+    return this.request<
+      ApiResponse<{ unreadCount: number; unreadImportantCount: number }>
+    >("/notifications/unread-count");
+  }
+
+  async markNotificationAsRead(notificationId: string): Promise<ApiResponse<null>> {
+    return this.request<ApiResponse<null>>(
+      `/notifications/${notificationId}/read`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({}),
+      },
+    );
+  }
+
+  async markAllNotificationsAsRead(): Promise<ApiResponse<null>> {
+    return this.request<ApiResponse<null>>("/notifications/read-all", {
+      method: "PATCH",
+      body: JSON.stringify({}),
+    });
+  }
+
+  async deleteNotification(notificationId: string): Promise<ApiResponse<null>> {
+    return this.request<ApiResponse<null>>(
+      `/notifications/${notificationId}`,
+      {
+        method: "DELETE",
+      },
+    );
   }
 
   // Settings Management

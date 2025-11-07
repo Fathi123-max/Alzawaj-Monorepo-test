@@ -51,7 +51,6 @@ import {
   Database,
   LogOut,
 } from "lucide-react";
-import { mockAdminNotifications } from "@/lib/static-data/comprehensive-admin-mock";
 
 const adminTabs = [
   {
@@ -236,9 +235,11 @@ export function AdminDashboard() {
                           </div>
                           {tab.count && stats?.data && (
                             <Badge variant="secondary" className="mt-1 text-xs">
-                              {stats.data[
-                                tab.count as keyof typeof stats.data
-                              ] || 0}
+                              {tab.count === "notifications"
+                                ? stats.data.notifications?.unread || 0
+                                : (stats.data[
+                                    tab.count as keyof typeof stats.data
+                                  ] as number) || 0}
                             </Badge>
                           )}
                         </div>
@@ -561,10 +562,7 @@ export function AdminDashboard() {
                           </div>
                           <div className="text-right">
                             <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-700 bg-clip-text text-transparent">
-                              {
-                                mockAdminNotifications.filter((n) => !n.read)
-                                  .length
-                              }
+                              {stats?.data?.notifications?.unread || 0}
                             </p>
                             <p className="text-gray-700 text-sm font-medium">
                               إشعارات غير مقروءة
@@ -574,7 +572,7 @@ export function AdminDashboard() {
                                 variant="secondary"
                                 className="text-xs bg-indigo-100 text-indigo-700"
                               >
-                                إجمالي: {mockAdminNotifications.length}
+                                إجمالي: {stats?.data?.notifications?.total || 0}
                               </Badge>
                             </div>
                           </div>
@@ -641,9 +639,11 @@ export function AdminDashboard() {
                           </div>
                           {tab.count && stats?.data && (
                             <Badge variant="secondary" className="text-xs">
-                              {stats.data[
-                                tab.count as keyof typeof stats.data
-                              ] || 0}
+                              {tab.count === "notifications"
+                                ? stats.data.notifications?.unread || 0
+                                : (stats.data[
+                                    tab.count as keyof typeof stats.data
+                                  ] as number) || 0}
                             </Badge>
                           )}
                         </TabsTrigger>

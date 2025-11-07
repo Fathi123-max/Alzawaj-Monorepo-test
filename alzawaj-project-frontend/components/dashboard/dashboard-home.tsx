@@ -6,6 +6,7 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getUserFromLocalStorage } from "@/lib/utils/localstorage";
+import { getStoredToken } from "@/lib/utils/auth.utils";
 import { searchService, DashboardStats } from "@/lib/services/search-service";
 import { searchApiService } from "@/lib/services/search-api-service";
 import { ProfileCard } from "@/components/search/profile-card";
@@ -98,22 +99,58 @@ export function DashboardHome() {
 
         // Handle stats
         try {
-          const searchStatsRes = await Promise.resolve(
+          // Fetch stats, pending requests, and active chats in parallel
+          const [searchStatsRes, receivedRequestsRes, chatRoomsRes] = await Promise.allSettled([
             searchApiService.getSearchStats(),
-          );
-          if (searchStatsRes?.success && searchStatsRes?.data) {
+            // Fetch received requests to get pending count
+            fetch("/api/requests/received?page=1&limit=100", {
+              headers: {
+                "Authorization": `Bearer ${getStoredToken()}`,
+              },
+            }).then(res => res.json()),
+            // Fetch chat rooms to get active chats count
+            fetch("/api/chat/rooms", {
+              headers: {
+                "Authorization": `Bearer ${getStoredToken()}`,
+              },
+            }).then(res => res.json()),
+          ]);
+
+          // Handle search stats
+          if (searchStatsRes.status === "fulfilled" && searchStatsRes.value?.success) {
+            const searchData = searchStatsRes.value.data as any;
             setStats({
-              profileViews: (searchStatsRes.data as any).totalViews || 0,
-              totalRequests: (searchStatsRes.data as any).totalMatches || 0,
+              profileViews: searchData?.totalViews || 0,
+              totalRequests: searchData?.totalMatches || 0,
+              totalProfiles: searchData?.totalProfiles || 0,
+              onlineProfiles: searchData?.onlineProfiles || 0,
+              todayViews: searchData?.todayViews || 0,
+              newMatches: searchData?.newMatches || 0,
               pendingRequests: 0,
               activeChats: 0,
-              totalProfiles: (searchStatsRes.data as any).totalProfiles || 0,
-              onlineProfiles: (searchStatsRes.data as any).onlineProfiles || 0,
-              todayViews: (searchStatsRes.data as any).todayViews || 0,
-              newMatches: (searchStatsRes.data as any).newMatches || 0,
             });
-            apiDataFetched = true;
           }
+
+          // Handle pending requests
+          if (receivedRequestsRes.status === "fulfilled" && receivedRequestsRes.value?.success) {
+            const requests = receivedRequestsRes.value.data?.requests || [];
+            const pendingCount = requests.filter((r: any) => r.status === "pending").length;
+            setStats(prev => ({
+              ...prev,
+              pendingRequests: pendingCount,
+            }));
+          }
+
+          // Handle active chats
+          if (chatRoomsRes.status === "fulfilled" && chatRoomsRes.value?.success) {
+            const chatRooms = chatRoomsRes.value.data || [];
+            setStats(prev => ({
+              ...prev,
+              activeChats: chatRooms.length,
+            }));
+          }
+
+          apiDataFetched = true;
         } catch (statsError) {
           console.warn("Stats API fetch failed:", statsError);
         }

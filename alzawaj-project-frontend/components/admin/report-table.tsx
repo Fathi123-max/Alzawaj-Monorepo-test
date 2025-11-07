@@ -130,15 +130,14 @@ export function ReportTable() {
 
   const getTypeLabel = (type: string) => {
     const typeLabels: Record<string, string> = {
-      inappropriate_behavior: "سلوك غير لائق",
-      fake_profile: "ملف شخصي مزيف",
-      harassment: "تحرش",
-      spam: "رسائل مزعجة",
-      scam: "احتيال",
-      violence: "عنف أو تهديد",
-      hate_speech: "خطاب كراهية",
-      inappropriate_content: "محتوى غير مناسب",
-      other: "أخرى",
+      "inappropriate-content": "محتوى غير مناسب",
+      "fake-profile": "ملف شخصي مزيف",
+      "harassment": "تحرش",
+      "spam": "رسائل مزعجة",
+      "scam": "احتيال",
+      "abusive-language": "لغة مسيئة",
+      "religious-violations": "انتهاكات دينية",
+      "other": "أخرى",
     };
     return typeLabels[type] || type;
   };
@@ -158,8 +157,8 @@ export function ReportTable() {
   };
 
   const getPriorityColor = (type: string) => {
-    const highPriority = ["harassment", "violence", "hate_speech"];
-    const mediumPriority = ["inappropriate_behavior", "scam"];
+    const highPriority = ["harassment", "abusive-language", "religious-violations"];
+    const mediumPriority = ["inappropriate-content", "scam", "fake-profile"];
 
     if (highPriority.includes(type)) return "text-red-600";
     if (mediumPriority.includes(type)) return "text-orange-600";
@@ -213,7 +212,7 @@ export function ReportTable() {
               <p className="text-2xl font-bold text-red-600">
                 {
                   reports.filter((r) =>
-                    ["harassment", "violence", "hate_speech"].includes(r.type),
+                    ["harassment", "abusive-language", "religious-violations"].includes(r.reason),
                   ).length
                 }
               </p>
@@ -267,7 +266,7 @@ export function ReportTable() {
                             ID: {report.id}
                           </div>
                           <div className="text-xs text-gray-500 mb-1">
-                            من: {report.reporterId} ضد: {report.reportedUserId}
+                            المبلغ: {report.reporterId} | ضد: {report.reportedUserId}
                           </div>
                           <div className="text-sm text-gray-700">
                             <strong>السبب:</strong> {report.reason}
@@ -279,9 +278,9 @@ export function ReportTable() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Badge
-                          className={`${getPriorityColor(report.type)} bg-gray-100`}
+                          className={`${getPriorityColor(report.reason)} bg-gray-100`}
                         >
-                          {getTypeLabel(report.type)}
+                          {getTypeLabel(report.reason)}
                         </Badge>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -385,9 +384,9 @@ export function ReportTable() {
                   </label>
                   <div className="mt-1">
                     <Badge
-                      className={`${getPriorityColor(selectedReport.type)} bg-gray-100`}
+                      className={`${getPriorityColor(selectedReport.reason)} bg-gray-100`}
                     >
-                      {getTypeLabel(selectedReport.type)}
+                      {getTypeLabel(selectedReport.reason)}
                     </Badge>
                   </div>
                 </div>

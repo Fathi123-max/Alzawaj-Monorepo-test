@@ -11,6 +11,7 @@ import {
   ReportSearchParams,
   ApiResponse,
   MarriageRequest,
+  AdminNotification,
 } from "@/lib/types";
 
 import {
@@ -479,6 +480,81 @@ class AdminApiService {
       : "/admin/reports/export";
 
     return await this.client.get<{ downloadUrl: string }>(url);
+  }
+
+  /**
+   * Get admin notifications
+   */
+  async getNotifications(
+    filter?: "all" | "unread" | "important",
+  ): Promise<
+    ApiResponse<{
+      notifications: AdminNotification[];
+      pagination: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+      };
+    }>
+  > {
+    const queryParams = new URLSearchParams();
+    if (filter) queryParams.append("filter", filter);
+
+    const queryString = queryParams.toString();
+    const url = `/admin/notifications${queryString ? `?${queryString}` : ""}`;
+
+    return await this.client.get<{
+      notifications: AdminNotification[];
+      pagination: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+      };
+    }>(url);
+  }
+
+  /**
+   * Get unread notification count
+   */
+  async getUnreadNotificationCount(): Promise<
+    ApiResponse<{ unreadCount: number; unreadImportantCount: number }>
+  > {
+    return await this.client.get<{
+      unreadCount: number;
+      unreadImportantCount: number;
+    }>("/admin/notifications/unread-count");
+  }
+
+  /**
+   * Mark notification as read
+   */
+  async markNotificationAsRead(
+    notificationId: string,
+  ): Promise<ApiResponse<null>> {
+    return await this.client.patch<null>(
+      `/admin/notifications/${notificationId}/read`,
+      {},
+    );
+  }
+
+  /**
+   * Mark all notifications as read
+   */
+  async markAllNotificationsAsRead(): Promise<ApiResponse<null>> {
+    return await this.client.patch<null>("/admin/notifications/read-all", {});
+  }
+
+  /**
+   * Delete notification
+   */
+  async deleteNotification(
+    notificationId: string,
+  ): Promise<ApiResponse<null>> {
+    return await this.client.delete<null>(
+      `/admin/notifications/${notificationId}`,
+    );
   }
 }
 

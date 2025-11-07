@@ -76,10 +76,33 @@ export async function GET(request: NextRequest) {
 
     console.log("✅ Admin pending messages fetched successfully");
 
+    // Transform messages to extract primitive values from populated objects
+    // Filter out any invalid messages with null sender or chatRoom
+    const messages = (responseData.data?.messages || responseData.data || [])
+      .filter((message: any) => message && message._id && message.sender && message.chatRoom)
+      .map((message: any) => ({
+        id: message._id || message.id,
+        chatRoomId:
+          message.chatRoom && typeof message.chatRoom === "object"
+            ? message.chatRoom._id || message.chatRoom.id
+            : message.chatRoom,
+        senderId:
+          message.sender && typeof message.sender === "object"
+            ? message.sender._id || message.sender.id
+            : message.sender,
+        content:
+          message.content && typeof message.content === "object"
+            ? message.content.text || ""
+            : message.content,
+        status: message.status,
+        createdAt: message.createdAt,
+        approvedAt: message.approvedAt,
+      }));
+
     return NextResponse.json({
       success: true,
       data: {
-        messages: responseData.data?.messages || responseData.data || [],
+        messages,
       },
       message: "تم جلب الرسائل المعلقة بنجاح",
     });

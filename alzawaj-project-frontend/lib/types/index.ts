@@ -472,6 +472,29 @@ export interface Notification {
   data?: any;
 }
 
+// Admin Notification Types
+export interface AdminNotification {
+  _id: string;
+  id: string;
+  type: "new_user" | "user_report" | "flagged_message" | "system_alert" | "marriage_request";
+  title: string;
+  message: string;
+  priority: "low" | "medium" | "high";
+  isRead: boolean;
+  readAt?: string;
+  actionRequired: boolean;
+  relatedId?: string;
+  data?: {
+    userId?: string;
+    reportId?: string;
+    messageId?: string;
+    requestId?: string;
+    url?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Chat Limits
 export interface ChatLimits {
   messagesPerHour: number;

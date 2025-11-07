@@ -76,10 +76,32 @@ export async function GET(request: NextRequest) {
 
     console.log("✅ Admin reports fetched successfully");
 
+    // Transform reports to extract string IDs from populated objects
+    const reports = (responseData.data?.reports || responseData.data || []).map(
+      (report: any) => ({
+        id: report._id || report.id,
+        reporterId:
+          typeof report.reporterId === "object"
+            ? report.reporterId._id || report.reporterId.id
+            : report.reporterId,
+        reportedUserId:
+          typeof report.reportedUserId === "object"
+            ? report.reportedUserId._id || report.reportedUserId.id
+            : report.reportedUserId,
+        type: report.type || report.reason,
+        reason: report.reason,
+        description: report.description,
+        status: report.status,
+        priority: report.priority,
+        createdAt: report.createdAt,
+        updatedAt: report.updatedAt,
+      })
+    );
+
     return NextResponse.json({
       success: true,
       data: {
-        reports: responseData.data?.reports || responseData.data || [],
+        reports,
       },
       message: "تم جلب البلاغات بنجاح",
     });

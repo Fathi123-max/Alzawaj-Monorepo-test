@@ -16,9 +16,11 @@ interface ChatWindowProps {
 function MessageBubble({
   message,
   isCurrentUser,
+  senderName,
 }: {
   message: Message;
   isCurrentUser: boolean;
+  senderName?: string;
 }) {
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString("ar-SA", {
@@ -27,44 +29,97 @@ function MessageBubble({
     });
   };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("ar-SA", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  // Get message status icon
+  const getStatusIcon = () => {
+    if (!isCurrentUser) return null;
+
+    switch (message.status) {
+      case "pending":
+        return <span className="text-xs opacity-70">🕐</span>;
+      case "approved":
+        return <span className="text-xs opacity-70">✓</span>;
+      case "rejected":
+        return <span className="text-xs opacity-70">✕</span>;
+      default:
+        return null;
+    }
+  };
+
+  if (isCurrentUser) {
+    // Sender's message (right side)
+    return (
+      <div className="flex justify-end mb-4 message-sender">
+        <div className="flex items-end gap-2 max-w-[85%] sm:max-w-xs lg:max-w-md xl:max-w-lg">
+          {/* Status and Time */}
+          <div className="flex flex-col items-end gap-1 min-w-[60px]">
+            <span className="text-[10px] text-gray-500 arabic-optimized">
+              {formatTime(message.createdAt)}
+            </span>
+            {getStatusIcon()}
+          </div>
+
+          {/* Message Bubble */}
+          <div className="relative">
+            {/* Tail decoration */}
+            <div className="absolute bottom-0 right-0 w-0 h-0 border-l-[8px] border-l-transparent border-b-[8px] border-b-primary translate-x-2"></div>
+
+            <div className="bg-gradient-to-br from-primary via-primary-hover to-primary-600 text-white px-4 py-3 rounded-2xl rounded-br-sm shadow-lg hover:shadow-xl transition-shadow">
+              <p className="text-sm leading-relaxed arabic-optimized break-words">
+                {message.content?.text || ""}
+              </p>
+            </div>
+          </div>
+
+          {/* Avatar */}
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-primary to-primary-700 flex items-center justify-center text-white font-semibold shadow-md flex-shrink-0">
+            أ
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Receiver's message (left side)
   return (
-    <div
-      className={`flex ${isCurrentUser ? "justify-end" : "justify-start"} mb-3 sm:mb-4`}
-    >
-      <div
-        className={`max-w-[85%] sm:max-w-xs lg:max-w-md xl:max-w-lg px-3 sm:px-4 py-2 sm:py-3 rounded-lg shadow-sm ${
-          isCurrentUser
-            ? "bg-primary text-white rounded-br-sm"
-            : "bg-gray-100 text-gray-800 rounded-bl-sm"
-        }`}
-      >
-        <p className="text-body leading-relaxed arabic-optimized">
-          {message.content?.text || ""}
-        </p>
-        <div className="flex items-center justify-between mt-1 sm:mt-2">
-          <span
-            className={`text-caption ${isCurrentUser ? "text-primary-lighter" : "text-gray-500"} arabic-optimized`}
-          >
+    <div className="flex justify-start mb-4 message-receiver">
+      <div className="flex items-end gap-2 max-w-[85%] sm:max-w-xs lg:max-w-md xl:max-w-lg">
+        {/* Avatar */}
+        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center text-gray-700 font-semibold shadow-md flex-shrink-0">
+          {senderName?.charAt(0) || "م"}
+        </div>
+
+        {/* Message Bubble */}
+        <div className="relative">
+          {/* Sender name (if provided and not current user) */}
+          {senderName && (
+            <span className="text-xs text-gray-600 mb-1 block px-1 arabic-optimized font-medium">
+              {senderName}
+            </span>
+          )}
+
+          {/* Tail decoration */}
+          <div className="absolute bottom-0 left-0 w-0 h-0 border-r-[8px] border-r-transparent border-b-[8px] border-b-gray-200 -translate-x-2"></div>
+
+          <div className="bg-white hover:bg-gray-50 text-gray-800 px-4 py-3 rounded-2xl rounded-bl-sm shadow-md hover:shadow-lg border border-gray-100 transition-all">
+            <p className="text-sm leading-relaxed arabic-optimized break-words">
+              {message.content?.text || ""}
+            </p>
+          </div>
+        </div>
+
+        {/* Time */}
+        <div className="flex flex-col items-start gap-1 min-w-[60px]">
+          <span className="text-[10px] text-gray-500 arabic-optimized">
             {formatTime(message.createdAt)}
           </span>
-          {message.status && message.status !== "approved" && (
-            <Badge
-              variant={
-                message.status === "pending"
-                  ? "outline"
-                  : message.status === "rejected"
-                    ? "error"
-                    : "secondary"
-              }
-              className="text-xs"
-            >
-              {message.status === "pending"
-                ? "في الانتظار"
-                : message.status === "rejected"
-                  ? "مرفوض"
-                  : message.status}
-            </Badge>
-          )}
         </div>
       </div>
     </div>
@@ -97,8 +152,9 @@ function MessageInput({
 
   return (
     <div className="border-t border-gray-200 p-3 sm:p-4 bg-white">
-      <div className="flex gap-2 sm:gap-3 items-end">
-        <div className="flex-1">
+      <div className="flex gap-2 sm:gap-3 items-stretch">
+        {/* Text Input Area */}
+        <div className="flex-1 flex flex-col">
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -107,34 +163,35 @@ function MessageInput({
               disabled ? "تم الوصول للحد الأقصى من الرسائل" : "اكتب رسالتك..."
             }
             disabled={disabled}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-primary focus:border-primary min-h-[40px] max-h-24 sm:max-h-32"
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm resize-none focus:ring-2 focus:ring-primary focus:border-primary min-h-[48px] max-h-32 arabic-optimized transition-all"
             rows={1}
             maxLength={500}
           />
-          <div className="text-xs text-gray-500 mt-1 flex justify-between">
+          <div className="text-xs text-gray-500 mt-1.5 px-1 flex justify-between">
             <span>{content.length}/500 حرف</span>
             <span className="text-gray-400 hidden sm:inline">
               Enter للإرسال
             </span>
           </div>
         </div>
+
+        {/* Send Button */}
         <Button
           onClick={handleSend}
           disabled={disabled || !content.trim()}
-          size="sm"
-          className="self-end px-3 sm:px-4 py-2 min-h-[40px] flex-shrink-0"
+          className="h-auto min-h-[48px] w-[48px] sm:w-auto px-4 flex items-center justify-center flex-shrink-0 bg-primary hover:bg-primary-hover transition-all"
         >
-          <span className="hidden sm:inline ml-1">إرسال</span>
+          <span className="hidden sm:inline ml-1 text-sm">إرسال</span>
           <svg
-            className="w-4 h-4"
+            className="w-5 h-5 sm:ml-1"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            strokeWidth={2}
           >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth={2}
               d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
             />
           </svg>
@@ -264,7 +321,7 @@ export function ChatWindow({ chatRoom }: ChatWindowProps) {
 
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-3 sm:p-4 bg-gray-50">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 bg-gradient-to-b from-gray-50 to-gray-100">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
@@ -288,13 +345,57 @@ export function ChatWindow({ chatRoom }: ChatWindowProps) {
             </div>
           ) : (
             <div className="space-y-1">
-              {roomMessages.map((message) => (
-                <MessageBubble
-                  key={message.id}
-                  message={message}
-                  isCurrentUser={message.senderId === user?.id}
-                />
-              ))}
+              {roomMessages.map((message, index) => {
+                // Extract sender name from message or use default
+                const senderName = message.sender
+                  ? `${message.sender.firstname || ""} ${message.sender.lastname || ""}`.trim() ||
+                    message.sender.email ||
+                    "مستخدم"
+                  : "مستخدم";
+
+                // Check if we need a date separator (new day)
+                const showDateSeparator = index === 0 ||
+                  new Date(message.createdAt).toDateString() !==
+                  new Date(roomMessages[index - 1].createdAt).toDateString();
+
+                // Fix: Check both senderId and populated sender object
+                const isCurrentUser = message.senderId === user?.id ||
+                  (message.sender && (message.sender.id || message.sender._id) === user?.id);
+
+                // Debug logging (remove in production)
+                if (typeof window !== "undefined" && index < 3) {
+                  console.log(`Message ${index}:`, {
+                    senderId: message.senderId,
+                    sender: message.sender?._id || message.sender?.id,
+                    userId: user?.id,
+                    isCurrentUser,
+                    senderName,
+                  });
+                }
+
+                return (
+                  <div key={message.id}>
+                    {showDateSeparator && (
+                      <div className="flex items-center justify-center my-4">
+                        <div className="bg-gray-200 px-3 py-1 rounded-full">
+                          <span className="text-xs text-gray-600 arabic-optimized">
+                            {new Date(message.createdAt).toLocaleDateString("ar-SA", {
+                              weekday: "long",
+                              month: "long",
+                              day: "numeric",
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    <MessageBubble
+                      message={message}
+                      isCurrentUser={isCurrentUser}
+                      senderName={senderName}
+                    />
+                  </div>
+                );
+              })}
               <div ref={messagesEndRef} />
             </div>
           )}

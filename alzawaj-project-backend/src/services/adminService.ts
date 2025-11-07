@@ -5,6 +5,7 @@ import { MarriageRequest } from "../models/MarriageRequest";
 import { Message } from "../models/Message";
 import { Report } from "../models/Report";
 import { AdminSettings } from "../models/AdminSettings";
+import { AdminNotification } from "../models/AdminNotification";
 
 export class AdminService {
   /**
@@ -61,7 +62,11 @@ export class AdminService {
       
       // Get report stats
       const reportStats = await Report.getStatistics();
-      
+
+      // Get notification stats
+      const unreadNotifications = await AdminNotification.getUnreadCount();
+      const unreadImportantNotifications = await AdminNotification.getUnreadImportantCount();
+
       return {
         users: {
           total: userStats[0]?.total || 0,
@@ -101,6 +106,11 @@ export class AdminService {
           dismissed: reportStats[0]?.dismissed || 0,
           critical: reportStats[0]?.critical || 0,
           high: reportStats[0]?.high || 0,
+        },
+        notifications: {
+          total: unreadNotifications + unreadImportantNotifications,
+          unread: unreadNotifications,
+          unreadImportant: unreadImportantNotifications,
         },
       };
     } catch (error: any) {

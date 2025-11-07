@@ -1,80 +1,81 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { adminApi } from "@/lib/api/admin";
+import { AdminNotification } from "@/lib/types";
+import { showToast } from "@/components/ui/toaster";
 
-interface AdminNotification {
-  id: string;
-  type:
-    | "new_user"
-    | "user_report"
-    | "flagged_message"
-    | "system_alert"
-    | "marriage_request";
-  title: string;
-  message: string;
-  priority: "low" | "medium" | "high";
-  read: boolean;
-  createdAt: string;
-  actionRequired: boolean;
-  relatedId?: string;
-}
 
 export function NotificationsBox() {
   const [filter, setFilter] = useState<"all" | "unread" | "important">("all");
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
+  const queryClient = useQueryClient();
 
   // Fetch notifications
   const {
     data: notificationsData,
     isLoading,
     error,
+    refetch,
   } = useQuery({
-    queryKey: ["admin-notifications"],
+    queryKey: ["admin-notifications", filter],
     queryFn: async () => {
-      // TODO: Implement notifications endpoint in admin API
-      // For now, return empty array
-      return { data: { notifications: [] } };
+      const response = await adminApi.getNotifications(filter);
+      if (response.success && response.data) {
+        return response.data;
+      }
+      return { notifications: [], pagination: { total: 0, page: 1, limit: 20, totalPages: 0 } };
     },
   });
 
   // Update local notifications state when query data changes
   useEffect(() => {
-    if (notificationsData?.data?.notifications) {
-      setNotifications(notificationsData.data.notifications);
+    if (notificationsData?.notifications) {
+      setNotifications(notificationsData.notifications);
     }
   }, [notificationsData]);
 
-  const currentNotifications: AdminNotification[] = notifications;
-
   const filteredNotifications = notifications.filter((notification) => {
-    if (filter === "unread") return !notification.read;
+    if (filter === "unread") return !notification.isRead;
     if (filter === "important") return notification.priority === "high";
     return true;
   });
 
-  const markAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === id ? { ...notification, read: true } : notification,
-      ),
-    );
+  const markAsRead = async (id: string) => {
+    try {
+      await adminApi.markNotificationAsRead(id);
+      showToast.success("تم تعليم الإشعار كمقروء");
+      refetch(); // Refresh the notifications list
+    } catch (error: any) {
+      showToast.error("حدث خطأ أثناء تعليم الإشعار كمقروء");
+      console.error("Error marking notification as read:", error);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((notification) => ({ ...notification, read: true })),
-    );
+  const markAllAsRead = async () => {
+    try {
+      await adminApi.markAllNotificationsAsRead();
+      showToast.success("تم تعليم جميع الإشعارات كمقروءة");
+      refetch(); // Refresh the notifications list
+    } catch (error: any) {
+      showToast.error("حدث خطأ أثناء تعليم الإشعارات كمقروءة");
+      console.error("Error marking all notifications as read:", error);
+    }
   };
 
-  const deleteNotification = (id: string) => {
-    setNotifications((prev) =>
-      prev.filter((notification) => notification.id !== id),
-    );
+  const deleteNotification = async (id: string) => {
+    try {
+      await adminApi.deleteNotification(id);
+      showToast.success("تم حذف الإشعار بنجاح");
+      refetch(); // Refresh the notifications list
+    } catch (error: any) {
+      showToast.error("حدث خطأ أثناء حذف الإشعار");
+      console.error("Error deleting notification:", error);
+    }
   };
 
   const getPriorityColor = (priority: string) => {
@@ -146,7 +147,7 @@ export function NotificationsBox() {
             {
               key: "unread",
               label: "غير مقروء",
-              count: notifications.filter((n) => !n.read).length,
+              count: notifications.filter((n) => !n.isRead).length,
             },
             {
               key: "important",
@@ -177,9 +178,9 @@ export function NotificationsBox() {
             <div className="divide-y divide-gray-100">
               {filteredNotifications.map((notification) => (
                 <div
-                  key={notification.id}
+                  key={notification._id}
                   className={`p-4 hover:bg-gray-50 transition-colors ${
-                    !notification.read
+                    !notification.isRead
                       ? "bg-primary-subtle border-r-4 border-primary-light"
                       : ""
                   }`}
@@ -193,7 +194,7 @@ export function NotificationsBox() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h4
-                            className={`text-sm ${!notification.read ? "font-semibold" : "font-medium"}`}
+                            className={`text-sm ${!notification.isRead ? "font-semibold" : "font-medium"}`}
                           >
                             {notification.title}
                           </h4>
@@ -218,11 +219,11 @@ export function NotificationsBox() {
                           </span>
 
                           <div className="flex gap-2">
-                            {!notification.read && (
+                            {!notification.isRead && (
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => markAsRead(notification.id)}
+                                onClick={() => markAsRead(notification._id)}
                                 className="text-xs text-primary hover:text-primary-hover"
                               >
                                 تعليم كمقروء
@@ -232,7 +233,7 @@ export function NotificationsBox() {
                               variant="ghost"
                               size="sm"
                               onClick={() =>
-                                deleteNotification(notification.id)
+                                deleteNotification(notification._id)
                               }
                               className="text-xs text-red-600 hover:text-red-800"
                             >

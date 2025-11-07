@@ -50,6 +50,10 @@ const chatActionValidation = [
   body("reason").optional().isLength({ max: 500 }).withMessage("السبب لا يجب أن يتجاوز 500 حرف"),
 ];
 
+const notificationActionValidation = [
+  param("notificationId").isMongoId().withMessage("معرف الإشعار غير صحيح"),
+];
+
 // Routes
 
 // Get admin stats
@@ -144,6 +148,21 @@ router.get("/reports", protect, adminOnly, adminController.getReports);
 
 // Report actions
 router.post("/reports/:reportId/action", protect, adminOnly, reportActionValidation, validateRequest, adminController.reportAction);
+
+// Get admin notifications
+router.get("/notifications", protect, adminOnly, adminController.getAdminNotifications);
+
+// Get unread notification count
+router.get("/notifications/unread-count", protect, adminOnly, adminController.getUnreadNotificationCount);
+
+// Mark notification as read
+router.patch("/notifications/:notificationId/read", protect, adminOnly, notificationActionValidation, validateRequest, adminController.markNotificationAsRead);
+
+// Mark all notifications as read
+router.patch("/notifications/read-all", protect, adminOnly, adminController.markAllNotificationsAsRead);
+
+// Delete notification
+router.delete("/notifications/:notificationId", protect, adminOnly, notificationActionValidation, validateRequest, adminController.deleteNotification);
 
 // Get admin settings
 router.get("/settings", protect, adminOnly, adminController.getAdminSettings);

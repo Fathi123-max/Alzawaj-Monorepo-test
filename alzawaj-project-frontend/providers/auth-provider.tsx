@@ -168,7 +168,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       !state.isAuthenticated &&
       typeof window !== "undefined" &&
       !window.location.pathname.startsWith("/auth/") &&
-      !window.location.pathname.startsWith("/api/")
+      !window.location.pathname.startsWith("/api/") &&
+      // Allow public pages without authentication
+      !window.location.pathname.match(/^\/$/) && // Landing page
+      !window.location.pathname.startsWith("/about") && // About page
+      !window.location.pathname.startsWith("/how-we-work") && // How we work page
+      !window.location.pathname.startsWith("/terms-privacy") && // Terms & Privacy page
+      !window.location.pathname.startsWith("/tips-guidance") && // Tips & Guidance page
+      !window.location.pathname.startsWith("/_next/") && // Next.js internal routes
+      !window.location.pathname.startsWith("/favicon") && // Favicon
+      !window.location.pathname.startsWith("/robots") && // Robots.txt
+      !window.location.pathname.startsWith("/sitemap") // Sitemap
     ) {
       console.log("Not authenticated, redirecting to login");
       window.location.href = "/auth/login";

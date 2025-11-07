@@ -6,6 +6,7 @@ import { ChatRoom } from "../models/ChatRoom";
 import { Message } from "../models/Message";
 import { Report } from "../models/Report";
 import { AdminSettings } from "../models/AdminSettings";
+import { AdminNotification } from "../models/AdminNotification";
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -243,16 +244,22 @@ export const getPendingMessages = async (
     // Calculate pagination
     const skip = (Number(page) - 1) * Number(limit);
 
-    // Get pending messages
+    // Get pending messages with populated sender and chatRoom
+    // Filter out messages where sender or chatRoom doesn't exist
     const messages = await Message.find({ status: "pending" })
-      .populate("sender", "firstname lastname profile")
+      .populate("sender", "firstname lastname")
       .populate("chatRoom", "participants")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(Number(limit));
 
+    // Filter out any messages where sender or chatRoom failed to populate
+    const validMessages = messages.filter(
+      (message: any) => message.sender && message.chatRoom
+    );
+
     res.json(
-      createSuccessResponse("تم جلب الرسائل المعلقة بنجاح", { messages })
+      createSuccessResponse("تم جلب الرسائل المعلقة بنجاح", { messages: validMessages })
     );
   } catch (error) {
     next(error);
@@ -645,6 +652,136 @@ export const archiveChatRoom = async (
   }
 };
 
+/**
+ * Get admin notifications
+ */
+export const getAdminNotifications = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { filter = "all", page = 1, limit = 20 } = req.query as any;
+
+    const result = await AdminNotification.getNotifications({
+      filter: filter as "all" | "unread" | "important",
+      page: Number(page),
+      limit: Number(limit),
+    });
+
+    res.json(
+      createSuccessResponse("تم جلب الإشعارات بنجاح", {
+        notifications: result.notifications,
+        pagination: {
+          page: result.page,
+          limit: Number(limit),
+          total: result.total,
+          totalPages: result.totalPages,
+        },
+      })
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get unread notification count
+ */
+export const getUnreadNotificationCount = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const unreadCount = await AdminNotification.getUnreadCount();
+    const unreadImportantCount = await AdminNotification.getUnreadImportantCount();
+
+    res.json(
+      createSuccessResponse("تم جلب عدد الإشعارات غير المقروءة بنجاح", {
+        unreadCount,
+        unreadImportantCount,
+      })
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Mark notification as read
+ */
+export const markNotificationAsRead = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { notificationId } = req.params;
+
+    const notification = await AdminNotification.findById(notificationId);
+
+    if (!notification) {
+      res.status(404).json(createErrorResponse("الإشعار غير موجود"));
+      return;
+    }
+
+    await notification.markAsRead();
+
+    res.json(
+      createSuccessResponse("تم تعليم الإشعار كمقروء", { notification })
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Mark all notifications as read
+ */
+export const markAllNotificationsAsRead = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    await AdminNotification.markAllAsRead();
+
+    res.json(createSuccessResponse("تم تعليم جميع الإشعارات كمقروءة"));
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Delete notification
+ */
+export const deleteNotification = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { notificationId } = req.params;
+
+    if (!notificationId) {
+      res.status(400).json(createErrorResponse("معرف الإشعار مطلوب"));
+      return;
+    }
+
+    const result = await AdminNotification.deleteNotification(notificationId);
+
+    if (!result) {
+      res.status(404).json(createErrorResponse("الإشعار غير موجود"));
+      return;
+    }
+
+    res.json(createSuccessResponse("تم حذف الإشعار بنجاح"));
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getAdminStats,
   getUsers,
@@ -662,6 +799,11 @@ export default {
   rejectMessage,
   getReports,
   reportAction,
+  getAdminNotifications,
+  getUnreadNotificationCount,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  deleteNotification,
   getAdminSettings,
   updateAdminSettings,
 };
