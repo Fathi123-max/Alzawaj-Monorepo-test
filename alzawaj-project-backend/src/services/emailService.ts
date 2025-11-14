@@ -44,7 +44,44 @@ export const sendEmailVerification = async (
   } catch (error) {
     console.error("Error sending email verification:", error);
     return false;
+}
+
+/**
+ * Send email verification using a provided verification link
+ */
+export const sendEmailVerificationLink = async (
+  email: string,
+  name: string,
+  link: string,
+): Promise<boolean> => {
+  try {
+    console.log(`Sending email verification to ${email} with link ${link}`);
+
+    const emailOptions: EmailOptions = {
+      to: email,
+      subject: "تأكيد البريد الإلكتروني - منصة الزواج الإسلامية",
+      html: `
+        <div dir="rtl" style="font-family: Arial, sans-serif; text-align: right;">
+          <h2>مرحباً ${name}</h2>
+          <p>شكراً لتسجيلك في منصة الزواج الإسلامية. يرجى النقر على الزر أدناه لتأكيد بريدك الإلكتروني:</p>
+          <a href="${link}"
+             style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+            تأكيد البريد الإلكتروني
+          </a>
+          <p>إذا لم تقم بإنشاء حساب، يرجى تجاهل هذا البريد.</p>
+        </div>
+      `,
+    };
+
+    // Integrate with actual email provider here
+    // await emailProvider.send(emailOptions);
+
+    return true;
+  } catch (error) {
+    console.error("Error sending email verification link:", error);
+    return false;
   }
+};
 };
 
 /**
@@ -162,6 +199,7 @@ export const sendMarriageRequestNotification = async (
 
 export default {
   sendEmailVerification,
+  sendEmailVerificationLink,
   sendPasswordReset,
   sendWelcomeEmail,
   sendMarriageRequestNotification,

@@ -631,12 +631,15 @@ const useRegistration = (): UseRegistrationResult => {
           localStorage.setItem("user_data", JSON.stringify(response.data.user));
         }
 
-        // Handle verification if needed
-        if (
-          !response.data?.user?.isEmailVerified ||
-          !response.data?.user?.isPhoneVerified
-        ) {
-          showToast.info("يرجى تأكيد البريد الإلكتروني ورقم الهاتف");
+        // Trigger Firebase email verification
+        try {
+          await (await import("@/lib/api/verification")).verificationApi.request(
+            regData.email,
+            `${regData.firstname.trim()} ${regData.lastname.trim()}`,
+          );
+          showToast.info("تم إرسال رسالة تأكيد البريد الإلكتروني. يرجى التحقق من بريدك");
+        } catch {
+          showToast.error("تعذر إرسال رسالة تأكيد البريد الإلكتروني");
         }
       } else {
         throw new Error(response.message || "فشل في إنشاء الحساب");

@@ -29,6 +29,7 @@ import notificationRoutes from './routes/notificationRoutes';
 import reportsRoutes from './routes/reportsRoutes';
 import adminRoutes from './routes/adminRoutes';
 import debugRoutes from './routes/debugRoutes';
+import verificationRoutes from './routes/verificationRoutes';
 
 const app: Express = express();
 const server = createServer(app);
@@ -133,6 +134,7 @@ app.get("/health", (req, res) => {
 
 // API Routes
 app.use("/api/auth", rateLimitConfig.auth, authRoutes);
+app.use('/api/auth/verification', verificationRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/search', rateLimitConfig.search, searchRoutes);
 app.use('/api/requests', requestRoutes);
