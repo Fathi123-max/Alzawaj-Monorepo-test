@@ -59,10 +59,21 @@ export interface ChatMessage {
   id: string;
   chatRoomId: string;
   senderId: string;
-  content: string;
+  sender?: {
+    _id: string;
+    firstname: string;
+    lastname: string;
+    fullName: string;
+  };
+  content: {
+    text?: string;
+    messageType: "text" | "media" | "system";
+  };
   status: "pending" | "approved" | "rejected" | "flagged";
   createdAt: string;
   approvedAt?: string;
+  isEdited?: boolean;
+  editedAt?: string;
 }
 
 export interface ChatRoom {
@@ -114,7 +125,12 @@ export interface AdminReport {
 export interface AdminNotification {
   _id: string;
   id: string;
-  type: "new_user" | "user_report" | "flagged_message" | "system_alert" | "marriage_request";
+  type:
+    | "new_user"
+    | "user_report"
+    | "flagged_message"
+    | "system_alert"
+    | "marriage_request";
   title: string;
   message: string;
   priority: "low" | "medium" | "high";
@@ -467,9 +483,7 @@ class AdminApiService {
     };
   }
 
-  async approveMarriageRequest(
-    requestId: string
-  ): Promise<ApiResponse<null>> {
+  async approveMarriageRequest(requestId: string): Promise<ApiResponse<null>> {
     return this.request<ApiResponse<null>>(`/requests/${requestId}/approve`, {
       method: "POST",
       body: JSON.stringify({}),
@@ -478,7 +492,7 @@ class AdminApiService {
 
   async rejectMarriageRequest(
     requestId: string,
-    reason?: string
+    reason?: string,
   ): Promise<ApiResponse<null>> {
     return this.request<ApiResponse<null>>(`/requests/${requestId}/reject`, {
       method: "POST",
@@ -511,7 +525,9 @@ class AdminApiService {
     };
   }
 
-  async getChatRoomDetails(chatRoomId: string): Promise<ApiResponse<{ chatRoom: ChatRoom }>> {
+  async getChatRoomDetails(
+    chatRoomId: string,
+  ): Promise<ApiResponse<{ chatRoom: ChatRoom }>> {
     const response = await this.request<{
       success: boolean;
       data: { chatRoom: ChatRoom };
@@ -529,7 +545,7 @@ class AdminApiService {
 
   async extendChatRoom(
     chatRoomId: string,
-    days: number = 7
+    days: number = 7,
   ): Promise<ApiResponse<null>> {
     return this.request<ApiResponse<null>>(`/chats/${chatRoomId}/extend`, {
       method: "POST",
@@ -539,7 +555,7 @@ class AdminApiService {
 
   async closeChatRoom(
     chatRoomId: string,
-    reason?: string
+    reason?: string,
   ): Promise<ApiResponse<null>> {
     return this.request<ApiResponse<null>>(`/chats/${chatRoomId}/close`, {
       method: "POST",
@@ -549,7 +565,7 @@ class AdminApiService {
 
   async archiveChatRoom(
     chatRoomId: string,
-    reason?: string
+    reason?: string,
   ): Promise<ApiResponse<null>> {
     return this.request<ApiResponse<null>>(`/chats/${chatRoomId}/archive`, {
       method: "POST",
@@ -603,9 +619,9 @@ class AdminApiService {
   }
 
   // Notifications Management
-  async getNotifications(filter?: "all" | "unread" | "important"): Promise<
-    ApiResponse<{ notifications: AdminNotification[] }>
-  > {
+  async getNotifications(
+    filter?: "all" | "unread" | "important",
+  ): Promise<ApiResponse<{ notifications: AdminNotification[] }>> {
     const params = filter ? `?filter=${filter}` : "";
     const response = await this.request<{
       success: boolean;
@@ -638,7 +654,9 @@ class AdminApiService {
     >("/notifications/unread-count");
   }
 
-  async markNotificationAsRead(notificationId: string): Promise<ApiResponse<null>> {
+  async markNotificationAsRead(
+    notificationId: string,
+  ): Promise<ApiResponse<null>> {
     return this.request<ApiResponse<null>>(
       `/notifications/${notificationId}/read`,
       {
@@ -656,12 +674,9 @@ class AdminApiService {
   }
 
   async deleteNotification(notificationId: string): Promise<ApiResponse<null>> {
-    return this.request<ApiResponse<null>>(
-      `/notifications/${notificationId}`,
-      {
-        method: "DELETE",
-      },
-    );
+    return this.request<ApiResponse<null>>(`/notifications/${notificationId}`, {
+      method: "DELETE",
+    });
   }
 
   // Settings Management
@@ -691,6 +706,93 @@ class AdminApiService {
       method: "PUT",
       body: JSON.stringify(settings),
     });
+  }
+
+  // Admin Messaging
+  async createChatWithUser(
+    userId: string,
+  ): Promise<ApiResponse<{ chatRoom: ChatRoom }>> {
+    const response = await this.request<{
+      success: boolean;
+      data: {
+        chatRoom: ChatRoom;
+      };
+      message?: string;
+    }>(`/chats/with-user/${userId}`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+
+    return {
+      success: response.success,
+      data: {
+        chatRoom: response.data.chatRoom,
+      },
+      message: response.message || "",
+    };
+  }
+
+  async getChatMessages(
+    chatRoomId: string,
+    page: number = 1,
+    limit: number = 50,
+  ): Promise<
+    ApiResponse<{
+      messages: ChatMessage[];
+      chatRoom: ChatRoom;
+      pagination: any;
+    }>
+  > {
+    console.log("[AdminApiService] getChatMessages called with:", { chatRoomId, page, limit }); // Debug log
+    const response = await this.request<{
+      success: boolean;
+      data: {
+        messages: ChatMessage[];
+        chatRoom: ChatRoom;
+        pagination: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
+      };
+      message?: string;
+    }>(`/chats/${chatRoomId}/messages?page=${page}&limit=${limit}`);
+
+    console.log("[AdminApiService] getChatMessages response:", response); // Debug log
+    return {
+      success: response.success,
+      data: {
+        messages: response.data.messages,
+        chatRoom: response.data.chatRoom,
+        pagination: response.data.pagination,
+      },
+      message: response.message || "",
+    };
+  }
+
+  async sendMessageToChat(
+    chatRoomId: string,
+    content: string,
+  ): Promise<ApiResponse<{ message: ChatMessage }>> {
+    const response = await this.request<{
+      success: boolean;
+      data: {
+        message: ChatMessage;
+      };
+      message?: string;
+    }>(`/chats/${chatRoomId}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ content }),
+    });
+
+    return {
+      success: response.success,
+      data: {
+        message: response.data.message,
+      },
+      message: response.message || "",
+    };
   }
 }
 

@@ -108,6 +108,27 @@ export const sendMarriageRequest = async (
       return;
     }
 
+    // TODO: Rate limiting - Users can only send 1 request every 48 hours
+    // Currently disabled, enable this check when needed
+    /*
+    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+    const recentRequests = await MarriageRequest.countDocuments({
+      sender: senderId,
+      createdAt: { $gte: fortyEightHoursAgo },
+    });
+
+    if (recentRequests > 0) {
+      res
+        .status(429)
+        .json(
+          createErrorResponse(
+            "يمكنك إرسال طلب زواح واحد فقط كل 48 ساعة. حاول مرة أخرى لاحقاً"
+          )
+        );
+      return;
+    }
+    */
+
     // Calculate compatibility score
     const compatibility = MarriageRequest.getCompatibilityScore(
       senderProfile,

@@ -379,10 +379,10 @@ export const login = async (
       token: refreshToken,
       createdAt: new Date(),
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-      deviceInfo: {
+      deviceInfo: JSON.stringify({
         userAgent: req.get("User-Agent") || "",
         ip: req.ip || "",
-      },
+      }),
     });
 
     console.log("Cleaning up old refresh tokens");
@@ -472,10 +472,10 @@ export const refreshToken = async (
       token: newRefreshToken,
       createdAt: new Date(),
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      deviceInfo: {
+      deviceInfo: JSON.stringify({
         userAgent: req.get("User-Agent") || "",
         ip: req.ip || "",
-      },
+      }),
     };
 
     await user.save();

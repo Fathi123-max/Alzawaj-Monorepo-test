@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
         priority: report.priority,
         createdAt: report.createdAt,
         updatedAt: report.updatedAt,
-      })
+      }),
     );
 
     return NextResponse.json({

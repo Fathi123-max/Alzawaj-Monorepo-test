@@ -135,16 +135,32 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const fetchMessages = useCallback(async (roomId: string) => {
+    console.log("[ChatProvider] Fetching messages for room:", roomId); // Debug log
     try {
       const response = await chatApi.getMessages(roomId);
+      console.log("[ChatProvider] Messages API response:", response); // Debug log
       if (response.success && response.data) {
+        // The response.data contains the actual messages array
+        const messages = response.data.messages || response.data || [];
+        console.log("[ChatProvider] Setting messages:", messages); // Debug log
         setMessages((prev) => ({
           ...prev,
-          [roomId]: response.data?.messages || [],
+          [roomId]: messages,
+        }));
+      } else {
+        console.log("[ChatProvider] No messages data in response"); // Debug log
+        setMessages((prev) => ({
+          ...prev,
+          [roomId]: [],
         }));
       }
     } catch (error: any) {
+      console.error("[ChatProvider] Error fetching messages:", error); // Debug log
       showToast.error(error.message || "خطأ في تحميل الرسائل");
+      setMessages((prev) => ({
+        ...prev,
+        [roomId]: [],
+      }));
     }
   }, []);
 
@@ -156,6 +172,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
+        console.log("[ChatProvider] Sending message:", content, "to room:", activeRoom.id); // Debug log
         // Send message via API
         const response = await chatApi.sendMessage({
           type: "text",
@@ -163,15 +180,13 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           content,
         });
 
-        if (response.success && response.data?.message) {
+        console.log("[ChatProvider] Send message response:", response); // Debug log
+        if (response.success && response.data) {
           // Add the new message to the local state
-          const newMessage = response.data.message;
+          const newMessage = response.data;
           setMessages((prev) => ({
             ...prev,
-            [activeRoom.id]: [
-              ...(prev[activeRoom.id] || []),
-              newMessage,
-            ],
+            [activeRoom.id]: [...(prev[activeRoom.id] || []), newMessage],
           }));
 
           showToast.success("تم إرسال الرسالة بنجاح");
@@ -180,12 +195,18 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           // await fetchMessages(activeRoom.id);
         }
       } catch (error: any) {
-        console.error("Send message error:", error);
-        const errorMessage = error.response?.data?.message || error.message || "خطأ في إرسال الرسالة";
+        console.error("[ChatProvider] Send message error:", error); // Debug log
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          "خطأ في إرسال الرسالة";
         showToast.error(errorMessage);
 
         // Handle rate limiting
-        if (errorMessage.includes("rate limit") || errorMessage.includes("حد أقصى")) {
+        if (
+          errorMessage.includes("rate limit") ||
+          errorMessage.includes("حد أقصى")
+        ) {
           setRateLimited(true);
           setTimeout(() => setRateLimited(false), 60000); // Reset after 1 minute
         }

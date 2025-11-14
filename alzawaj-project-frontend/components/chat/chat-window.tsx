@@ -275,15 +275,23 @@ export function ChatWindow({ chatRoom }: ChatWindowProps) {
                 }
                 if (typeof otherParticipant === "object" && otherParticipant) {
                   // Try to get user name if available
-                  if (typeof otherParticipant.user === "object" && otherParticipant.user) {
+                  if (
+                    typeof otherParticipant.user === "object" &&
+                    otherParticipant.user
+                  ) {
                     const userObj = otherParticipant.user;
                     if (userObj.fullName) return userObj.fullName;
                     if (userObj.firstname || userObj.lastname) {
-                      return `${userObj.firstname || ""} ${userObj.lastname || ""}`.trim() || "مستخدم";
+                      return (
+                        `${userObj.firstname || ""} ${userObj.lastname || ""}`.trim() ||
+                        "مستخدم"
+                      );
                     }
                   }
                   // Fallback to ID
-                  return otherParticipant.id || otherParticipant._id || "مستخدم";
+                  return (
+                    otherParticipant.id || otherParticipant._id || "مستخدم"
+                  );
                 }
                 return "مستخدم";
               })()}
@@ -354,13 +362,16 @@ export function ChatWindow({ chatRoom }: ChatWindowProps) {
                   : "مستخدم";
 
                 // Check if we need a date separator (new day)
-                const showDateSeparator = index === 0 ||
+                const showDateSeparator =
+                  index === 0 ||
                   new Date(message.createdAt).toDateString() !==
-                  new Date(roomMessages[index - 1].createdAt).toDateString();
+                    new Date(roomMessages[index - 1].createdAt).toDateString();
 
                 // Fix: Check both senderId and populated sender object
-                const isCurrentUser = message.senderId === user?.id ||
-                  (message.sender && (message.sender.id || message.sender._id) === user?.id);
+                const isCurrentUser =
+                  message.senderId === user?.id ||
+                  (message.sender &&
+                    (message.sender.id || message.sender._id) === user?.id);
 
                 // Debug logging (remove in production)
                 if (typeof window !== "undefined" && index < 3) {
@@ -379,11 +390,14 @@ export function ChatWindow({ chatRoom }: ChatWindowProps) {
                       <div className="flex items-center justify-center my-4">
                         <div className="bg-gray-200 px-3 py-1 rounded-full">
                           <span className="text-xs text-gray-600 arabic-optimized">
-                            {new Date(message.createdAt).toLocaleDateString("ar-SA", {
-                              weekday: "long",
-                              month: "long",
-                              day: "numeric",
-                            })}
+                            {new Date(message.createdAt).toLocaleDateString(
+                              "ar-SA",
+                              {
+                                weekday: "long",
+                                month: "long",
+                                day: "numeric",
+                              },
+                            )}
                           </span>
                         </div>
                       </div>

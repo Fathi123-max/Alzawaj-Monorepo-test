@@ -4,15 +4,29 @@ import { useState, useEffect } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { adminApiService, ChatRoom, handleApiError } from "@/lib/services/admin-api-service";
+import {
+  adminApiService,
+  ChatRoom,
+  handleApiError,
+} from "@/lib/services/admin-api-service";
 import { showToast } from "@/components/ui/toaster";
-import { MessageCircle, Users, Clock, AlertTriangle, Eye, RefreshCw } from "lucide-react";
+import { AdminChatModal } from "./admin-chat-modal";
+import {
+  MessageCircle,
+  Users,
+  Clock,
+  AlertTriangle,
+  Eye,
+  RefreshCw,
+} from "lucide-react";
 
 export function ChatOverviewPanel() {
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedChat, setSelectedChat] = useState<ChatRoom | null>(null);
   const [chats, setChats] = useState<ChatRoom[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [viewChat, setViewChat] = useState<ChatRoom | null>(null);
 
   // Load chats
   const loadChats = async () => {
@@ -52,7 +66,9 @@ export function ChatOverviewPanel() {
     const config = {
       active: {
         label: chat.isActive ? "نشط" : "غير نشط",
-        className: chat.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800",
+        className: chat.isActive
+          ? "bg-green-100 text-green-800"
+          : "bg-gray-100 text-gray-800",
         icon: MessageCircle,
       },
     };
@@ -138,6 +154,12 @@ export function ChatOverviewPanel() {
     }
   };
 
+  // Handle view chat
+  const handleViewChat = (chat: ChatRoom) => {
+    setViewChat(chat);
+    setShowChatModal(true);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header with statistics */}
@@ -148,8 +170,15 @@ export function ChatOverviewPanel() {
               <MessageCircle className="h-6 w-6 text-primary" />
               المحادثات النشطة
             </h2>
-            <Button onClick={loadChats} disabled={loading} variant="outline" size="sm">
-              <RefreshCw className={`w-4 h-4 ml-2 ${loading ? "animate-spin" : ""}`} />
+            <Button
+              onClick={loadChats}
+              disabled={loading}
+              variant="outline"
+              size="sm"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ml-2 ${loading ? "animate-spin" : ""}`}
+              />
               تحديث
             </Button>
           </div>
@@ -162,7 +191,11 @@ export function ChatOverviewPanel() {
             </div>
             <div className="text-center p-3 bg-orange-50 rounded-lg">
               <div className="text-2xl font-bold text-orange-600">
-                {chats.filter((c) => c.expiresAt && new Date(c.expiresAt) < new Date()).length}
+                {
+                  chats.filter(
+                    (c) => c.expiresAt && new Date(c.expiresAt) < new Date(),
+                  ).length
+                }
               </div>
               <div className="text-sm text-orange-600">منتهية الصلاحية</div>
             </div>
@@ -211,12 +244,16 @@ export function ChatOverviewPanel() {
           {loading ? (
             <div className="p-8 text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-              <p className="text-lg text-gray-600 mt-4">جارٍ تحميل المحادثات...</p>
+              <p className="text-lg text-gray-600 mt-4">
+                جارٍ تحميل المحادثات...
+              </p>
             </div>
           ) : filteredChats.length === 0 ? (
             <div className="p-8 text-center">
               <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">لا توجد محادثات</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                لا توجد محادثات
+              </h3>
               <p className="text-gray-500">
                 {selectedStatus === "all"
                   ? "لا توجد محادثات نشطة حالياً"
@@ -253,13 +290,15 @@ export function ChatOverviewPanel() {
                           <Users className="h-5 w-5 text-gray-400" />
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {chat.participants[0]?.user?.fullName || "غير محدد"}
+                              {chat.participants[0]?.user?.fullName ||
+                                "غير محدد"}
                             </div>
                           </div>
                           <div className="text-gray-400">→</div>
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {chat.participants[1]?.user?.fullName || "غير محدد"}
+                              {chat.participants[1]?.user?.fullName ||
+                                "غير محدد"}
                             </div>
                           </div>
                         </div>
@@ -281,7 +320,9 @@ export function ChatOverviewPanel() {
                           className={`${
                             getTimeRemaining(chat.expiresAt).includes("منتهي")
                               ? "text-red-600"
-                              : getTimeRemaining(chat.expiresAt).includes("اليوم")
+                              : getTimeRemaining(chat.expiresAt).includes(
+                                    "اليوم",
+                                  )
                                 ? "text-orange-600"
                                 : "text-gray-600"
                           }`}
@@ -298,12 +339,23 @@ export function ChatOverviewPanel() {
                           >
                             <Eye className="h-3 w-3" />
                           </Button>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => handleViewChat(chat)}
+                            className="bg-purple-600 hover:bg-purple-700"
+                            title="عرض والمشاركة في المحادثة"
+                          >
+                            <MessageCircle className="h-3 w-3" />
+                          </Button>
                           {chat.isActive && (
                             <>
                               <Button
                                 variant="secondary"
                                 size="sm"
-                                onClick={() => handleExtend(chat._id || chat.id, 7)}
+                                onClick={() =>
+                                  handleExtend(chat._id || chat.id, 7)
+                                }
                                 title="تمديد 7 أيام"
                               >
                                 +7
@@ -361,18 +413,23 @@ export function ChatOverviewPanel() {
                   <div className="text-sm text-gray-600">
                     <div>
                       <strong>الاسم:</strong>{" "}
-                      {selectedChat.participants[0]?.user?.fullName || "غير محدد"}
+                      {selectedChat.participants[0]?.user?.fullName ||
+                        "غير محدد"}
                     </div>
                     <div>
                       <strong>تاريخ الانضمام:</strong>{" "}
                       {selectedChat.participants[0]?.joinedAt
-                        ? new Date(selectedChat.participants[0].joinedAt).toLocaleDateString("ar-SA")
+                        ? new Date(
+                            selectedChat.participants[0].joinedAt,
+                          ).toLocaleDateString("ar-SA")
                         : "غير محدد"}
                     </div>
                     <div>
                       <strong>آخر ظهور:</strong>{" "}
                       {selectedChat.participants[0]?.lastSeen
-                        ? new Date(selectedChat.participants[0].lastSeen).toLocaleDateString("ar-SA")
+                        ? new Date(
+                            selectedChat.participants[0].lastSeen,
+                          ).toLocaleDateString("ar-SA")
                         : "غير محدد"}
                     </div>
                   </div>
@@ -382,18 +439,23 @@ export function ChatOverviewPanel() {
                   <div className="text-sm text-gray-600">
                     <div>
                       <strong>الاسم:</strong>{" "}
-                      {selectedChat.participants[1]?.user?.fullName || "غير محدد"}
+                      {selectedChat.participants[1]?.user?.fullName ||
+                        "غير محدد"}
                     </div>
                     <div>
                       <strong>تاريخ الانضمام:</strong>{" "}
                       {selectedChat.participants[1]?.joinedAt
-                        ? new Date(selectedChat.participants[1].joinedAt).toLocaleDateString("ar-SA")
+                        ? new Date(
+                            selectedChat.participants[1].joinedAt,
+                          ).toLocaleDateString("ar-SA")
                         : "غير محدد"}
                     </div>
                     <div>
                       <strong>آخر ظهور:</strong>{" "}
                       {selectedChat.participants[1]?.lastSeen
-                        ? new Date(selectedChat.participants[1].lastSeen).toLocaleDateString("ar-SA")
+                        ? new Date(
+                            selectedChat.participants[1].lastSeen,
+                          ).toLocaleDateString("ar-SA")
                         : "غير محدد"}
                     </div>
                   </div>
@@ -405,25 +467,35 @@ export function ChatOverviewPanel() {
                 <div className="text-sm text-gray-600 space-y-1">
                   <div>
                     <strong>تاريخ الإنشاء:</strong>{" "}
-                    {new Date(selectedChat.createdAt).toLocaleDateString("ar-SA")}
+                    {new Date(selectedChat.createdAt).toLocaleDateString(
+                      "ar-SA",
+                    )}
                   </div>
                   <div>
                     <strong>آخر تحديث:</strong>{" "}
-                    {new Date(selectedChat.updatedAt).toLocaleDateString("ar-SA")}
+                    {new Date(selectedChat.updatedAt).toLocaleDateString(
+                      "ar-SA",
+                    )}
                   </div>
                   {selectedChat.expiresAt && (
                     <>
                       <div>
                         <strong>تاريخ الانتهاء:</strong>{" "}
-                        {new Date(selectedChat.expiresAt).toLocaleDateString("ar-SA")}
+                        {new Date(selectedChat.expiresAt).toLocaleDateString(
+                          "ar-SA",
+                        )}
                       </div>
                       <div>
                         <strong>الوقت المتبقي:</strong>
                         <span
                           className={`font-medium ${
-                            getTimeRemaining(selectedChat.expiresAt).includes("منتهي")
+                            getTimeRemaining(selectedChat.expiresAt).includes(
+                              "منتهي",
+                            )
                               ? "text-red-600"
-                              : getTimeRemaining(selectedChat.expiresAt).includes("اليوم")
+                              : getTimeRemaining(
+                                    selectedChat.expiresAt,
+                                  ).includes("اليوم")
                                 ? "text-orange-600"
                                 : "text-green-600"
                           }`}
@@ -437,10 +509,12 @@ export function ChatOverviewPanel() {
                     <strong>النوع:</strong> {selectedChat.type}
                   </div>
                   <div>
-                    <strong>الحالة:</strong> {selectedChat.isActive ? "نشط" : "غير نشط"}
+                    <strong>الحالة:</strong>{" "}
+                    {selectedChat.isActive ? "نشط" : "غير نشط"}
                   </div>
                   <div>
-                    <strong>المعرف:</strong> {selectedChat._id || selectedChat.id}
+                    <strong>المعرف:</strong>{" "}
+                    {selectedChat._id || selectedChat.id}
                   </div>
                 </div>
               </div>
@@ -454,12 +528,15 @@ export function ChatOverviewPanel() {
                       {selectedChat.lastMessage.sender?.firstname || "غير محدد"}
                     </div>
                     <div>
-                      <strong>المحتوى:</strong> {selectedChat.lastMessage.content || "غير محدد"}
+                      <strong>المحتوى:</strong>{" "}
+                      {selectedChat.lastMessage.content || "غير محدد"}
                     </div>
                     <div>
                       <strong>التاريخ:</strong>{" "}
                       {selectedChat.lastMessage.timestamp
-                        ? new Date(selectedChat.lastMessage.timestamp).toLocaleDateString("ar-SA")
+                        ? new Date(
+                            selectedChat.lastMessage.timestamp,
+                          ).toLocaleDateString("ar-SA")
                         : "غير محدد"}
                     </div>
                   </div>
@@ -496,6 +573,16 @@ export function ChatOverviewPanel() {
           </Card>
         </div>
       )}
+
+      {/* Admin Chat Modal */}
+      <AdminChatModal
+        isOpen={showChatModal}
+        onClose={() => {
+          setShowChatModal(false);
+          setViewChat(null);
+        }}
+        chatRoom={viewChat || null}
+      />
     </div>
   );
 }

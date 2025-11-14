@@ -76,7 +76,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex sm:space-x-4 sm:space-x-reverse">
+            <nav className="hidden md:flex sm:space-x-4 sm:space-x-reverse">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
@@ -101,7 +101,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </button>
               <button
                 onClick={toggleMobileMenu}
-                className="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
+                className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
                 aria-label="فتح القائمة"
               >
                 <svg
@@ -152,12 +152,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Mobile Navigation Overlay */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden">
           <div
             className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
             onClick={toggleMobileMenu}
           ></div>
-          <nav className="fixed top-0 right-0 bottom-0 flex flex-col w-80 max-w-sm bg-white shadow-2xl transform transition-transform duration-300 ease-in-out">
+          <nav className="fixed top-0 right-0 bottom-0 flex flex-col w-72 max-w-[85vw] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out">
             <div className="flex items-center justify-between p-4 border-b">
               <span className="text-lg font-bold text-primary">القائمة</span>
               <button
@@ -296,7 +296,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       <div className="flex flex-1">
         {/* Desktop Sidebar */}
-        <aside className="hidden xl:flex w-64 bg-gradient-to-b from-white to-gray-50/30 shadow-lg border-l border-gray-200/70">
+        <aside className="hidden lg:flex w-64 bg-gradient-to-b from-white to-gray-50/30 shadow-lg border-l border-gray-200/70">
           <div className="sticky top-16 sm:top-20 h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)] overflow-y-auto w-full scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             <nav className="flex-1 p-4 pt-6">
               <ul className="space-y-2">

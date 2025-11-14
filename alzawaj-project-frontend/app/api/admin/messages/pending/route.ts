@@ -79,7 +79,10 @@ export async function GET(request: NextRequest) {
     // Transform messages to extract primitive values from populated objects
     // Filter out any invalid messages with null sender or chatRoom
     const messages = (responseData.data?.messages || responseData.data || [])
-      .filter((message: any) => message && message._id && message.sender && message.chatRoom)
+      .filter(
+        (message: any) =>
+          message && message._id && message.sender && message.chatRoom,
+      )
       .map((message: any) => ({
         id: message._id || message.id,
         chatRoomId:

@@ -485,9 +485,7 @@ class AdminApiService {
   /**
    * Get admin notifications
    */
-  async getNotifications(
-    filter?: "all" | "unread" | "important",
-  ): Promise<
+  async getNotifications(filter?: "all" | "unread" | "important"): Promise<
     ApiResponse<{
       notifications: AdminNotification[];
       pagination: {
@@ -498,11 +496,13 @@ class AdminApiService {
       };
     }>
   > {
+    console.log("[AdminApi] getNotifications called with filter:", filter); // Debug log
     const queryParams = new URLSearchParams();
     if (filter) queryParams.append("filter", filter);
 
     const queryString = queryParams.toString();
     const url = `/admin/notifications${queryString ? `?${queryString}` : ""}`;
+    console.log("[AdminApi] Making request to:", url); // Debug log
 
     return await this.client.get<{
       notifications: AdminNotification[];
@@ -549,9 +549,7 @@ class AdminApiService {
   /**
    * Delete notification
    */
-  async deleteNotification(
-    notificationId: string,
-  ): Promise<ApiResponse<null>> {
+  async deleteNotification(notificationId: string): Promise<ApiResponse<null>> {
     return await this.client.delete<null>(
       `/admin/notifications/${notificationId}`,
     );

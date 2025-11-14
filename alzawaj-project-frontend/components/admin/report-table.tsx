@@ -132,12 +132,12 @@ export function ReportTable() {
     const typeLabels: Record<string, string> = {
       "inappropriate-content": "محتوى غير مناسب",
       "fake-profile": "ملف شخصي مزيف",
-      "harassment": "تحرش",
-      "spam": "رسائل مزعجة",
-      "scam": "احتيال",
+      harassment: "تحرش",
+      spam: "رسائل مزعجة",
+      scam: "احتيال",
       "abusive-language": "لغة مسيئة",
       "religious-violations": "انتهاكات دينية",
-      "other": "أخرى",
+      other: "أخرى",
     };
     return typeLabels[type] || type;
   };
@@ -157,7 +157,11 @@ export function ReportTable() {
   };
 
   const getPriorityColor = (type: string) => {
-    const highPriority = ["harassment", "abusive-language", "religious-violations"];
+    const highPriority = [
+      "harassment",
+      "abusive-language",
+      "religious-violations",
+    ];
     const mediumPriority = ["inappropriate-content", "scam", "fake-profile"];
 
     if (highPriority.includes(type)) return "text-red-600";
@@ -212,7 +216,11 @@ export function ReportTable() {
               <p className="text-2xl font-bold text-red-600">
                 {
                   reports.filter((r) =>
-                    ["harassment", "abusive-language", "religious-violations"].includes(r.reason),
+                    [
+                      "harassment",
+                      "abusive-language",
+                      "religious-violations",
+                    ].includes(r.reason),
                   ).length
                 }
               </p>
@@ -266,7 +274,8 @@ export function ReportTable() {
                             ID: {report.id}
                           </div>
                           <div className="text-xs text-gray-500 mb-1">
-                            المبلغ: {report.reporterId} | ضد: {report.reportedUserId}
+                            المبلغ: {report.reporterId} | ضد:{" "}
+                            {report.reportedUserId}
                           </div>
                           <div className="text-sm text-gray-700">
                             <strong>السبب:</strong> {report.reason}

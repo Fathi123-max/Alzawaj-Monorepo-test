@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import mongoose from "mongoose";
 import { User } from "../models/User";
 import { Profile } from "../models/Profile";
 import { MarriageRequest } from "../models/MarriageRequest";
@@ -782,6 +783,228 @@ export const deleteNotification = async (
   }
 };
 
+/**
+ * Create or get chat room between admin and a user
+ */
+export const createAdminChatWithUser = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { userId } = req.params;
+    const adminId = req.user?.id;
+
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json(createErrorResponse("المستخدم غير موجود"));
+      return;
+    }
+
+    // Check if admin is actually an admin
+    if (req.user?.role !== "admin" && req.user?.role !== "moderator") {
+      res.status(403).json(createErrorResponse("غير مصرح لك بإنشاء محادثات إدارية"));
+      return;
+    }
+
+    // Check if chat room already exists between admin and user
+    const existingChat = await ChatRoom.findOne({
+      type: "direct",
+      "participants.user": { $all: [adminId, userId] },
+      participants: { $size: 2 },
+      isActive: true,
+    }).populate("participants.user", "firstname lastname");
+
+    if (existingChat) {
+      res.json(
+        createSuccessResponse("تم جلب المحادثة بنجاح", {
+          chatRoom: existingChat,
+        })
+      );
+      return;
+    }
+
+    // Create new chat room
+    const chatRoom = await ChatRoom.createDirectChat(
+      new mongoose.Types.ObjectId(adminId),
+      new mongoose.Types.ObjectId(userId)
+    );
+
+    // Populate participants
+    const populatedChat = await ChatRoom.findById(chatRoom._id).populate(
+      "participants.user",
+      "firstname lastname"
+    );
+
+    res.status(201).json(
+      createSuccessResponse("تم إنشاء المحادثة بنجاح", {
+        chatRoom: populatedChat,
+      })
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get messages in a chat room (Admin can access all chats)
+ */
+export const getAdminChatMessages = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { chatRoomId } = req.params;
+    const { page = 1, limit = 50 } = req.query as any;
+
+    // Check if chat room exists
+    const chatRoom = await ChatRoom.findById(chatRoomId).populate(
+      "participants.user",
+      "firstname lastname"
+    );
+
+    if (!chatRoom) {
+      res.status(404).json(createErrorResponse("غرفة الدردشة غير موجودة"));
+      return;
+    }
+
+    // Check if user is admin or participant
+    const isAdmin = req.user?.role === "admin" || req.user?.role === "moderator";
+    const isParticipant = chatRoom.participants.some(
+      (p) => p.user._id.toString() === req.user?.id
+    );
+
+    if (!isAdmin && !isParticipant) {
+      res.status(403).json(createErrorResponse("غير مصرح لك بالوصول إلى هذه المحادثة"));
+      return;
+    }
+
+    // Calculate pagination
+    const skip = (Number(page) - 1) * Number(limit);
+    const totalMessages = await Message.countDocuments({
+      chatRoom: chatRoomId,
+      isDeleted: false,
+    });
+
+    // Get messages
+    const messages = await Message.find({
+      chatRoom: chatRoomId,
+      isDeleted: false,
+    })
+      .populate("sender", "firstname lastname")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit));
+
+    const totalPages = Math.ceil(totalMessages / Number(limit));
+
+    res.json(
+      createSuccessResponse("تم جلب الرسائل بنجاح", {
+        messages: messages.reverse(), // Reverse to show oldest first
+        chatRoom,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total: totalMessages,
+          totalPages,
+        },
+      })
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Send message to a chat room as admin
+ */
+export const sendAdminMessage = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { chatRoomId } = req.params;
+    const { content } = req.body;
+    const adminId = req.user?.id;
+
+    // Check if user is admin or moderator
+    if (req.user?.role !== "admin" && req.user?.role !== "moderator") {
+      res.status(403).json(createErrorResponse("غير مصرح لك بإرسال رسائل إدارية"));
+      return;
+    }
+
+    // Validate content
+    if (!content || content.trim().length === 0) {
+      res.status(400).json(createErrorResponse("محتوى الرسالة مطلوب"));
+      return;
+    }
+
+    if (content.length > 1000) {
+      res.status(400).json(createErrorResponse("الرسالة لا يجب أن تتجاوز 1000 حرف"));
+      return;
+    }
+
+    // Check if chat room exists
+    const chatRoom = await ChatRoom.findById(chatRoomId);
+
+    if (!chatRoom) {
+      res.status(404).json(createErrorResponse("غرفة الدردشة غير موجودة"));
+      return;
+    }
+
+    // Check if admin is already a participant, if not add them
+    const isParticipant = chatRoom.participants.some(
+      (p) => p.user.toString() === adminId
+    );
+
+    if (!isParticipant) {
+      await chatRoom.addParticipant(new mongoose.Types.ObjectId(adminId), "admin");
+    }
+
+    // Create message
+    const message = new Message({
+      chatRoom: chatRoomId,
+      sender: adminId,
+      content: {
+        text: content,
+        messageType: "text",
+      },
+      status: "approved", // Auto-approve admin messages
+      approvedAt: new Date(),
+      approvedBy: adminId,
+    });
+
+    // Check content compliance
+    (message as any).checkCompliance();
+
+    await message.save();
+
+    // Update chat room last message
+    (chatRoom as any).lastMessage = {
+      content: content,
+      sender: adminId,
+      timestamp: new Date(),
+      type: "text",
+    };
+    (chatRoom as any).lastMessageAt = new Date();
+    await chatRoom.save();
+
+    // Populate sender info
+    await message.populate("sender", "firstname lastname");
+
+    res.status(201).json(
+      createSuccessResponse("تم إرسال الرسالة بنجاح", {
+        message,
+      })
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getAdminStats,
   getUsers,
@@ -806,4 +1029,7 @@ export default {
   deleteNotification,
   getAdminSettings,
   updateAdminSettings,
+  createAdminChatWithUser,
+  getAdminChatMessages,
+  sendAdminMessage,
 };

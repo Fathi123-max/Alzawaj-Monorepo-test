@@ -27,6 +27,7 @@ import {
   handleApiError,
 } from "@/lib/services/admin-api-service";
 import { showToast } from "@/components/ui/toaster";
+import { AdminChatModal } from "./admin-chat-modal";
 import {
   Search,
   RefreshCw,
@@ -43,6 +44,7 @@ import {
   Phone,
   Mail,
   Calendar,
+  MessageCircle,
 } from "lucide-react";
 
 interface SearchParams {
@@ -64,6 +66,10 @@ export function UsersManagement() {
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showMobileDetails, setShowMobileDetails] = useState(false);
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [chatUser, setChatUser] = useState<{ id: string; name: string } | null>(
+    null,
+  );
 
   useEffect(() => {
     loadUsers();
@@ -155,6 +161,14 @@ export function UsersManagement() {
       ...prev,
       page,
     }));
+  };
+
+  const handleStartChat = (user: AdminUser) => {
+    setChatUser({
+      id: user.id || user._id,
+      name: user.fullName || `${user.firstname} ${user.lastname}`,
+    });
+    setShowChatModal(true);
   };
 
   const getStatusBadge = (status: string) => {
@@ -435,6 +449,15 @@ export function UsersManagement() {
                               <Shield className="w-4 h-4" />
                             </Button>
                           )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleStartChat(user)}
+                            className="text-purple-600 hover:text-purple-800"
+                            title="مراسلة المستخدم"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -614,6 +637,17 @@ export function UsersManagement() {
                                   توثيق الحساب
                                 </Button>
                               )}
+                              <Button
+                                variant="default"
+                                className="w-full bg-purple-600 hover:bg-purple-700"
+                                onClick={() => {
+                                  handleStartChat(selectedUser);
+                                  setShowMobileDetails(false);
+                                }}
+                              >
+                                <MessageCircle className="w-4 h-4 ml-2" />
+                                مراسلة المستخدم
+                              </Button>
                             </div>
                           </div>
                         )}
@@ -750,6 +784,17 @@ export function UsersManagement() {
           </CardContent>
         </Card>
       )}
+
+      {/* Admin Chat Modal */}
+      <AdminChatModal
+        isOpen={showChatModal}
+        onClose={() => {
+          setShowChatModal(false);
+          setChatUser(null);
+        }}
+        userId={chatUser?.id || null}
+        userName={chatUser?.name || null}
+      />
     </div>
   );
 }

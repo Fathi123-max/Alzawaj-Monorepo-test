@@ -100,24 +100,28 @@ export function DashboardHome() {
         // Handle stats
         try {
           // Fetch stats, pending requests, and active chats in parallel
-          const [searchStatsRes, receivedRequestsRes, chatRoomsRes] = await Promise.allSettled([
-            searchApiService.getSearchStats(),
-            // Fetch received requests to get pending count
-            fetch("/api/requests/received?page=1&limit=100", {
-              headers: {
-                "Authorization": `Bearer ${getStoredToken()}`,
-              },
-            }).then(res => res.json()),
-            // Fetch chat rooms to get active chats count
-            fetch("/api/chat/rooms", {
-              headers: {
-                "Authorization": `Bearer ${getStoredToken()}`,
-              },
-            }).then(res => res.json()),
-          ]);
+          const [searchStatsRes, receivedRequestsRes, chatRoomsRes] =
+            await Promise.allSettled([
+              searchApiService.getSearchStats(),
+              // Fetch received requests to get pending count
+              fetch("/api/requests/received?page=1&limit=100", {
+                headers: {
+                  Authorization: `Bearer ${getStoredToken()}`,
+                },
+              }).then((res) => res.json()),
+              // Fetch chat rooms to get active chats count
+              fetch("/api/chat/rooms", {
+                headers: {
+                  Authorization: `Bearer ${getStoredToken()}`,
+                },
+              }).then((res) => res.json()),
+            ]);
 
           // Handle search stats
-          if (searchStatsRes.status === "fulfilled" && searchStatsRes.value?.success) {
+          if (
+            searchStatsRes.status === "fulfilled" &&
+            searchStatsRes.value?.success
+          ) {
             const searchData = searchStatsRes.value.data as any;
             setStats({
               profileViews: searchData?.totalViews || 0,
@@ -132,19 +136,27 @@ export function DashboardHome() {
           }
 
           // Handle pending requests
-          if (receivedRequestsRes.status === "fulfilled" && receivedRequestsRes.value?.success) {
+          if (
+            receivedRequestsRes.status === "fulfilled" &&
+            receivedRequestsRes.value?.success
+          ) {
             const requests = receivedRequestsRes.value.data?.requests || [];
-            const pendingCount = requests.filter((r: any) => r.status === "pending").length;
-            setStats(prev => ({
+            const pendingCount = requests.filter(
+              (r: any) => r.status === "pending",
+            ).length;
+            setStats((prev) => ({
               ...prev,
               pendingRequests: pendingCount,
             }));
           }
 
           // Handle active chats
-          if (chatRoomsRes.status === "fulfilled" && chatRoomsRes.value?.success) {
+          if (
+            chatRoomsRes.status === "fulfilled" &&
+            chatRoomsRes.value?.success
+          ) {
             const chatRooms = chatRoomsRes.value.data || [];
-            setStats(prev => ({
+            setStats((prev) => ({
               ...prev,
               activeChats: chatRooms.length,
             }));
@@ -289,7 +301,7 @@ export function DashboardHome() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 xl:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 xl:gap-6">
         <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
           <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center">
@@ -542,7 +554,7 @@ export function DashboardHome() {
             </CardHeader>
             <CardContent className="p-3 sm:p-4 lg:p-6">
               {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="animate-pulse">
                       <div className="bg-gray-200 h-48 rounded-lg"></div>
@@ -550,7 +562,7 @@ export function DashboardHome() {
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {featuredProfiles.map((profile) => (
                     <ProfileCard
                       key={profile.id}
@@ -638,7 +650,7 @@ export function DashboardHome() {
         </CardHeader>
         <CardContent className="p-3 sm:p-4">
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="animate-pulse">
                   <div className="bg-gray-200 h-32 rounded-lg"></div>
@@ -646,7 +658,7 @@ export function DashboardHome() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {recentProfiles.map((profile) => (
                 <ProfileCard
                   key={profile.id}

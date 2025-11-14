@@ -235,21 +235,26 @@ export interface MarriageRequest {
 export interface ChatRoom {
   id: string;
   requestId: string;
-  participants: (string | {
-    user: string | {
-      _id: string;
-      id: string;
-      firstname?: string;
-      lastname?: string;
-      fullName?: string;
-    };
-    joinedAt: string;
-    lastSeen: string;
-    isActive: boolean;
-    role: string;
-    _id?: string;
-    id: string;
-  })[];
+  participants: (
+    | string
+    | {
+        user:
+          | string
+          | {
+              _id: string;
+              id: string;
+              firstname?: string;
+              lastname?: string;
+              fullName?: string;
+            };
+        joinedAt: string;
+        lastSeen: string;
+        isActive: boolean;
+        role: string;
+        _id?: string;
+        id: string;
+      }
+  )[];
   status: "active" | "expired" | "closed";
   createdAt: string;
   updatedAt: string;
@@ -476,7 +481,12 @@ export interface Notification {
 export interface AdminNotification {
   _id: string;
   id: string;
-  type: "new_user" | "user_report" | "flagged_message" | "system_alert" | "marriage_request";
+  type:
+    | "new_user"
+    | "user_report"
+    | "flagged_message"
+    | "system_alert"
+    | "marriage_request";
   title: string;
   message: string;
   priority: "low" | "medium" | "high";

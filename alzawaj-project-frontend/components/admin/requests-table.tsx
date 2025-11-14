@@ -407,7 +407,9 @@ export function RequestsTable() {
                                 size="sm"
                                 variant="ghost"
                                 className="text-green-600 hover:text-green-800"
-                                onClick={() => handleApprove(request._id || request.id)}
+                                onClick={() =>
+                                  handleApprove(request._id || request.id)
+                                }
                                 title="قبول الطلب"
                               >
                                 <CheckCircle className="w-4 h-4" />
@@ -416,7 +418,9 @@ export function RequestsTable() {
                                 size="sm"
                                 variant="ghost"
                                 className="text-red-600 hover:text-red-800"
-                                onClick={() => handleReject(request._id || request.id)}
+                                onClick={() =>
+                                  handleReject(request._id || request.id)
+                                }
                                 title="رفض الطلب"
                               >
                                 <XCircle className="w-4 h-4" />
@@ -529,7 +533,9 @@ export function RequestsTable() {
                                   variant="default"
                                   className="w-full"
                                   onClick={() => {
-                                    handleApprove(selectedRequest._id || selectedRequest.id);
+                                    handleApprove(
+                                      selectedRequest._id || selectedRequest.id,
+                                    );
                                     setShowRequestDetails(false);
                                   }}
                                 >
@@ -540,7 +546,9 @@ export function RequestsTable() {
                                   variant="destructive"
                                   className="w-full"
                                   onClick={() => {
-                                    handleReject(selectedRequest._id || selectedRequest.id);
+                                    handleReject(
+                                      selectedRequest._id || selectedRequest.id,
+                                    );
                                     setShowRequestDetails(false);
                                   }}
                                 >

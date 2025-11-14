@@ -25,7 +25,9 @@ function RequestCard({ request, type, onUpdate }: RequestCardProps) {
   const handleStartChat = async (request: MarriageRequest) => {
     try {
       // Find or create chat room for this request
-      const chatRoomResponse = await chatApi.getOrCreateRoomByRequest(request.id);
+      const chatRoomResponse = await chatApi.getOrCreateRoomByRequest(
+        request.id,
+      );
 
       if (chatRoomResponse.success && chatRoomResponse.data) {
         const chatRoom = chatRoomResponse.data;
@@ -186,8 +188,7 @@ function RequestCard({ request, type, onUpdate }: RequestCardProps) {
           </div>
         </div>
 
-        {/* Action Buttons - TEMPORARILY HIDDEN */}
-        {/* TODO: Re-enable accept/reject functionality later
+        {/* Action Buttons */}
         {type === "received" && request.status === "pending" && (
           <div className="flex gap-3">
             <Button
@@ -205,16 +206,6 @@ function RequestCard({ request, type, onUpdate }: RequestCardProps) {
             >
               {isLoading ? "جاري الرفض..." : "رفض"}
             </Button>
-          </div>
-        )}
-        */}
-
-        {/* Temporary notice */}
-        {type === "received" && request.status === "pending" && (
-          <div className="mt-4 p-3 bg-blue-50 rounded-md border border-blue-200">
-            <p className="text-sm text-blue-800 text-center">
-              ⚠️ وظائف القبول والرفض معطلة مؤقتاً
-            </p>
           </div>
         )}
 

@@ -14,7 +14,10 @@ function ChatPageContent() {
   if (chatRoomId) {
     return (
       <div className="h-full">
-        <ChatInterface requestId={requestId || undefined} chatRoomId={chatRoomId} />
+        <ChatInterface
+          requestId={requestId || undefined}
+          chatRoomId={chatRoomId}
+        />
       </div>
     );
   }

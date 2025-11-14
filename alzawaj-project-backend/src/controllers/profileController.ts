@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { Profile } from "../models/Profile";
 import { User } from "../models/User";
 import { MarriageRequest } from "../models/MarriageRequest";
+import { Message } from "../models/Message";
 import mongoose from "mongoose";
 import {
   createSuccessResponse,
@@ -1432,6 +1433,9 @@ export const deleteProfile = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const userId = req.user?.id;
     const { confirmPassword } = req.body;
@@ -1444,7 +1448,7 @@ export const deleteProfile = async (
     }
 
     // Verify password
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).session(session);
     if (!user) {
       res.status(404).json(createErrorResponse("المستخدم غير موجود"));
       return;
@@ -1456,20 +1460,38 @@ export const deleteProfile = async (
       return;
     }
 
+    // Delete all messages sent by the user
+    await Message.updateMany(
+      { sender: userId },
+      {
+        $set: {
+          isDeleted: true,
+          deletedAt: new Date()
+        }
+      },
+      { session }
+    );
+
     // Soft delete profile
-    const profile = await Profile.findOne({ userId: userId });
+    const profile = await Profile.findOne({ userId: userId }).session(session);
     if (profile) {
       profile.isDeleted = true;
       profile.deletedAt = new Date();
-      await profile.save();
+      await profile.save({ session });
     }
 
-    // Deactivate user account
-    user.isActive = false;
-    await user.save();
+    // Soft delete user account using the model's softDelete method
+    await user.softDelete();
 
-    res.json(createSuccessResponse("تم حذف الملف الشخصي بنجاح"));
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    res.json(createSuccessResponse("تم حذف الحساب وجميع الرسائل بنجاح"));
   } catch (error) {
+    // Abort transaction on error
+    await session.abortTransaction();
+    session.endSession();
     next(error);
   }
 };

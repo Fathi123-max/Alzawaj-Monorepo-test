@@ -54,6 +54,22 @@ const notificationActionValidation = [
   param("notificationId").isMongoId().withMessage("معرف الإشعار غير صحيح"),
 ];
 
+const adminChatValidation = [
+  param("userId").isMongoId().withMessage("معرف المستخدم غير صحيح"),
+  body("content").optional().isLength({ max: 1000 }).withMessage("الرسالة لا يجب أن تتجاوز 1000 حرف"),
+];
+
+const adminMessageValidation = [
+  param("chatRoomId").isMongoId().withMessage("معرف غرفة الدردشة غير صحيح"),
+  body("content").isLength({ min: 1, max: 1000 }).withMessage("محتوى الرسالة مطلوب ويجب أن يكون بين 1-1000 حرف"),
+];
+
+const getChatMessagesValidation = [
+  param("chatRoomId").isMongoId().withMessage("معرف غرفة الدردشة غير صحيح"),
+  query("page").optional().isInt({ min: 1 }).withMessage("رقم الصفحة يجب أن يكون رقمًا موجبًا"),
+  query("limit").optional().isInt({ min: 1, max: 100 }).withMessage("الحد يجب أن يكون بين 1-100"),
+];
+
 // Routes
 
 // Get admin stats
@@ -102,6 +118,26 @@ router.get(
   protect,
   adminOnly,
   adminController.getChatRoomDetails
+);
+
+// Get chat messages
+router.get(
+  "/chats/:chatRoomId/messages",
+  protect,
+  adminOnly,
+  getChatMessagesValidation,
+  validateRequest,
+  adminController.getAdminChatMessages
+);
+
+// Send message to chat
+router.post(
+  "/chats/:chatRoomId/messages",
+  protect,
+  adminOnly,
+  adminMessageValidation,
+  validateRequest,
+  adminController.sendAdminMessage
 );
 
 // Extend chat room
@@ -169,5 +205,33 @@ router.get("/settings", protect, adminOnly, adminController.getAdminSettings);
 
 // Update admin settings
 router.put("/settings", protect, adminOnly, updateSettingsValidation, validateRequest, adminController.updateAdminSettings);
+
+// Create or get chat with a user
+router.post(
+  "/chats/with-user/:userId",
+  protect,
+  adminOnly,
+  adminChatValidation,
+  validateRequest,
+  adminController.createAdminChatWithUser
+);
+
+// Get messages in a chat room (admin can access all chats)
+router.get(
+  "/chats/:chatRoomId/messages",
+  protect,
+  adminOnly,
+  adminController.getAdminChatMessages
+);
+
+// Send message to a chat room as admin
+router.post(
+  "/chats/:chatRoomId/messages",
+  protect,
+  adminOnly,
+  adminMessageValidation,
+  validateRequest,
+  adminController.sendAdminMessage
+);
 
 export default router;

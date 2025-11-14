@@ -9,11 +9,12 @@ import { adminApi } from "@/lib/api/admin";
 import { AdminNotification } from "@/lib/types";
 import { showToast } from "@/components/ui/toaster";
 
-
 export function NotificationsBox() {
   const [filter, setFilter] = useState<"all" | "unread" | "important">("all");
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const queryClient = useQueryClient();
+
+  console.log("[NotificationsBox] Component rendered"); // Debug log
 
   // Fetch notifications
   const {
@@ -24,11 +25,16 @@ export function NotificationsBox() {
   } = useQuery({
     queryKey: ["admin-notifications", filter],
     queryFn: async () => {
+      console.log("[NotificationsBox] Fetching notifications with filter:", filter); // Debug log
       const response = await adminApi.getNotifications(filter);
+      console.log("[NotificationsBox] API Response:", response); // Debug log
       if (response.success && response.data) {
         return response.data;
       }
-      return { notifications: [], pagination: { total: 0, page: 1, limit: 20, totalPages: 0 } };
+      return {
+        notifications: [],
+        pagination: { total: 0, page: 1, limit: 20, totalPages: 0 },
+      };
     },
   });
 

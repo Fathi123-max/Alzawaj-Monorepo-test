@@ -350,6 +350,53 @@ userSchema.methods.softDelete = function (this: IUser): Promise<IUser> {
   return this.save();
 };
 
+// Static method for soft delete with message deletion (for use in transactions)
+userSchema.statics.softDeleteWithMessages = function (
+  userId: mongoose.Types.ObjectId,
+  session?: mongoose.ClientSession
+): Promise<any> {
+  // If we have a session, use it directly
+  if (session) {
+    return (this as any).softDeleteWithMessagesWithSession(userId, session);
+  }
+
+  // Otherwise, start a new transaction
+  return mongoose.connection.transaction(async (txSession: mongoose.ClientSession) => {
+    return (this as any).softDeleteWithMessagesWithSession(userId, txSession);
+  });
+};
+
+// Helper method that uses an existing session
+userSchema.statics.softDeleteWithMessagesWithSession = function (
+  userId: mongoose.Types.ObjectId,
+  session: mongoose.ClientSession
+): Promise<any> {
+  // Get the Message model dynamically to avoid circular dependency
+  const Message = mongoose.model("Message");
+
+  // Delete all messages sent by the user
+  return Message.updateMany(
+    { sender: userId },
+    {
+      $set: {
+        isDeleted: true,
+        deletedAt: new Date(),
+      },
+    },
+    { session }
+  ).then(() => {
+    // Soft delete the user
+    return (this as IUserModel).findById(userId).session(session).then((user: IUser | null) => {
+      if (!user) {
+        throw new Error("User not found for deletion");
+      }
+      user.deletedAt = new Date();
+      user.status = "blocked";
+      return user.save({ session });
+    });
+  });
+};
+
 // Restore from soft delete
 userSchema.methods.restore = function (this: IUser): Promise<IUser> {
   delete this.deletedAt;
