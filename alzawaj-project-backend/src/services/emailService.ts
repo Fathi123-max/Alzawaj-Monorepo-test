@@ -44,11 +44,10 @@ export const sendEmailVerification = async (
   } catch (error) {
     console.error("Error sending email verification:", error);
     return false;
-}
+}}
 
-/**
- * Send email verification using a provided verification link
- */
+
+
 export const sendEmailVerificationLink = async (
   email: string,
   name: string,
@@ -82,11 +81,8 @@ export const sendEmailVerificationLink = async (
     return false;
   }
 };
-};
 
-/**
- * Send password reset email
- */
+
 export const sendPasswordReset = async (
   email: string,
   name: string,
