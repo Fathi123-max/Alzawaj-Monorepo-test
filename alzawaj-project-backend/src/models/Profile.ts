@@ -9,7 +9,7 @@ export interface IProfile extends Document {
   country: string;
   city: string;
   nationality: string;
-  maritalStatus: "single" | "divorced" | "widowed";
+  maritalStatus: "never_married" | "divorced" | "widowed";
   occupation?: string;
   religiousLevel: "basic" | "practicing" | "very-religious" | "moderate";
   isPrayerRegular: boolean;
@@ -302,8 +302,8 @@ const profileSchema = new Schema<IProfile>(
     maritalStatus: {
       type: String,
       enum: {
-        values: ["single", "divorced", "widowed"],
-        message: "الحالة الاجتماعية يجب أن تكون single أو divorced أو widowed",
+        values: ["never_married", "divorced", "widowed"],
+        message: "الحالة الاجتماعية يجب أن تكون never_married أو divorced أو widowed",
       },
       required: [true, "الحالة الاجتماعية مطلوبة"],
     },

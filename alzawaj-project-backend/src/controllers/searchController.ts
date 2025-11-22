@@ -22,23 +22,32 @@ interface SearchQuery {
   ageMin?: number;
   ageMax?: number;
   location?: string;
+  country?: string;
+  city?: string;
   education?: string;
   maritalStatus?: string;
   religiousCommitment?: string;
   profession?: string;
   hasChildren?: boolean;
   wantsChildren?: boolean;
-  name?: string; // Added for name-based search
+  name?: string;
+  heightMin?: number;
+  heightMax?: number;
+  isPrayerRegular?: boolean;
+  hasBeard?: boolean;
+  wearHijab?: boolean;
+  wearNiqab?: boolean;
+  verified?: boolean;
   page?: number;
   limit?: number;
   sortBy?: string;
-  fuzzy?: boolean; // Whether to use fuzzy/near matching when no exact matches found
+  fuzzy?: boolean;
 }
 
 interface QuickSearchQuery {
   q?: string;
   limit?: number;
-  fuzzy?: boolean; // Whether to use fuzzy/near matching when no exact matches found
+  fuzzy?: boolean;
 }
 
 interface SearchCriteria {
@@ -46,19 +55,27 @@ interface SearchCriteria {
   criteria: {
     ageRange?: { min: number; max: number };
     location?: string;
+    country?: string;
+    city?: string;
     education?: string[];
     maritalStatus?: string[];
     religiousCommitment?: string[];
     profession?: string[];
     hasChildren?: boolean;
     wantsChildren?: boolean;
+    heightRange?: { min: number; max: number };
+    isPrayerRegular?: boolean;
+    hasBeard?: boolean;
+    wearHijab?: boolean;
+    wearNiqab?: boolean;
+    verified?: boolean;
   };
   isActive: boolean;
 }
 
 interface ProfileWithScore {
-  profile: any; // Using any to avoid complex ObjectId type issues
-  compatibilityScore: any; // Using any for compatibility result
+  profile: any;
+  compatibilityScore: any;
   canSendRequest: boolean;
 }
 
@@ -98,20 +115,29 @@ export const searchProfiles = async (
       ageMin,
       ageMax,
       location,
+      country,
+      city,
       education,
       maritalStatus,
       religiousCommitment,
       profession,
       hasChildren,
       wantsChildren,
-      name, // Added name parameter
+      name,
+      heightMin,
+      heightMax,
+      isPrayerRegular,
+      hasBeard,
+      wearHijab,
+      wearNiqab,
+      verified,
       page = 1,
       limit = 20,
       sortBy = "compatibility",
-      fuzzy = true, // Whether to use fuzzy/near matching (default to true),
+      fuzzy = true,
     }: SearchQuery = req.query as any;
 
-    // Validate filter values against allowed options - only validate if values exist and are strings
+    // Validate filter values
     if (education && typeof education === 'string') {
       if (!ALLOWED_EDUCATION_LEVELS.includes(education.toLowerCase())) {
         res.status(400).json(createErrorResponse('المستوى التعليمي غير صحيح'));
@@ -150,51 +176,92 @@ export const searchProfiles = async (
       userId: { $ne: userId }, // Exclude self
       isActive: true,
       isDeleted: false,
-      "gender": searcherProfile.gender === "m" ? "f" : "m", // Opposite gender (top-level field)
+      "gender": searcherProfile.gender === "m" ? "f" : "m", // Opposite gender
       "privacy.profileVisibility": { $in: ["everyone", "verified-only", "matches-only"] },
     };
 
-    // Age filter (top-level field)
+    // Age filter
     if (ageMin || ageMax) {
       searchQuery["age"] = {};
-      if (ageMin)
-        searchQuery["age"].$gte = parseInt(ageMin.toString());
-      if (ageMax)
-        searchQuery["age"].$lte = parseInt(ageMax.toString());
+      if (ageMin) searchQuery["age"].$gte = parseInt(ageMin.toString());
+      if (ageMax) searchQuery["age"].$lte = parseInt(ageMax.toString());
     }
 
-    // Location filter
+    // Height filter
+    if (heightMin || heightMax) {
+      searchQuery["height"] = {};
+      if (heightMin) searchQuery["height"].$gte = parseInt(heightMin.toString());
+      if (heightMax) searchQuery["height"].$lte = parseInt(heightMax.toString());
+    }
+
+    // Location filter (General)
     if (location) {
       const locationConditions = [
         { "location.country": { $regex: location, $options: "i" } },
         { "location.city": { $regex: location, $options: "i" } },
         { "location.state": { $regex: location, $options: "i" } },
+        { "country": { $regex: location, $options: "i" } }, // Check top-level country
+        { "city": { $regex: location, $options: "i" } }, // Check top-level city
       ];
       
       if (searchQuery.$or) {
-        // If there are existing $or conditions, add location conditions
         searchQuery.$or = [...searchQuery.$or, ...locationConditions];
       } else {
         searchQuery.$or = locationConditions;
       }
     }
 
-    // Education filter (top-level field)
+    // Specific Country/City filters
+    if (country) {
+      searchQuery.$or = [
+        { "location.country": { $regex: country, $options: "i" } },
+        { "country": { $regex: country, $options: "i" } }
+      ];
+    }
+
+    if (city) {
+      const cityConditions = [
+        { "location.city": { $regex: city, $options: "i" } },
+        { "city": { $regex: city, $options: "i" } }
+      ];
+      
+      if (searchQuery.$or) {
+        // If country filter exists, we need to AND it with city (intersection)
+        // But since we are using $or for country fields, this gets complicated.
+        // Simpler approach: If both country and city are present, we can just add city conditions to the query
+        // effectively ANDing them with the country conditions if they were added as top-level properties.
+        // However, since we used $or for country, we need to be careful.
+        // Let's use $and if we have multiple complex conditions
+        if (country) {
+             searchQuery.$and = [
+                { $or: searchQuery.$or }, // Country conditions
+                { $or: cityConditions }   // City conditions
+             ];
+             delete searchQuery.$or; // Remove the top-level $or
+        } else {
+             searchQuery.$or = [...(searchQuery.$or || []), ...cityConditions];
+        }
+      } else {
+        searchQuery.$or = cityConditions;
+      }
+    }
+
+    // Education filter
     if (education) {
       searchQuery["education"] = education;
     }
 
-    // Marital status filter (top-level field)
+    // Marital status filter
     if (maritalStatus) {
       searchQuery["maritalStatus"] = maritalStatus;
     }
 
-    // Religious commitment filter (top-level field)
+    // Religious commitment filter
     if (religiousCommitment) {
       searchQuery["religiousLevel"] = religiousCommitment;
     }
 
-    // Profession filter (top-level field)
+    // Profession filter
     if (profession) {
       searchQuery["occupation"] = {
         $regex: profession,
@@ -202,7 +269,7 @@ export const searchProfiles = async (
       };
     }
 
-    // Name filter - only if provided
+    // Name filter
     if (name) {
       const nameConditions = [
         { "basicInfo.fullName": { $regex: name, $options: "i" } },
@@ -210,15 +277,37 @@ export const searchProfiles = async (
       ];
       
       if (searchQuery.$or) {
-        // If other filter already created $or, add name conditions to it
         searchQuery.$or = [...searchQuery.$or, ...nameConditions];
       } else {
-        // Otherwise, create a new $or condition for name
         searchQuery.$or = nameConditions;
       }
     }
 
-    // Children filters (top-level field with string values "yes"/"no")
+    // Boolean filters
+    if (isPrayerRegular !== undefined) {
+      searchQuery["isPrayerRegular"] = isPrayerRegular === true || (isPrayerRegular as any) === "true";
+    }
+
+    if (hasBeard !== undefined) {
+      searchQuery["hasBeard"] = hasBeard === true || (hasBeard as any) === "true";
+    }
+
+    if (wearHijab !== undefined) {
+      searchQuery["wearHijab"] = wearHijab === true || (wearHijab as any) === "true";
+    }
+
+    if (wearNiqab !== undefined) {
+      searchQuery["wearNiqab"] = wearNiqab === true || (wearNiqab as any) === "true";
+    }
+
+    if (verified !== undefined) {
+      const isVerified = verified === true || (verified as any) === "true";
+      if (isVerified) {
+        searchQuery["verification.isVerified"] = true;
+      }
+    }
+
+    // Children filters
     if (hasChildren !== undefined) {
       searchQuery["hasChildren"] =
         hasChildren === true || (hasChildren as any) === "true" ? "yes" : "no";

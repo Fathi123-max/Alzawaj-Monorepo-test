@@ -199,10 +199,10 @@ export function validateAndConvertFilters(filters: any) {
       converted.location = backendLocationValue || locationValue;
     }
 
-    // Remove separate country/city from query params
-    // Backend only uses `location`
-    delete converted.country;
-    delete converted.city;
+    // Remove separate country/city from query params only if we want to rely solely on location
+    // But since backend now supports country/city explicitly, we can keep them
+    // delete converted.country;
+    // delete converted.city;
   }
 
   return converted;

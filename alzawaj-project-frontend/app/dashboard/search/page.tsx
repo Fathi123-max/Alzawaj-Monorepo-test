@@ -478,7 +478,7 @@ function SearchPageContent() {
 
 
       {/* Search Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
         <Card>
           <CardContent className="p-3 md:p-4 text-center">
             <Users className="h-6 w-6 md:h-8 md:w-8 text-primary mx-auto mb-2" />
@@ -486,15 +486,6 @@ function SearchPageContent() {
               {stats.totalProfiles}
             </p>
             <p className="text-xs md:text-sm text-gray-600">إجمالي الملفات</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-3 md:p-4 text-center">
-            <Heart className="h-6 w-6 md:h-8 md:w-8 text-red-500 mx-auto mb-2" />
-            <p className="text-xl md:text-2xl font-bold text-gray-900">
-              {stats.totalProfiles}
-            </p>
-            <p className="text-xs md:text-sm text-gray-600">متصل الآن</p>
           </CardContent>
         </Card>
         <Card>
