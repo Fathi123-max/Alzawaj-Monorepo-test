@@ -59,29 +59,6 @@ export function ChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
   return <DesktopChatInterface requestId={requestId} chatRoomId={chatRoomId} />;
 }
 
-function MobileChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
-  const router = useRouter();
-
-  return (
-    <div className="h-full flex flex-col">
-      <div className="p-4 border-b bg-white">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.back()}
-          className="mb-2"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          العودة
-        </Button>
-        <h2 className="text-lg font-semibold">المحادثة</h2>
-      </div>
-      <div className="flex-1 flex items-center justify-center">
-        <p className="text-gray-500">الواجهة المحمولة قيد التطوير</p>
-      </div>
-    </div>
-  );
-}
 
 function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
   const router = useRouter();

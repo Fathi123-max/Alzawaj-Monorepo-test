@@ -475,62 +475,7 @@ function SearchPageContent() {
         </p>
       </div>
 
-      {/* Quick Search */}
-      <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex gap-3">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute right-3 top-3 text-gray-400" />
-              <Input
-                placeholder="البحث السريع بالاسم أو المهنة..."
-                className="pr-10"
-                onKeyDown={async (e: React.KeyboardEvent<HTMLInputElement>) => {
-                  if (e.key === "Enter" && e.currentTarget.value.trim()) {
-                    const input = e.currentTarget as HTMLInputElement;
-                    await handleQuickSearch(input.value);
-                    input.value = ""; // Clear the input after search
-                  }
-                }}
-                disabled={quickSearchLoading}
-              />
-            </div>
-            <Button
-              onClick={async () => {
-                const input = document.querySelector(
-                  'input[placeholder="البحث السريع بالاسم أو المهنة..."]',
-                ) as HTMLInputElement;
-                if (input && input.value.trim()) {
-                  await handleQuickSearch(input.value);
-                  input.value = "";
-                } else {
-                  toast.error("يرجى إدخال نص للبحث");
-                }
-              }}
-              className="px-6"
-              disabled={quickSearchLoading}
-            >
-              {quickSearchLoading ? "جاري البحث..." : "بحث"}
-            </Button>
-          </div>
-          {quickSearchQuery && (
-            <div className="mt-2 text-sm text-gray-600">
-              نتائج البحث السريع عن:{" "}
-              <span className="font-semibold">{quickSearchQuery}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setQuickSearchQuery("");
-                  setQuickSearchResult({ profiles: [] });
-                }}
-                className="mr-2 h-auto p-1 text-xs"
-              >
-                مسح
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+
 
       {/* Search Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">

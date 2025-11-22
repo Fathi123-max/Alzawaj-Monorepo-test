@@ -1,19 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import crypto from "crypto";
 import { validationResult } from "express-validator";
 import { createSuccessResponse, createErrorResponse } from "../utils/responseHelper";
-import { getAuth, generateEmailVerificationLink } from "../config/firebaseAdmin";
 import emailService from "../services/emailService";
 import { User } from "../models/User";
-
-const ACTION_CODE_URL = process.env.FRONTEND_URL
-  ? `${process.env.FRONTEND_URL}/auth/verify-email`
-  : "http://localhost:3000/auth/verify-email";
-
-const actionCodeSettings = {
-  url: ACTION_CODE_URL,
-  handleCodeInApp: true,
-} as any;
+import crypto from "crypto";
 
 export const requestVerification = async (
   req: Request,
@@ -30,23 +20,35 @@ export const requestVerification = async (
     }
 
     const { email, name } = req.body as { email: string; name?: string };
-    const auth = getAuth();
 
-    let firebaseUser;
-    try {
-      firebaseUser = await auth.getUserByEmail(email);
-    } catch {
-      // Create a lightweight user with a random password solely for verification
-      const randomPassword = crypto.randomBytes(12).toString("hex");
-      firebaseUser = await auth.createUser({ email, password: randomPassword });
+    // Validate the email using mailboxlayer API
+    // If mailboxlayer is not configured, skip validation (don't block registration)
+    const validation = await emailService.validateEmail(email);
+    if (!validation.isValid) {
+      // Log the validation issue but continue with verification
+      console.warn(`Email validation failed for ${email}:`, validation);
     }
 
-    const link = await generateEmailVerificationLink(email, actionCodeSettings);
+    // Find user in database
+    const dbUser = await User.findOne({ email });
+    if (!dbUser) {
+      res.status(404).json(createErrorResponse("المستخدم غير موجود"));
+      return;
+    }
 
+    // Generate verification token
+    const verificationToken = dbUser.generateEmailVerificationToken();
+    await dbUser.save();
+
+    // Create verification link with token
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const verificationLink = `${frontendUrl}/auth/verify-email?token=${verificationToken}&mode=verifyEmail`;
+
+    // Send verification email
     const sent = await emailService.sendEmailVerificationLink(
       email,
-      name || "المستخدم",
-      link,
+      name || dbUser.firstname || "المستخدم",
+      verificationLink,
     );
 
     if (!sent) {
@@ -74,27 +76,62 @@ export const confirmVerification = async (
       return;
     }
 
-    const { email } = req.body as { email: string };
-    const auth = getAuth();
+    const { token, email } = req.body as { token?: string; email?: string };
 
-    try {
-      const userRecord = await auth.getUserByEmail(email);
-      if (!userRecord.emailVerified) {
-        res.status(400).json(createErrorResponse("البريد الإلكتروني غير مؤكد بعد"));
+    // If token is provided, use token-based verification
+    if (token) {
+      // Hash the token to match database
+      const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+      // Find user by verification token
+      const dbUser = await User.findOne({
+        emailVerificationToken: hashedToken,
+        emailVerificationExpires: { $gt: new Date() } // Token not expired
+      });
+
+      if (!dbUser) {
+        res.status(400).json(createErrorResponse("رمز التحقق غير صالح أو منتهي الصلاحية"));
         return;
       }
 
+      // Update user as verified
+      dbUser.isEmailVerified = true;
+      dbUser.emailVerifiedAt = new Date();
+      // Update user status to active after email verification
+      dbUser.status = "active";
+      // Clear the verification token and expiration
+      dbUser.emailVerificationToken = undefined as any;
+      dbUser.emailVerificationExpires = undefined as any;
+
+      await dbUser.save();
+
+      res.json(createSuccessResponse("تم تأكيد البريد الإلكتروني بنجاح", { email: dbUser.email }));
+      return;
+    }
+
+    // If email is provided, use email-based verification (for older systems)
+    if (email) {
       const dbUser = await User.findOne({ email });
-      if (dbUser) {
-        dbUser.isEmailVerified = true;
-        dbUser.emailVerifiedAt = new Date();
-        await dbUser.save();
+      if (!dbUser) {
+        res.status(404).json(createErrorResponse("المستخدم غير موجود"));
+        return;
       }
 
-      res.json(createSuccessResponse("تم تأكيد البريد الإلكتروني بنجاح", { email }));
-    } catch (e) {
-      res.status(404).json(createErrorResponse("المستخدم غير موجود"));
+      if (dbUser.isEmailVerified) {
+        res.json(createSuccessResponse("البريد الإلكتروني مؤكد بالفعل", { email: dbUser.email }));
+        return;
+      }
+
+      // Update user as verified
+      dbUser.isEmailVerified = true;
+      dbUser.emailVerifiedAt = new Date();
+      await dbUser.save();
+
+      res.json(createSuccessResponse("تم تأكيد البريد الإلكتروني بنجاح", { email: dbUser.email }));
+      return;
     }
+
+    res.status(400).json(createErrorResponse("يجب تزويد رمز التحقق أو البريد الإلكتروني"));
   } catch (error) {
     next(error);
   }
@@ -112,20 +149,10 @@ export const getVerificationStatus = async (
       return;
     }
 
-    const auth = getAuth();
-    let verified = false;
-    let verifiedAt: Date | undefined;
-
-    try {
-      const userRecord = await auth.getUserByEmail(email);
-      verified = !!userRecord.emailVerified;
-    } catch {}
-
     const dbUser = await User.findOne({ email });
-    if (dbUser && dbUser.isEmailVerified) {
-      verified = true;
-      verifiedAt = dbUser.emailVerifiedAt || undefined;
-    }
+
+    const verified = dbUser ? dbUser.isEmailVerified : false;
+    const verifiedAt = dbUser && dbUser.emailVerifiedAt ? dbUser.emailVerifiedAt : undefined;
 
     res.json(createSuccessResponse("تم جلب حالة التحقق", {
       email,

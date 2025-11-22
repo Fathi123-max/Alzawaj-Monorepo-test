@@ -376,8 +376,8 @@ export function DashboardHome() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-        {/* Quick Actions - expanded to fill space left by hidden Recent Activity section */}
-        <div className="xl:col-span-3">
+        {/* Quick Actions */}
+        <div className="xl:col-span-2">
           <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 mb-3 sm:mb-4 lg:mb-6 px-1">
             الإجراءات السريعة
           </h2>
@@ -419,7 +419,7 @@ export function DashboardHome() {
           </div>
         </div>
 
-        {/* <!-- HIDDEN: Recent Activity
+        {/* Recent Activity */}
         <div>
           <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 mb-3 sm:mb-4 lg:mb-6 px-1">
             النشاط الأخير
@@ -488,7 +488,6 @@ export function DashboardHome() {
             </CardContent>
           </Card>
         </div>
-        --> */}
       </div>
 
       {/* Tips and Guidelines */}
@@ -540,7 +539,6 @@ export function DashboardHome() {
         </CardContent>
       </Card>
 
-      {/* <!-- HIDDEN: Featured Profiles and Online Members sections
       {/* Featured Profiles Section */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
         <div className="xl:col-span-2">
@@ -637,8 +635,7 @@ export function DashboardHome() {
         </Card>
       </div>
 
-      {/* HIDDEN: Recent Profiles Section */}
-      {/*
+      {/* Recent Profiles Section */}
       <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-blue-50">
         <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-3 sm:p-4">
           <div className="flex items-center justify-between">
@@ -688,7 +685,6 @@ export function DashboardHome() {
           </div>
         </CardContent>
       </Card>
-      */}
     </div>
   );
 }

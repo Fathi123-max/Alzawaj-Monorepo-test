@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
 // User interface extending the IUser from types
 export interface IUser extends Document {
@@ -534,9 +535,10 @@ userSchema.methods.generateEmailVerificationToken = function (
   const token =
     Math.random().toString(36).substring(2, 15) +
     Math.random().toString(36).substring(2, 15);
-  this.emailVerificationToken = token;
+  // Hash the token before storing for security
+  this.emailVerificationToken = crypto.createHash('sha256').update(token).digest('hex');
   this.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-  return token;
+  return token; // Return unhashed token for use in email
 };
 
 userSchema.methods.generatePhoneVerificationOTP = function (

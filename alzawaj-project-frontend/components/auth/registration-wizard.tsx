@@ -129,9 +129,6 @@ export function RegistrationWizard({
           <Step1Auth
             {...stepProps}
             data={step1Data}
-            onSendOTP={sendOTP}
-            // otpSent={otpSent}
-            otpSent={false} // Temporary fix, should be replaced with actual state
           />
         );
       case 2:

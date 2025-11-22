@@ -1,8 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { getFirebaseAuth } from "@/lib/firebase/client";
-import { applyActionCode, checkActionCode } from "firebase/auth";
 import { verificationApi } from "@/lib/api/verification";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -16,45 +14,37 @@ export default function VerifyEmailPage() {
     email?: string;
   }>({ status: "idle" });
 
-  const oobCode = useMemo(() => searchParams.get("oobCode") || "", [searchParams]);
+  const token = useMemo(() => searchParams.get("token") || "", [searchParams]);
   const mode = useMemo(() => searchParams.get("mode") || "", [searchParams]);
 
   useEffect(() => {
     const run = async () => {
-      if (!oobCode || mode !== "verifyEmail") {
+      if (!token || mode !== "verifyEmail") {
         setState({ status: "error", message: "رابط تأكيد غير صالح" });
         return;
       }
       setState({ status: "processing" });
-      const auth = getFirebaseAuth();
       try {
-        const info = await checkActionCode(auth, oobCode);
-        const email = (info?.data as any)?.email as string | undefined;
-        await applyActionCode(auth, oobCode);
-        if (email) {
-          try {
-            await verificationApi.confirm(email);
-          } catch {}
-        }
-        setState({ status: "success", email, message: "تم تأكيد بريدك الإلكتروني بنجاح" });
+        const response = await verificationApi.confirmToken(token);
+        const email = response.data?.data?.email;
+        setState({
+          status: "success",
+          message: "تم تأكيد بريدك الإلكتروني بنجاح",
+          ...(email && { email })
+        });
       } catch (e: any) {
-        const msg =
-          e?.code === "auth/expired-action-code"
-            ? "انتهت صلاحية رابط التأكيد، يرجى طلب رابط جديد"
-            : e?.code === "auth/invalid-action-code"
-            ? "رمز التأكيد غير صالح"
-            : "فشل في تأكيد البريد الإلكتروني";
+        const msg = "فشل في تأكيد البريد الإلكتروني";
         setState({ status: "error", message: msg });
       }
     };
     run();
-  }, [oobCode, mode]);
+  }, [token, mode]);
 
   const resend = async () => {
     const email = state.email || "";
     if (!email) return;
     try {
-      await verificationApi.request(email);
+      await verificationApi.request({ email });
       setState({ ...state, message: "تم إرسال رابط تأكيد جديد إلى بريدك" });
     } catch {
       setState({ ...state, message: "تعذر إرسال رابط جديد حالياً" });

@@ -235,21 +235,8 @@ const useRegistration = (): UseRegistrationResult => {
           return false;
         }
 
-        // if (!state.data.phone) {
-        //   dispatch({ type: "SET_ERROR", payload: "رقم الهاتف مطلوب" });
-        //   return false;
-        // }
-        // if (!state.otpSent) {
-        // dispatch({
-        //   type: "SET_ERROR",
-        //   payload: "يرجى إرسال رمز التحقق للبريد الإلكتروني",
-        // });
-        // return false;
-        // }
-        // if (!state.data.otpCode) {
-        //   dispatch({ type: "SET_ERROR", payload: "يرجى إدخال رمز التحقق" });
-        //   return false;
-        // }
+        // Email confirmation will happen after registration
+        // No OTP required during registration process
       }
 
       // Step 2: Validate personal data
@@ -428,7 +415,7 @@ const useRegistration = (): UseRegistrationResult => {
       if (!regData.password) validationErrors.push("كلمة المرور مطلوبة");
       if (!regData.firstname) validationErrors.push("الاسم الأول مطلوب");
       if (!regData.lastname) validationErrors.push("الاسم الأخير مطلوب");
-      if (!regData.phone) validationErrors.push("رقم الهاتف مطلوب");
+      // Phone is optional during registration
       if (!regData.country) validationErrors.push("البلد مطلوب");
       if (!regData.city) validationErrors.push("المدينة مطلوبة");
       if (!regData.nationality) validationErrors.push("الجنسية مطلوبة");
@@ -506,7 +493,7 @@ const useRegistration = (): UseRegistrationResult => {
         email: regData.email.trim(),
         password: regData.password,
         confirmPassword: regData.password, // Add confirmPassword field
-        phone: (regData.phone || "").trim(),
+        phone: regData.phone ? (regData.phone || "").trim() : undefined,
         gender: regData.gender,
         acceptDeclaration: regData.acceptDeclaration || false,
         basicInfo: {
@@ -624,23 +611,7 @@ const useRegistration = (): UseRegistrationResult => {
       console.log("Registration response:", response);
 
       if (response.success) {
-        showToast.success(response.message || "تم إنشاء الحساب بنجاح");
-
-        // Save user data to localStorage
-        if (response.data?.user) {
-          localStorage.setItem("user_data", JSON.stringify(response.data.user));
-        }
-
-        // Trigger Firebase email verification
-        try {
-          await (await import("@/lib/api/verification")).verificationApi.request(
-            regData.email,
-            `${regData.firstname.trim()} ${regData.lastname.trim()}`,
-          );
-          showToast.info("تم إرسال رسالة تأكيد البريد الإلكتروني. يرجى التحقق من بريدك");
-        } catch {
-          showToast.error("تعذر إرسال رسالة تأكيد البريد الإلكتروني");
-        }
+        showToast.success("تم إنشاء الحساب بنجاح. يرجى التحقق من بريدك الإلكتروني للتأكيد");
       } else {
         throw new Error(response.message || "فشل في إنشاء الحساب");
       }

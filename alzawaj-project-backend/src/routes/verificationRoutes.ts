@@ -13,7 +13,10 @@ const router: Router = express.Router();
 router.post(
   "/request",
   rateLimitConfig.auth,
-  body("email").isEmail().withMessage("البريد الإلكتروني غير صحيح"),
+  [
+    body("email").isEmail().withMessage("البريد الإلكتروني غير صحيح"),
+    body("name").optional().isString().withMessage("اسم المستخدم غير صحيح"),
+  ],
   validateRequest,
   requestVerification,
 );
@@ -21,7 +24,10 @@ router.post(
 router.post(
   "/confirm",
   rateLimitConfig.auth,
-  body("email").isEmail().withMessage("البريد الإلكتروني غير صحيح"),
+  [
+    body("email").optional().isEmail().withMessage("البريد الإلكتروني غير صحيح"),
+    body("token").optional().notEmpty().withMessage("رمز التحقق مطلوب"),
+  ],
   validateRequest,
   confirmVerification,
 );

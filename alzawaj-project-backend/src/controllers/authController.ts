@@ -165,6 +165,7 @@ export const register = async (
       firstname,
       lastname,
       role: "user",
+      status: "pending", // User remains pending until email is verified
       isEmailVerified: false,
       isPhoneVerified: false,
     });
@@ -229,12 +230,14 @@ export const register = async (
 
     await user.save();
 
-    // Send verification email
+    // Create verification link with token and send email
     try {
-      await emailService.sendEmailVerification(
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+      const verificationLink = `${frontendUrl}/auth/verify-email?token=${emailToken}&mode=verifyEmail`;
+      await emailService.sendEmailVerificationLink(
         email,
         basicInfo.name,
-        emailToken,
+        verificationLink,
       );
     } catch (emailError) {
       console.error("Failed to send verification email:", emailError);
@@ -249,7 +252,7 @@ export const register = async (
 
     res.status(201).json(
       createSuccessResponse(
-        "تم التسجيل بنجاح. يرجى تأكيد البريد الإلكتروني ورقم الهاتف",
+        "تم التسجيل بنجاح. يرجى تأكيد بريدك الإلكتروني من الرسالة التي أرسلناها",
         {
           user: {
             id: user._id,
@@ -257,6 +260,7 @@ export const register = async (
             phone: user.phone,
             isEmailVerified: user.isEmailVerified,
             isPhoneVerified: user.isPhoneVerified,
+            status: user.status,
           },
           profile: {
             id: profile._id,
@@ -624,6 +628,7 @@ export const verifyEmail = async (
 
     // Update user
     user.isEmailVerified = true;
+    user.status = "active"; // Update user status to active after email verification
     delete user.emailVerificationToken;
     delete user.emailVerificationExpires;
     await user.save();

@@ -16,8 +16,8 @@ interface NewStep1AuthProps {
   error: string | null;
   clearError: () => void;
   isSubmitting: boolean;
-  onSendOTP: () => Promise<boolean>;
-  otpSent: boolean;
+  onSendOTP?: () => Promise<boolean>;
+  otpSent?: boolean;
 }
 
 export default function NewStep1Auth({
@@ -32,25 +32,12 @@ export default function NewStep1Auth({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [otp, setOtp] = useState("");
 
   const handleInputChange = (field: keyof RequestBody, value: any): void => {
     clearError();
     updateData({ [field]: value });
   };
 
-  const handleSendOTP = async () => {
-    if (!data.email) {
-      return;
-    }
-    await onSendOTP();
-  };
-  const handleOTPChange = (value: string) => {
-    setOtp(value);
-    clearError();
-    // Store OTP in a temporary field for validation (we'll extend the type later)
-    updateData({ email: data.email, otpCode: value } as any);
-  };
 
   return (
     <div className="space-y-4">
@@ -79,36 +66,15 @@ export default function NewStep1Auth({
       </div>
       {/* Email and Phone */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> */}
-        <Input
+          <Input
           label="البريد الإلكتروني"
           type="email"
           value={data.email || ""}
           onChange={(e) => handleInputChange("email", e.target.value)}
           placeholder="أدخل بريدك الإلكتروني"
-          disabled={isSubmitting || otpSent}
+          disabled={isSubmitting}
           required
         />
-        {/* {data.email && !otpSent && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleSendOTP}
-            disabled={isSubmitting}
-            className="mt-auto mb-1 w-full"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                جارٍ الإرسال...
-              </>
-            ) : (
-              "إرسال رمز التحقق"
-            )}
-          </Button>
-        )} */}
-        {/* </div>{" "} */}
         <div className="mt-1">
           <label className="block text-sm font-medium text-gray-700">
             رقم الهاتف (اختياري)
@@ -125,33 +91,6 @@ export default function NewStep1Auth({
           </p>
         </div>
       </div>
-      {/* OTP Verification */}
-      {otpSent && (
-        <div className="border rounded-lg p-4 bg-primary-subtle">
-          <Alert className="mb-4">
-            <AlertDescription>
-              تم إرسال رمز التحقق إلى بريدك الإلكتروني. يرجى إدخال الرمز أدناه.
-            </AlertDescription>
-          </Alert>
-
-          <div className="space-y-4">
-            <label className="block text-sm font-medium text-gray-700">
-              رمز التحقق
-            </label>{" "}
-            <OTPInput onChange={handleOTPChange} length={6} />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleSendOTP}
-              disabled={isSubmitting}
-              className="w-full"
-            >
-              إعادة إرسال الرمز
-            </Button>
-          </div>
-        </div>
-      )}
       {/* Password Fields */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>

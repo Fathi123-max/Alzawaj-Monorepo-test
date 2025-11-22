@@ -1,15 +1,20 @@
 import { ApiClient } from "./client";
 
 export const verificationApi = {
-  request: (email: string, name?: string) =>
+  request: (data: { email: string, name?: string }) =>
     ApiClient.post<{ success: boolean; message: string }>(
       "/auth/verification/request",
-      { email, name },
+      data,
     ),
   confirm: (email: string) =>
     ApiClient.post<{ success: boolean; message: string }>(
       "/auth/verification/confirm",
       { email },
+    ),
+  confirmToken: (token: string) =>
+    ApiClient.post<{ success: boolean; message: string; data: { email: string } }>(
+      "/auth/verification/confirm",
+      { token },
     ),
   status: (email: string) =>
     ApiClient.get<{ email: string; verified: boolean; verifiedAt?: string }>(

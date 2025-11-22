@@ -1,39 +1,12 @@
 /** @type {import('next').NextConfig} */
-const withBundleAnalyzer = require("@next/bundle-analyzer")({
-  enabled: process.env.ANALYZE === "true",
-});
-
 const nextConfig = {
   // Enable experimental features for better performance
   experimental: {
     // optimizeCss: true, // Disabled due to missing critters dependency
     scrollRestoration: true,
-  },
-
-  // Turbopack configuration for Next.js 16
-  // Set to use Webpack to avoid Turbopack issues with custom config
-  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    // Optimize for Arabic fonts
-    config.module.rules.push({
-      test: /\.(woff|woff2|eot|ttf|otf)$/,
-      use: {
-        loader: "file-loader",
-        options: {
-          publicPath: "/_next/static/fonts/",
-          outputPath: "static/fonts/",
-        },
-      },
-    });
-
-    // Bundle analyzer for production builds
-    if (!dev && !isServer) {
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        "@": require("path").resolve(__dirname),
-      };
-    }
-
-    return config;
+    optimizeFonts: true,
+    // Turbopack configuration for Next.js 16
+    turbopack: {},
   },
 
   // Performance optimizations
@@ -121,4 +94,4 @@ const nextConfig = {
   reactStrictMode: true,
 };
 
-module.exports = withBundleAnalyzer(nextConfig);
+module.exports = nextConfig;
