@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -62,6 +62,7 @@ export function UsersManagement() {
     limit: 5,
     search: "",
   });
+  const [searchInput, setSearchInput] = useState(""); // Local search input state
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -70,6 +71,19 @@ export function UsersManagement() {
   const [chatUser, setChatUser] = useState<{ id: string; name: string } | null>(
     null,
   );
+
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchParams((prev) => ({
+        ...prev,
+        search: searchInput,
+        page: 1,
+      }));
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   useEffect(() => {
     loadUsers();
@@ -147,14 +161,6 @@ export function UsersManagement() {
     } finally {
       setActionLoading(null);
     }
-  };
-
-  const handleSearch = (value: string) => {
-    setSearchParams((prev: SearchParams) => ({
-      ...prev,
-      search: value,
-      page: 1,
-    }));
   };
 
   const handlePageChange = (page: number) => {
@@ -258,8 +264,8 @@ export function UsersManagement() {
               <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
               <Input
                 placeholder="البحث عن المستخدمين بالاسم أو البريد الإلكتروني..."
-                value={searchParams.search}
-                onChange={(e) => handleSearch(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -801,7 +807,7 @@ export function UsersManagement() {
                 </p>
               </div>
               {searchParams.search && (
-                <Button variant="outline" onClick={() => handleSearch("")}>
+                <Button variant="outline" onClick={() => setSearchInput("")}>
                   مسح البحث
                 </Button>
               )}
