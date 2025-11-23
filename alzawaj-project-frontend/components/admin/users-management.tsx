@@ -80,6 +80,10 @@ export function UsersManagement() {
         search: searchInput,
         page: 1,
       }));
+      // Reset status filter when searching to show all results
+      if (searchInput) {
+        setFilterStatus("all");
+      }
     }, 500); // 500ms debounce
 
     return () => clearTimeout(timer);
