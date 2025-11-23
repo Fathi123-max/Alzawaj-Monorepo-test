@@ -458,7 +458,8 @@ export function AdminDashboard() {
                       </CardContent>
                     </Card>
 
-                    <Card className="group hover:shadow-lg transition-all duration-300 border-l-4 border-l-purple-500 hover:border-l-purple-600 bg-gradient-to-r from-purple-50/50 to-white overflow-hidden relative">
+                    {/* Hidden sections: رسائل معلقة, تقارير معلقة */}
+                    {/* <Card className="group hover:shadow-lg transition-all duration-300 border-l-4 border-l-purple-500 hover:border-l-purple-600 bg-gradient-to-r from-purple-50/50 to-white overflow-hidden relative">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
@@ -516,7 +517,7 @@ export function AdminDashboard() {
                         </div>
                         <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       </CardContent>
-                    </Card>
+                    </Card> */}
 
                     <Card className="group hover:shadow-lg transition-all duration-300 border-l-4 border-l-orange-500 hover:border-l-orange-600 bg-gradient-to-r from-orange-50/50 to-white overflow-hidden relative">
                       <CardContent className="p-6">
@@ -554,7 +555,8 @@ export function AdminDashboard() {
                       </CardContent>
                     </Card>
 
-                    <Card className="group hover:shadow-lg transition-all duration-300 border-l-4 border-l-indigo-500 hover:border-l-indigo-600 bg-gradient-to-r from-indigo-50/50 to-white overflow-hidden relative">
+                    {/* Hidden sections: إشعارات غير مقروءة, إجمالي البيانات */}
+                    {/* <Card className="group hover:shadow-lg transition-all duration-300 border-l-4 border-l-indigo-500 hover:border-l-indigo-600 bg-gradient-to-r from-indigo-50/50 to-white overflow-hidden relative">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                           <div className="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
@@ -611,7 +613,7 @@ export function AdminDashboard() {
                         </div>
                         <div className="absolute inset-0 bg-gradient-to-r from-teal-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       </CardContent>
-                    </Card>
+                    </Card> */}
                   </>
                 )}
               </div>
