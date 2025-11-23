@@ -81,27 +81,28 @@ const adminTabs = [
     description: "مراقبة المحادثات والأنشطة الحالية",
     count: "activeChats",
   },
-  {
-    id: "reports",
-    label: "التقارير والإحصائيات",
-    icon: <BarChart3 className="w-4 h-4" />,
-    description: "عرض التقارير التفصيلية والتحليلات",
-    count: "totalReports",
-  },
-  {
-    id: "notifications",
-    label: "الإشعارات",
-    icon: <Bell className="w-4 h-4" />,
-    description: "إدارة الإشعارات والتنبيهات",
-    count: "notifications",
-  },
-  {
-    id: "settings",
-    label: "إعدادات النظام",
-    icon: <Settings className="w-4 h-4" />,
-    description: "تكوين إعدادات المنصة والنظام",
-    count: null,
-  },
+  // Hidden tabs
+  // {
+  //   id: "reports",
+  //   label: "التقارير والإحصائيات",
+  //   icon: <BarChart3 className="w-4 h-4" />,
+  //   description: "عرض التقارير التفصيلية والتحليلات",
+  //   count: "totalReports",
+  // },
+  // {
+  //   id: "notifications",
+  //   label: "الإشعارات",
+  //   icon: <Bell className="w-4 h-4" />,
+  //   description: "إدارة الإشعارات والتنبيهات",
+  //   count: "notifications",
+  // },
+  // {
+  //   id: "settings",
+  //   label: "إعدادات النظام",
+  //   icon: <Settings className="w-4 h-4" />,
+  //   description: "تكوين إعدادات المنصة والنظام",
+  //   count: null,
+  // },
 ];
 
 export function AdminDashboard() {
