@@ -413,7 +413,9 @@ class AdminApiService {
   async getUsers(
     page: number = 1,
     limit: number = 10,
+    search?: string,
   ): Promise<PaginatedResponse<AdminUser>> {
+    const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
     const response = await this.request<{
       success: boolean;
       data: {
@@ -423,7 +425,7 @@ class AdminApiService {
         totalPages?: number;
       };
       message?: string;
-    }>(`/users?page=${page}&limit=${limit}`);
+    }>(`/users?page=${page}&limit=${limit}${searchParam}`);
 
     // Transform the response to match our PaginatedResponse interface
     return {

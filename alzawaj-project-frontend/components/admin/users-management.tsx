@@ -81,6 +81,7 @@ export function UsersManagement() {
       const response = await adminApiService.getUsers(
         searchParams.page,
         searchParams.limit,
+        searchParams.search,
       );
 
       if (response.success && response.data) {
