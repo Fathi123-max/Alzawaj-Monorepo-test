@@ -74,7 +74,9 @@ export function UsersManagement() {
 
   // Debounced search effect
   useEffect(() => {
+    console.log('[UsersManagement] Search input changed:', searchInput);
     const timer = setTimeout(() => {
+      console.log('[UsersManagement] Applying search after debounce:', searchInput);
       setSearchParams((prev) => ({
         ...prev,
         search: searchInput,
@@ -90,10 +92,12 @@ export function UsersManagement() {
   }, [searchInput]);
 
   useEffect(() => {
+    console.log('[UsersManagement] Search params changed:', searchParams);
     loadUsers();
   }, [searchParams]);
 
   const loadUsers = async () => {
+    console.log('[UsersManagement] Loading users with params:', searchParams);
     setLoading(true);
     try {
       const response = await adminApiService.getUsers(
@@ -101,8 +105,10 @@ export function UsersManagement() {
         searchParams.limit,
         searchParams.search,
       );
+      console.log('[UsersManagement] API response:', response);
 
       if (response.success && response.data) {
+        console.log('[UsersManagement] Users loaded:', response.data.items?.length, 'users');
         setUsersData(response);
       } else {
         throw new Error("Failed to load users");
