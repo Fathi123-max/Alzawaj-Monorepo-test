@@ -54,17 +54,23 @@ export const getUsers = async (
       search,
     } = req.query as any;
 
+    console.log('[AdminController] getUsers query params:', req.query);
+
     const filters: any = {};
     if (status) filters.status = Array.isArray(status) ? status : [status];
     if (gender) filters.gender = gender;
     if (verified !== undefined) filters.verified = verified === "true";
     if (search) filters.search = search;
 
+    console.log('[AdminController] Filters:', filters);
+
     const result = await AdminService.getUsers(
       Number(page),
       Number(limit),
       filters
     );
+
+    console.log('[AdminController] Result:', { total: result.pagination.total, count: result.users.length });
 
     res.json(createSuccessResponse("تم جلب المستخدمين بنجاح", result));
   } catch (error) {

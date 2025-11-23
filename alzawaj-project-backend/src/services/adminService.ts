@@ -132,6 +132,8 @@ export class AdminService {
     }
   ): Promise<any> {
     try {
+      console.log('[AdminService] getUsers called with:', { page, limit, filters });
+
       // Build query
       const query: any = {};
 
@@ -152,28 +154,24 @@ export class AdminService {
         ];
       }
 
+      console.log('[AdminService] MongoDB query:', JSON.stringify(query, null, 2));
+
       // Calculate pagination
       const skip = (page - 1) * limit;
 
-      // Get users with gender filtering
+      // Get users with full profile data
       let usersQuery = User.find(query)
         .select("-password -refreshTokens")
+        .populate("profile") // Always populate full profile
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit);
 
-      // If gender filter is applied, join with profiles
-      if (filters?.gender) {
-        usersQuery = usersQuery.populate({
-          path: "profile",
-          match: { gender: filters.gender },
-          select: "gender"
-        });
-      }
-
       const users = await usersQuery.exec();
 
-      // Filter out users whose profiles don't match gender criteria (when gender filter is applied)
+      console.log('[AdminService] Found users:', users.length);
+
+      // Filter by gender if specified
       let filteredUsers = users;
       if (filters?.gender) {
         filteredUsers = users.filter(user => 
@@ -185,6 +183,8 @@ export class AdminService {
       const totalUsers = await User.countDocuments(query);
       const totalPages = Math.ceil(totalUsers / limit);
 
+      console.log('[AdminService] Total users matching query:', totalUsers);
+
       return {
         users: filteredUsers,
         pagination: {
@@ -195,6 +195,7 @@ export class AdminService {
         },
       };
     } catch (error: any) {
+      console.error('[AdminService] Error in getUsers:', error);
       throw new Error(`Error getting users: ${error.message}`);
     }
   }

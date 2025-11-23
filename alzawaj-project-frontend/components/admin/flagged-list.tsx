@@ -47,13 +47,10 @@ import {
 export function FlaggedList() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedStatus, setSelectedStatus] = useState<string>("pending");
   const [selectedMessage, setSelectedMessage] = useState<ChatMessage | null>(
     null,
   );
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showMessageDetails, setShowMessageDetails] = useState(false);
 
   useEffect(() => {
     loadMessages();
@@ -162,15 +159,7 @@ export function FlaggedList() {
     return "الآن";
   };
 
-  const filteredMessages = messages.filter((message) => {
-    const matchesStatus =
-      selectedStatus === "all" || message.status === selectedStatus;
-    const matchesSearch =
-      searchTerm === "" ||
-      message.content?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      message.senderId?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
+  const filteredMessages = messages;
 
   return (
     <div className="space-y-6">
@@ -204,64 +193,6 @@ export function FlaggedList() {
             </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-0">
-          {/* Search and Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-4">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-              <Input
-                placeholder="البحث في الرسائل أو أسماء المستخدمين..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Button variant="outline" size="sm" className="lg:hidden">
-              <Filter className="w-4 h-4" />
-            </Button>
-          </div>
-
-          {/* Status Filter Buttons */}
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              size="sm"
-              variant={selectedStatus === "all" ? "default" : "outline"}
-              onClick={() => setSelectedStatus("all")}
-            >
-              الكل ({messages.length})
-            </Button>
-            <Button
-              size="sm"
-              variant={selectedStatus === "pending" ? "default" : "outline"}
-              onClick={() => setSelectedStatus("pending")}
-            >
-              في الانتظار (
-              {messages.filter((m) => m.status === "pending").length})
-            </Button>
-            <Button
-              size="sm"
-              variant={selectedStatus === "flagged" ? "default" : "outline"}
-              onClick={() => setSelectedStatus("flagged")}
-            >
-              مبلغ عنه ({messages.filter((m) => m.status === "flagged").length})
-            </Button>
-            <Button
-              size="sm"
-              variant={selectedStatus === "approved" ? "default" : "outline"}
-              onClick={() => setSelectedStatus("approved")}
-            >
-              موافق عليه (
-              {messages.filter((m) => m.status === "approved").length})
-            </Button>
-            <Button
-              size="sm"
-              variant={selectedStatus === "rejected" ? "default" : "outline"}
-              onClick={() => setSelectedStatus("rejected")}
-            >
-              مرفوض ({messages.filter((m) => m.status === "rejected").length})
-            </Button>
-          </div>
-        </CardContent>
       </Card>
 
       {/* Messages Table */}

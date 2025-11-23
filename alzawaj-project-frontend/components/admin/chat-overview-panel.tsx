@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 
 export function ChatOverviewPanel() {
-  const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedChat, setSelectedChat] = useState<ChatRoom | null>(null);
   const [chats, setChats] = useState<ChatRoom[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,14 +51,7 @@ export function ChatOverviewPanel() {
     loadChats();
   }, []);
 
-  const filteredChats =
-    selectedStatus === "all"
-      ? chats
-      : chats.filter((chat) => {
-          if (selectedStatus === "active") return chat.isActive;
-          if (selectedStatus === "archived") return !chat.isActive;
-          return true;
-        });
+  const filteredChats = chats;
 
   const getStatusBadge = (chat: ChatRoom) => {
     const isExpired = chat.expiresAt && new Date(chat.expiresAt) < new Date();
@@ -182,7 +174,7 @@ export function ChatOverviewPanel() {
               تحديث
             </Button>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+          <div className="grid grid-cols-2 gap-4 mt-4">
             <div className="text-center p-3 bg-primary-subtle rounded-lg">
               <div className="text-2xl font-bold text-primary">
                 {counts.active}
@@ -199,43 +191,8 @@ export function ChatOverviewPanel() {
               </div>
               <div className="text-sm text-orange-600">منتهية الصلاحية</div>
             </div>
-            <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-gray-600">
-                {counts.archived}
-              </div>
-              <div className="text-sm text-gray-600">مؤرشفة</div>
-            </div>
           </div>
         </CardHeader>
-      </Card>
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={selectedStatus === "all" ? "default" : "outline"}
-              onClick={() => setSelectedStatus("all")}
-              size="sm"
-            >
-              جميع المحادثات ({counts.all})
-            </Button>
-            <Button
-              variant={selectedStatus === "active" ? "default" : "outline"}
-              onClick={() => setSelectedStatus("active")}
-              size="sm"
-            >
-              نشطة ({counts.active})
-            </Button>
-            <Button
-              variant={selectedStatus === "archived" ? "default" : "outline"}
-              onClick={() => setSelectedStatus("archived")}
-              size="sm"
-            >
-              مؤرشفة ({counts.archived})
-            </Button>
-          </div>
-        </CardContent>
       </Card>
 
       {/* Chats Table */}
@@ -255,9 +212,7 @@ export function ChatOverviewPanel() {
                 لا توجد محادثات
               </h3>
               <p className="text-gray-500">
-                {selectedStatus === "all"
-                  ? "لا توجد محادثات نشطة حالياً"
-                  : `لا توجد محادثات ${selectedStatus === "active" ? "نشطة" : "مؤرشفة"} حالياً`}
+                لا توجد محادثات نشطة حالياً
               </p>
             </div>
           ) : (

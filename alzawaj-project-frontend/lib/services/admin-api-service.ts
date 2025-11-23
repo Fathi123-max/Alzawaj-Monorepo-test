@@ -48,7 +48,7 @@ export interface AdminUser {
   suspendedAt?: string;
   suspendedBy?: string;
   suspensionReason?: string;
-  profile?: string;
+  profile?: string | any; // Can be ID string or populated profile object
   __v?: number;
 }
 

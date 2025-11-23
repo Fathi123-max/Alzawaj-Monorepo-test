@@ -60,13 +60,13 @@ const adminTabs = [
     description: "إدارة حسابات المستخدمين والملفات الشخصية",
     count: "totalUsers",
   },
-  {
-    id: "requests",
-    label: "طلبات الزواج",
-    icon: <Heart className="w-4 h-4" />,
-    description: "مراجعة والموافقة على طلبات الزواج",
-    count: "pendingRequests",
-  },
+  // {
+  //   id: "requests",
+  //   label: "طلبات الزواج",
+  //   icon: <Heart className="w-4 h-4" />,
+  //   description: "مراجعة والموافقة على طلبات الزواج",
+  //   count: "pendingRequests",
+  // },
   {
     id: "messages",
     label: "الرسائل المبلغ عنها",
@@ -302,21 +302,6 @@ export function AdminDashboard() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Badge variant="outline" className="px-3 py-1">
-              <Activity className="w-4 h-4 mr-2" />
-              متصل الآن
-            </Badge>
-            <Button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              variant="outline"
-              className="gap-2"
-            >
-              <RefreshCw
-                className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
-              />
-              تحديث البيانات
-            </Button>
             <Button
               onClick={handleSignOut}
               variant="destructive"
