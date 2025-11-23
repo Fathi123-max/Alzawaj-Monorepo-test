@@ -415,7 +415,7 @@ class AdminApiService {
     limit: number = 10,
     search?: string,
   ): Promise<PaginatedResponse<AdminUser>> {
-    const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
+    const searchParam = search && search.trim() ? `&search=${encodeURIComponent(search.trim())}` : '';
     const url = `/users?page=${page}&limit=${limit}${searchParam}`;
     console.log('[AdminAPI] getUsers called with:', { page, limit, search });
     console.log('[AdminAPI] Request URL:', url);
