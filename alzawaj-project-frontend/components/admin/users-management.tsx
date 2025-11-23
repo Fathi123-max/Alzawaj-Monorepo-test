@@ -51,6 +51,7 @@ interface SearchParams {
   page: number;
   limit: number;
   search?: string;
+  status?: string;
 }
 
 export function UsersManagement() {
@@ -61,11 +62,11 @@ export function UsersManagement() {
     page: 1,
     limit: 5,
     search: "",
+    status: "all",
   });
   const [searchInput, setSearchInput] = useState(""); // Local search input state
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
-  const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showMobileDetails, setShowMobileDetails] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
   const [chatUser, setChatUser] = useState<{ id: string; name: string } | null>(
@@ -82,10 +83,6 @@ export function UsersManagement() {
         search: searchInput,
         page: 1,
       }));
-      // Reset status filter when searching to show all results
-      if (searchInput) {
-        setFilterStatus("all");
-      }
     }, 500); // 500ms debounce
 
     return () => clearTimeout(timer);
@@ -104,6 +101,7 @@ export function UsersManagement() {
         searchParams.page,
         searchParams.limit,
         searchParams.search,
+        searchParams.status !== 'all' ? searchParams.status : undefined,
       );
       console.log('[UsersManagement] API response:', response);
 
@@ -224,11 +222,16 @@ export function UsersManagement() {
     }
   };
 
-  const filteredUsers =
-    usersData?.data?.items?.filter((user) => {
-      if (filterStatus === "all") return true;
-      return user.status === filterStatus;
-    }) || [];
+  // Use API-filtered data directly
+  const displayedUsers = usersData?.data?.items || [];
+
+  const handleStatusFilter = (status: string) => {
+    setSearchParams((prev) => ({
+      ...prev,
+      status,
+      page: 1,
+    }));
+  };
 
   return (
     <div className="space-y-6">
@@ -281,23 +284,23 @@ export function UsersManagement() {
             </div>
             <div className="flex gap-2">
               <Button
-                variant={filterStatus === "all" ? "default" : "outline"}
+                variant={searchParams.status === "all" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setFilterStatus("all")}
+                onClick={() => handleStatusFilter("all")}
               >
                 الكل
               </Button>
               <Button
-                variant={filterStatus === "active" ? "default" : "outline"}
+                variant={searchParams.status === "active" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setFilterStatus("active")}
+                onClick={() => handleStatusFilter("active")}
               >
                 نشط
               </Button>
               <Button
-                variant={filterStatus === "pending" ? "default" : "outline"}
+                variant={searchParams.status === "pending" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setFilterStatus("pending")}
+                onClick={() => handleStatusFilter("pending")}
               >
                 معلق
               </Button>
@@ -350,7 +353,7 @@ export function UsersManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredUsers?.map((user) => (
+                  {displayedUsers?.map((user) => (
                     <TableRow
                       key={user.id || user._id}
                       className="group hover:bg-blue-50/50"
@@ -494,7 +497,7 @@ export function UsersManagement() {
 
           {/* Mobile Cards */}
           <div className="lg:hidden space-y-4">
-            {filteredUsers?.map((user) => (
+            {displayedUsers?.map((user) => (
               <Card key={user.id || user._id} className="overflow-hidden">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
@@ -799,7 +802,7 @@ export function UsersManagement() {
         )}
 
       {/* Empty State */}
-      {!loading && filteredUsers?.length === 0 && (
+      {!loading && displayedUsers?.length === 0 && (
         <Card>
           <CardContent className="p-8 text-center">
             <div className="flex flex-col items-center justify-center space-y-4">

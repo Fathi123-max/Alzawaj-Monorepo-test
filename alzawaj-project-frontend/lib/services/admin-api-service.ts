@@ -414,10 +414,12 @@ class AdminApiService {
     page: number = 1,
     limit: number = 10,
     search?: string,
+    status?: string,
   ): Promise<PaginatedResponse<AdminUser>> {
     const searchParam = search && search.trim() ? `&search=${encodeURIComponent(search.trim())}` : '';
-    const url = `/users?page=${page}&limit=${limit}${searchParam}`;
-    console.log('[AdminAPI] getUsers called with:', { page, limit, search });
+    const statusParam = status ? `&status=${encodeURIComponent(status)}` : '';
+    const url = `/users?page=${page}&limit=${limit}${searchParam}${statusParam}`;
+    console.log('[AdminAPI] getUsers called with:', { page, limit, search, status });
     console.log('[AdminAPI] Request URL:', url);
     
     const response = await this.request<{
