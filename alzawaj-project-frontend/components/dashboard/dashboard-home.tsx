@@ -540,8 +540,7 @@ export function DashboardHome() {
         </CardContent>
       </Card>
 
-      {/* <!-- HIDDEN: Featured Profiles and Online Members sections
-      {/* Featured Profiles Section */}
+      {/* HIDDEN: Featured Profiles and Online Members sections
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
         <div className="xl:col-span-2">
           <Card className="shadow-xl border-0 bg-gradient-to-br from-white via-gray-50 to-primary-subtle overflow-hidden">
@@ -590,7 +589,6 @@ export function DashboardHome() {
           </Card>
         </div>
 
-        {/* Online Members */}
         <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-green-50">
           <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-3 sm:p-4">
             <h3 className="text-base sm:text-lg font-semibold flex items-center">
@@ -636,6 +634,7 @@ export function DashboardHome() {
           </CardContent>
         </Card>
       </div>
+      */}
 
       {/* HIDDEN: Recent Profiles Section */}
       {/*

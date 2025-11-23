@@ -68,6 +68,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   priority
                   quality={100}
                   sizes="(max-width: 768px) 64px, (max-width: 1280px) 80px, 96px"
+                  suppressHydrationWarning
                 />
                 <span className="text-nav-primary font-heading arabic-optimized">
                   الزواج السعيد

@@ -59,10 +59,121 @@ export async function updateProfileFlat(
   profileData: Record<string, any>,
 ): Promise<ApiProfile> {
   try {
-    console.log("updateProfileFlat: Sending data:", profileData);
+    console.log("updateProfileFlat: Raw data:", profileData);
+
+    // Transform flat data to nested structure expected by backend
+    const structuredData: any = {
+      basicInfo: {},
+      location: {},
+      religiousInfo: {},
+      personalInfo: {},
+      professional: {},
+      preferences: {},
+      privacy: {},
+    };
+
+    // Map Basic Info
+    if (profileData['name']) structuredData.basicInfo.fullName = profileData['name'];
+    if (profileData['age']) structuredData.basicInfo.age = profileData['age'];
+    if (profileData['gender']) structuredData.basicInfo.gender = profileData['gender'];
+    if (profileData['nationality'])
+      structuredData.basicInfo.nationality = profileData['nationality'];
+    if (profileData['maritalStatus'])
+      structuredData.basicInfo.maritalStatus = profileData['maritalStatus'];
+    if (profileData['hasChildren'] !== undefined)
+      structuredData.basicInfo.hasChildren = profileData['hasChildren'] === "yes";
+    if (profileData['wantsChildren'] !== undefined)
+      structuredData.basicInfo.wantChildren =
+        profileData['wantsChildren'] === "yes";
+    if (profileData['dateOfBirth'])
+      structuredData.basicInfo.dateOfBirth = profileData['dateOfBirth'];
+
+    // Map Location
+    if (profileData['country']) {
+      structuredData.location.country = profileData['country'];
+      structuredData.basicInfo.currentLocation = {
+        ...structuredData.basicInfo.currentLocation,
+        country: profileData['country'],
+      };
+    }
+    if (profileData['city']) {
+      structuredData.location.city = profileData['city'];
+      structuredData.basicInfo.currentLocation = {
+        ...structuredData.basicInfo.currentLocation,
+        city: profileData['city'],
+      };
+    }
+    if (profileData['state']) structuredData.location.state = profileData['state'];
+
+    // Map Religious Info
+    if (profileData['religiousLevel'])
+      structuredData.religiousInfo.religiousLevel = profileData['religiousLevel'];
+    if (profileData['sect']) structuredData.religiousInfo.sect = profileData['sect'];
+    if (profileData['isPrayerRegular'] !== undefined)
+      structuredData.religiousInfo.prayerFrequency = profileData['isPrayerRegular']
+        ? "always"
+        : "never"; // Simple mapping
+    if (profileData['quranMemorization'])
+      structuredData.religiousInfo.memorizedQuran =
+        profileData['quranMemorization'];
+
+    // Map Personal Info
+    if (profileData['height'])
+      structuredData.personalInfo.height = Number(profileData['height']);
+    if (profileData['weight'])
+      structuredData.personalInfo.weight = Number(profileData['weight']);
+    if (profileData['bodyType'])
+      structuredData.personalInfo.build = profileData['bodyType'];
+    if (profileData['skinColor'])
+      structuredData.personalInfo.ethnicity = profileData['skinColor']; // Mapping skinColor to ethnicity/skinColor
+    if (profileData['interests'])
+      structuredData.personalInfo.interests = profileData['interests'];
+    if (profileData['bio']) structuredData.personalInfo.about = profileData['bio'];
+    if (profileData['personalityDescription'])
+      structuredData.personalInfo.personality = [
+        profileData['personalityDescription'],
+      ];
+
+    // Map Professional
+    if (profileData['education'])
+      structuredData.professional.education = profileData['education'];
+    if (profileData['occupation'])
+      structuredData.professional.occupation = profileData['occupation'];
+    if (profileData['monthlyIncome'])
+      structuredData.professional.income = String(profileData['monthlyIncome']);
+
+    // Map Preferences (if any exist in flat data)
+    if (profileData['preferences']) structuredData.preferences = profileData['preferences'];
+
+    // Map top-level fields
+    if (profileData['areParentsAlive']) structuredData.areParentsAlive = profileData['areParentsAlive'];
+    if (profileData['parentRelationship']) structuredData.parentRelationship = profileData['parentRelationship'];
+    if (profileData['marriageGoals']) structuredData.marriageGoals = profileData['marriageGoals'];
+    if (profileData['familyPlans']) structuredData.familyPlans = profileData['familyPlans'];
+    if (profileData['relocationPlans']) structuredData.relocationPlans = profileData['relocationPlans'];
+    if (profileData['marriageTimeline']) structuredData.marriageTimeline = profileData['marriageTimeline'];
+    if (profileData['smokingStatus']) structuredData.smokingStatus = profileData['smokingStatus'];
+    
+    // Male specific top-level
+    if (profileData['hasBeard'] !== undefined) structuredData.hasBeard = profileData['hasBeard'];
+    if (profileData['financialSituation']) structuredData.financialSituation = profileData['financialSituation'];
+    if (profileData['housingOwnership']) structuredData.housingOwnership = profileData['housingOwnership'];
+    if (profileData['monthlyIncome']) structuredData.monthlyIncome = Number(profileData['monthlyIncome']);
+
+    // Female specific top-level
+    if (profileData['wearHijab'] !== undefined) structuredData.wearHijab = profileData['wearHijab'];
+    if (profileData['wearNiqab'] !== undefined) structuredData.wearNiqab = profileData['wearNiqab'];
+    if (profileData['clothingStyle']) structuredData.clothingStyle = profileData['clothingStyle'];
+    if (profileData['workAfterMarriage']) structuredData.workAfterMarriage = profileData['workAfterMarriage'];
+    if (profileData['guardianName']) structuredData.guardianName = profileData['guardianName'];
+    if (profileData['guardianPhone']) structuredData.guardianPhone = profileData['guardianPhone'];
+    if (profileData['guardianRelationship']) structuredData.guardianRelationship = profileData['guardianRelationship'];
+
+    console.log("updateProfileFlat: Sending structured data:", structuredData);
+
     const response = await ApiClient.patch<{ profile: ApiProfile }>(
       "/profile",
-      profileData,
+      structuredData,
     );
 
     console.log("updateProfileFlat: API response:", response);

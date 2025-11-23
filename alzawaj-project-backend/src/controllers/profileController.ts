@@ -118,6 +118,40 @@ interface ProfileUpdateData {
     allowNearbySearch?: boolean;
     blockedUsers?: mongoose.Types.ObjectId[];
   };
+  
+  // Top-level fields
+  areParentsAlive?: "both" | "father" | "mother" | "none";
+  parentRelationship?: "excellent" | "good" | "average" | "poor";
+  marriageGoals?: string;
+  familyPlans?: string;
+  relocationPlans?: string;
+  marriageTimeline?: string;
+  smokingStatus?: "never" | "quit" | "occasionally" | "regularly";
+  
+  // Male specific
+  hasBeard?: boolean;
+  financialSituation?: "excellent" | "good" | "average" | "struggling";
+  housingOwnership?: "owned" | "rented" | "family-owned";
+  monthlyIncome?: number;
+
+  // Female specific
+  wearHijab?: boolean;
+  wearNiqab?: boolean;
+   clothingStyle?:
+    | "niqab-full"
+    | "niqab-hands"
+    | "khimar"
+    | "tarha-loose"
+    | "hijab-conservative"
+    | "hijab-modest"
+    | "tarha-fitted"
+    | "hijab-modern"
+    | "loose-covering"
+    | "modest-covering";
+  workAfterMarriage?: "yes" | "no" | "undecided";
+  guardianName?: string;
+  guardianPhone?: string;
+  guardianRelationship?: "father" | "brother" | "uncle" | "other";
 }
 
 interface ValidationResult {
@@ -723,8 +757,87 @@ export const updateProfile = async (
       }
     }
 
+    // Handle top-level fields that are not in nested objects
+    if (updateData.areParentsAlive !== undefined) profile.areParentsAlive = updateData.areParentsAlive;
+    if (updateData.parentRelationship !== undefined) profile.parentRelationship = updateData.parentRelationship;
+    if (updateData.marriageGoals !== undefined) profile.marriageGoals = updateData.marriageGoals;
+    if (updateData.familyPlans !== undefined) profile.familyPlans = updateData.familyPlans;
+    if (updateData.relocationPlans !== undefined) profile.relocationPlans = updateData.relocationPlans;
+    if (updateData.marriageTimeline !== undefined) profile.marriageTimeline = updateData.marriageTimeline;
+    if (updateData.smokingStatus !== undefined) profile.smokingStatus = updateData.smokingStatus;
+    
+    // Male specific top-level fields
+    if (updateData.hasBeard !== undefined) profile.hasBeard = updateData.hasBeard;
+    if (updateData.financialSituation !== undefined) profile.financialSituation = updateData.financialSituation;
+    if (updateData.housingOwnership !== undefined) profile.housingOwnership = updateData.housingOwnership;
+    if (updateData.monthlyIncome !== undefined) profile.monthlyIncome = updateData.monthlyIncome;
+
+    // Female specific top-level fields
+    if (updateData.wearHijab !== undefined) profile.wearHijab = updateData.wearHijab;
+    if (updateData.wearNiqab !== undefined) profile.wearNiqab = updateData.wearNiqab;
+    if (updateData.clothingStyle !== undefined) profile.clothingStyle = updateData.clothingStyle;
+    if (updateData.workAfterMarriage !== undefined) profile.workAfterMarriage = updateData.workAfterMarriage;
+    if (updateData.guardianName !== undefined) profile.guardianName = updateData.guardianName;
+    if (updateData.guardianPhone !== undefined) profile.guardianPhone = updateData.guardianPhone;
+    if (updateData.guardianRelationship !== undefined) profile.guardianRelationship = updateData.guardianRelationship;
+
     // Update last modified timestamp
     profile.lastModified = new Date();
+
+    // Sync top-level fields with basicInfo to satisfy schema validation and consistency
+    if (profile.basicInfo) {
+      if (profile.basicInfo.fullName) profile.name = profile.basicInfo.fullName;
+      if (profile.basicInfo.age) profile.age = profile.basicInfo.age;
+      if (profile.basicInfo.gender) profile.gender = profile.basicInfo.gender;
+      if (profile.basicInfo.nationality) profile.nationality = profile.basicInfo.nationality;
+      if (profile.basicInfo.maritalStatus) profile.maritalStatus = profile.basicInfo.maritalStatus;
+      
+      // Map boolean to string enum for hasChildren/wantsChildren if needed
+      if (profile.basicInfo.hasChildren !== undefined) {
+        profile.hasChildren = profile.basicInfo.hasChildren ? "yes" : "no";
+      }
+      if (profile.basicInfo.wantChildren !== undefined) {
+        profile.wantsChildren = profile.basicInfo.wantChildren ? "yes" : "no";
+      }
+    }
+
+    if (profile.location) {
+      if (profile.location.country) profile.country = profile.location.country;
+      if (profile.location.city) profile.city = profile.location.city;
+    }
+
+    if (profile.professional) {
+      if (profile.professional.occupation) profile.occupation = profile.professional.occupation;
+    }
+
+    if (profile.religiousInfo) {
+      if (profile.religiousInfo.religiousLevel) {
+        // Cast to any to avoid strict enum check issues if types mismatch slightly
+        profile.religiousLevel = profile.religiousInfo.religiousLevel as any;
+      }
+      if (profile.religiousInfo.prayerFrequency) {
+        profile.isPrayerRegular = profile.religiousInfo.prayerFrequency === "always" || 
+                                 profile.religiousInfo.prayerFrequency === "regularly";
+      }
+    }
+
+    if (profile.personalInfo) {
+      if (profile.personalInfo.height) profile.height = profile.personalInfo.height;
+      if (profile.personalInfo.weight) profile.weight = profile.personalInfo.weight;
+      
+      // Map build -> bodyType
+      if (profile.personalInfo.build) {
+        profile.bodyType = profile.personalInfo.build as any;
+      }
+      
+      // Map ethnicity -> skinColor (if matches enum)
+      if (profile.personalInfo.ethnicity) {
+        const validSkinColors = ["fair", "medium", "olive", "dark"];
+        if (validSkinColors.includes(profile.personalInfo.ethnicity)) {
+          profile.skinColor = profile.personalInfo.ethnicity as any;
+        }
+      }
+    }
 
     // Save profile (will trigger completion percentage calculation)
     await profile.save();

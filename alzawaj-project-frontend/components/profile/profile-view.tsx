@@ -110,7 +110,12 @@ export function ProfileView() {
 
   const handleGlobalEdit = () => {
     setIsGlobalEdit(true);
-    setEditData({ ...profile });
+    const initialData = { ...profile };
+    // Fix legacy data
+    if ((initialData.maritalStatus as string) === "single") {
+      initialData.maritalStatus = "never_married";
+    }
+    setEditData(initialData);
   };
 
   const handleCancelEdit = () => {

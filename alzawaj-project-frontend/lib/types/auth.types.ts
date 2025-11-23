@@ -80,7 +80,7 @@ export interface BaseRegisterRequest {
   country: string;
   city: string;
   nationality: string;
-  maritalStatus: "single" | "divorced" | "widowed";
+  maritalStatus: "never_married" | "divorced" | "widowed";
   education?: string;
   occupation?: string;
 
@@ -296,7 +296,7 @@ export interface BaseProfile {
   country: string;
   city: string;
   nationality: string;
-  maritalStatus: "single" | "divorced" | "widowed";
+  maritalStatus: "never_married" | "divorced" | "widowed";
   education?: string;
   occupation?: string;
   religiousLevel: "basic" | "practicing" | "very-religious" | "moderate";
@@ -398,7 +398,7 @@ export interface ApiProfile {
   country: string;
   city: string;
   nationality: string;
-  maritalStatus: "single" | "divorced" | "widowed";
+  maritalStatus: "never_married" | "divorced" | "widowed";
   religiousLevel: "basic" | "moderate" | "practicing" | "very-religious";
   isPrayerRegular: boolean;
   hasChildren: "yes" | "no";
@@ -687,7 +687,7 @@ export const RELIGIOUS_LEVELS = [
   "moderate",
 ] as const;
 
-export const MARITAL_STATUS = ["single", "divorced", "widowed"] as const;
+export const MARITAL_STATUS = ["never_married", "divorced", "widowed"] as const;
 
 export const PARENT_STATUS = ["both", "father", "mother", "none"] as const;
 

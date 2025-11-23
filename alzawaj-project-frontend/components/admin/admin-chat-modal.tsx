@@ -49,6 +49,35 @@ export function AdminChatModal({
   const [hasMore, setHasMore] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setMessages([]);
+      setNewMessage("");
+      setPage(1);
+      setHasMore(true);
+      setCurrentChatRoom(null);
+    }
+  }, [isOpen]);
+
+  // Reset and load messages when chatRoom or userId changes
+  useEffect(() => {
+    if (isOpen) {
+      // Reset state first
+      setMessages([]);
+      setPage(1);
+      setHasMore(true);
+      
+      // Set the current chat room from props
+      if (chatRoom) {
+        setCurrentChatRoom(chatRoom);
+      } else if (userId) {
+        // If only userId is provided, clear the chat room (will show create chat button)
+        setCurrentChatRoom(null);
+      }
+    }
+  }, [chatRoom, userId, isOpen]);
+
   // Load messages when chat room changes
   useEffect(() => {
     if (currentChatRoom && isOpen) {
