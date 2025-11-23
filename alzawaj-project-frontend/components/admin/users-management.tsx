@@ -164,6 +164,14 @@ export function UsersManagement() {
     }));
   };
 
+  const handleLimitChange = (limit: number) => {
+    setSearchParams((prev: SearchParams) => ({
+      ...prev,
+      limit,
+      page: 1, // Reset to first page when changing limit
+    }));
+  };
+
   const handleStartChat = (user: AdminUser) => {
     setChatUser({
       id: user.id || user._id,
@@ -688,71 +696,87 @@ export function UsersManagement() {
       )}
 
       {/* Enhanced Pagination */}
-      {usersData?.data?.pagination &&
-        usersData.data.pagination.totalPages > 1 && (
+      {usersData?.data?.pagination && (
           <Card>
             <CardContent className="p-4">
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div className="text-sm text-gray-700">
-                  <span className="font-medium">
-                    صفحة {usersData.data.pagination.page} من{" "}
-                    {usersData.data.pagination.totalPages}
-                  </span>
-                  <span className="text-gray-500 mr-2">
-                    (إجمالي {usersData.data.pagination.total} مستخدم)
-                  </span>
+                <div className="flex items-center gap-4">
+                  <div className="text-sm text-gray-700">
+                    <span className="font-medium">
+                      صفحة {usersData.data.pagination.page} من{" "}
+                      {usersData.data.pagination.totalPages}
+                    </span>
+                    <span className="text-gray-500 mr-2">
+                      (إجمالي {usersData.data.pagination.total} مستخدم)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">عرض:</span>
+                    <select
+                      value={searchParams.limit}
+                      onChange={(e) => handleLimitChange(Number(e.target.value))}
+                      className="px-2 py-1 text-sm border rounded-md bg-white"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePageChange(1)}
-                    disabled={usersData.data.pagination.page <= 1}
-                    className="hidden sm:flex"
-                  >
-                    الأولى
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      handlePageChange(usersData.data.pagination.page - 1)
-                    }
-                    disabled={usersData.data.pagination.page <= 1}
-                  >
-                    السابق
-                  </Button>
-                  <span className="px-3 py-1 text-sm font-medium bg-primary text-primary-foreground rounded">
-                    {usersData.data.pagination.page}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      handlePageChange(usersData.data.pagination.page + 1)
-                    }
-                    disabled={
-                      usersData.data.pagination.page >=
-                      usersData.data.pagination.totalPages
-                    }
-                  >
-                    التالي
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      handlePageChange(usersData.data.pagination.totalPages)
-                    }
-                    disabled={
-                      usersData.data.pagination.page >=
-                      usersData.data.pagination.totalPages
-                    }
-                    className="hidden sm:flex"
-                  >
-                    الأخيرة
-                  </Button>
-                </div>
+                {usersData.data.pagination.totalPages > 1 && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(1)}
+                      disabled={usersData.data.pagination.page <= 1}
+                      className="hidden sm:flex"
+                    >
+                      الأولى
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        handlePageChange(usersData.data.pagination.page - 1)
+                      }
+                      disabled={usersData.data.pagination.page <= 1}
+                    >
+                      السابق
+                    </Button>
+                    <span className="px-3 py-1 text-sm font-medium bg-primary text-primary-foreground rounded">
+                      {usersData.data.pagination.page}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        handlePageChange(usersData.data.pagination.page + 1)
+                      }
+                      disabled={
+                        usersData.data.pagination.page >=
+                        usersData.data.pagination.totalPages
+                      }
+                    >
+                      التالي
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        handlePageChange(usersData.data.pagination.totalPages)
+                      }
+                      disabled={
+                        usersData.data.pagination.page >=
+                        usersData.data.pagination.totalPages
+                      }
+                      className="hidden sm:flex"
+                    >
+                      الأخيرة
+                    </Button>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
