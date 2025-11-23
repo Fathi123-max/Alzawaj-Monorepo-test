@@ -420,9 +420,12 @@ class AdminApiService {
       success: boolean;
       data: {
         users: AdminUser[];
-        totalUsers?: number;
-        currentPage?: number;
-        totalPages?: number;
+        pagination: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
       };
       message?: string;
     }>(`/users?page=${page}&limit=${limit}${searchParam}`);
@@ -432,16 +435,7 @@ class AdminApiService {
       success: response.success,
       data: {
         items: response.data.users,
-        pagination: {
-          page: response.data.currentPage || page,
-          limit: limit,
-          total: response.data.totalUsers || response.data.users.length,
-          totalPages:
-            response.data.totalPages ||
-            Math.ceil(
-              (response.data.totalUsers || response.data.users.length) / limit,
-            ),
-        },
+        pagination: response.data.pagination,
       },
     };
   }
