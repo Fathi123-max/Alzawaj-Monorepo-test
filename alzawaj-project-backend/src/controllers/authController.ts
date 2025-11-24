@@ -222,6 +222,11 @@ export const register = async (
 
     // Upload profile picture if provided
     if (req.file) {
+      console.log("📸 Photo upload attempt - file received:", {
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      });
       try {
         const ImageKit = require('imagekit');
         const imagekit = new ImageKit({
@@ -230,6 +235,7 @@ export const register = async (
           urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT || "",
         });
 
+        console.log("📸 ImageKit config loaded, uploading...");
         const uploadResult = await imagekit.upload({
           file: req.file.buffer.toString('base64'),
           fileName: `profile-${user._id}-${Date.now()}`,
@@ -237,6 +243,7 @@ export const register = async (
           useUniqueFileName: true,
         });
 
+        console.log("📸 ImageKit upload successful:", uploadResult.url);
         const thumbnailUrl = imagekit.url({
           path: uploadResult.filePath,
           transformation: [{ width: "300", height: "300", crop: "fit" }],
@@ -260,11 +267,13 @@ export const register = async (
         });
 
         await profile.save();
-        console.log("Profile picture uploaded successfully during registration");
+        console.log("✅ Profile picture uploaded successfully during registration");
       } catch (uploadError) {
-        console.error("Failed to upload profile picture during registration:", uploadError);
+        console.error("❌ Failed to upload profile picture during registration:", uploadError);
         // Continue without photo - don't fail registration
       }
+    } else {
+      console.log("📸 No photo file received in request");
     }
 
     // Update user with profile reference
