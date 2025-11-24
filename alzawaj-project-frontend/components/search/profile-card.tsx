@@ -61,6 +61,13 @@ export function ProfileCard({
     "profile" | "request"
   >("profile");
 
+  console.log("🎴 ProfileCard rendering:", {
+    profileId: profile.id,
+    profilePicture: profile.profilePicture,
+    firstname: profile.firstname,
+    lastname: profile.lastname,
+  });
+
   const handleSave = async () => {
     try {
       setLoading(true);
@@ -155,6 +162,8 @@ export function ProfileCard({
                 src={profile.profilePicture}
                 alt={`${profile.firstname} ${profile.lastname}`}
                 className="object-cover"
+                referrerPolicy="no-referrer"
+                crossOrigin="anonymous"
               />
               <AvatarFallback
                 className={`text-white text-lg font-semibold ${
@@ -257,6 +266,8 @@ export function ProfileCard({
                 src={profile.profilePicture}
                 alt={`${profile.firstname} ${profile.lastname}`}
                 className="object-cover"
+                referrerPolicy="no-referrer"
+                crossOrigin="anonymous"
               />
               <AvatarFallback
                 className={`text-white text-xl font-semibold ${

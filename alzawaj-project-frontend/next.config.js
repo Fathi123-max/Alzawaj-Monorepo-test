@@ -29,10 +29,15 @@ const nextConfig = {
         protocol: "https",
         hostname: "zawaj-platform.s3.amazonaws.com",
       },
+      {
+        protocol: "https",
+        hostname: "ik.imagekit.io",
+      },
     ],
     formats: ["image/webp", "image/avif"],
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
     dangerouslyAllowSVG: false,
+    unoptimized: false,
   },
 
   // Security headers

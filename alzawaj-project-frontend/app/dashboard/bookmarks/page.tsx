@@ -41,7 +41,7 @@ const convertToDisplayProfile = (apiProfile: any): MockProfile => {
     education: professional.educationLevel || apiProfile.education || "غير محدد",
     occupation: professional.occupation || apiProfile.occupation || "غير محدد",
     bio: personalInfo.about || apiProfile.bio || "لا توجد معلومات إضافية",
-    profilePicture: apiProfile.profilePicture || (gender === "male" ? "/default-male-avatar.svg" : "/default-female-avatar.svg"),
+    profilePicture: apiProfile.profilePicture || "/logo.png",
     verified: Boolean(apiProfile.verification?.isVerified || apiProfile.isApproved || false),
     isOnline: Boolean(apiProfile.isOnline || false),
     lastActive: apiProfile.lastActive || "منذ ساعة",

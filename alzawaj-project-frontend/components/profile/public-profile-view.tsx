@@ -13,6 +13,7 @@ import {
 import { showToast } from "@/components/ui/toaster";
 import { ArrowLeft, Heart, MessageCircle, Flag, Bookmark } from "lucide-react";
 import { getUserFromLocalStorage } from "@/lib/utils/localstorage";
+import Image from "next/image";
 
 const user = getUserFromLocalStorage();
 
@@ -35,6 +36,7 @@ export function PublicProfileView({
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
   const [savingBookmark, setSavingBookmark] = useState(false);
+  const [showFullImage, setShowFullImage] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -205,10 +207,19 @@ export function PublicProfileView({
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-4 space-x-reverse">
-              <div
-                className={`w-20 h-20 ${isMaleApiProfile(profile) ? "bg-gradient-to-br from-primary-light to-primary" : "bg-gradient-to-br from-pink-400 to-pink-600"} rounded-full flex items-center justify-center text-white text-2xl font-bold`}
+              <div 
+                className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-lg cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => setShowFullImage(true)}
               >
-                {isMaleApiProfile(profile) ? "👨" : "👩"}
+                <Image
+                  src={typeof profile.profilePicture === 'string' 
+                    ? profile.profilePicture 
+                    : profile.profilePicture?.url || profile.profilePicture?.fileUrl || '/logo.png'}
+                  alt={profile.name}
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
               </div>
               <div>
                 <div className="flex items-center gap-3 mb-2">
@@ -667,6 +678,32 @@ export function PublicProfileView({
           )}
         </CardContent>
       </Card>
+
+      {/* Full-size image modal */}
+      {showFullImage && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setShowFullImage(false)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] w-full h-full">
+            <Image
+              src={typeof profile.profilePicture === 'string' 
+                ? profile.profilePicture 
+                : profile.profilePicture?.url || profile.profilePicture?.fileUrl || '/logo.png'}
+              alt={profile.name}
+              fill
+              className="object-contain"
+              unoptimized
+            />
+            <button
+              onClick={() => setShowFullImage(false)}
+              className="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2 hover:bg-black/70"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -151,11 +151,22 @@ const convertToMockProfile = (apiProfile: Profile): MockProfile => {
     "غير محدد";
 
   // Get profile picture with fallback to default
-  const profilePicture =
-    apiProfile.profilePicture ||
-    (apiProfile as any).profile_picture ||
-    (apiProfile as any).avatar ||
-    getDefaultProfilePicture(gender);
+  const rawProfilePicture = apiProfile.profilePicture || (apiProfile as any).profile_picture || (apiProfile as any).avatar;
+  
+  // Handle if profilePicture is an object (e.g., {url: "..."})
+  let profilePicture = "/logo.png";
+  if (typeof rawProfilePicture === "string") {
+    profilePicture = rawProfilePicture;
+  } else if (rawProfilePicture && typeof rawProfilePicture === "object") {
+    profilePicture = rawProfilePicture.url || rawProfilePicture.fileUrl || rawProfilePicture.path || "/logo.png";
+  }
+
+  console.log("🖼️ Profile Picture URL:", {
+    userId: apiProfile._id || apiProfile.id,
+    profilePicture: profilePicture,
+    rawProfilePicture: rawProfilePicture,
+    rawType: typeof rawProfilePicture,
+  });
 
   const convertedProfile = {
     id:
