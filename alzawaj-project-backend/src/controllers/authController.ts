@@ -106,38 +106,6 @@ export const register = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    // Parse JSON fields from FormData if they exist
-    if (req.body.basicInfo && typeof req.body.basicInfo === 'string') {
-      req.body.basicInfo = JSON.parse(req.body.basicInfo);
-    }
-    if (req.body.location && typeof req.body.location === 'string') {
-      req.body.location = JSON.parse(req.body.location);
-    }
-    if (req.body.education && typeof req.body.education === 'string') {
-      req.body.education = JSON.parse(req.body.education);
-    }
-    if (req.body.professional && typeof req.body.professional === 'string') {
-      req.body.professional = JSON.parse(req.body.professional);
-    }
-    if (req.body.religiousInfo && typeof req.body.religiousInfo === 'string') {
-      req.body.religiousInfo = JSON.parse(req.body.religiousInfo);
-    }
-    if (req.body.personalInfo && typeof req.body.personalInfo === 'string') {
-      req.body.personalInfo = JSON.parse(req.body.personalInfo);
-    }
-    if (req.body.familyInfo && typeof req.body.familyInfo === 'string') {
-      req.body.familyInfo = JSON.parse(req.body.familyInfo);
-    }
-    if (req.body.lifestyle && typeof req.body.lifestyle === 'string') {
-      req.body.lifestyle = JSON.parse(req.body.lifestyle);
-    }
-    if (req.body.preferences && typeof req.body.preferences === 'string') {
-      req.body.preferences = JSON.parse(req.body.preferences);
-    }
-    if (req.body.privacy && typeof req.body.privacy === 'string') {
-      req.body.privacy = JSON.parse(req.body.privacy);
-    }
-
     const {
       email,
       password,
