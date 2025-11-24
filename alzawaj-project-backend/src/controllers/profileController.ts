@@ -1269,18 +1269,50 @@ export const getPublicProfile = async (
       return;
     }
 
-    // Check visibility permissions based on profile settings
-    // For now, assume all non-blocked viewers can view (this is a basic implementation)
-    // In a more sophisticated system, you might check privacy settings here
-    // e.g., if (profile.privacySettings?.profileVisibility !== "public" && viewerId !== profile.userId.toString())
-    // Additional checks could be added based on your requirements
+    // Apply privacy settings to filter profile data
+    const profileData: any = profile.toObject();
+    
+    // Hide age if privacy setting is disabled
+    if (profile.privacy?.showAge === false && viewerId !== profile.userId.toString()) {
+      if (profileData.basicInfo) {
+        profileData.basicInfo.age = undefined;
+        profileData.basicInfo.dateOfBirth = undefined;
+      }
+    }
+    
+    // Hide location if privacy setting is disabled
+    if (profile.privacy?.showLocation === false && viewerId !== profile.userId.toString()) {
+      if (profileData.basicInfo?.currentLocation) {
+        profileData.basicInfo.currentLocation = undefined;
+      }
+      if (profileData.location) {
+        profileData.location = undefined;
+      }
+    }
+    
+    // Hide occupation if privacy setting is disabled
+    if (profile.privacy?.showOccupation === false && viewerId !== profile.userId.toString()) {
+      if (profileData.professional) {
+        profileData.professional.occupation = undefined;
+        profileData.professional.company = undefined;
+      }
+    }
+    
+    // Hide profile picture based on setting
+    if (profile.privacy?.showProfilePicture === 'none' && viewerId !== profile.userId.toString()) {
+      profileData.profilePicture = undefined;
+    } else if (profile.privacy?.showProfilePicture === 'matches-only' && viewerId !== profile.userId.toString()) {
+      // TODO: Check if viewer is a match
+      // For now, hide from non-matches
+      profileData.profilePicture = undefined;
+    }
 
     // Record profile view
     if (viewerId && viewerId !== profile.userId.toString()) {
       await profile.recordView(viewerId);
     }
 
-    res.json(createSuccessResponse("تم جلب الملف الشخصي بنجاح", { profile }));
+    res.json(createSuccessResponse("تم جلب الملف الشخصي بنجاح", { profile: profileData }));
   } catch (error) {
     next(error);
   }

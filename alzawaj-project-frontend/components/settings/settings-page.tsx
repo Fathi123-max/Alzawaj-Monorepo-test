@@ -63,11 +63,17 @@ export function SettingsPage() {
     setLoading(true);
     try {
       console.log("Settings Page - Saving privacy settings:", privacySettings);
-      await updatePrivacySettings(privacySettings);
+      const response = await updatePrivacySettings(privacySettings);
+      console.log("Settings Page - Save response:", response);
+      
+      // Wait a moment for the database to update
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       // Reload profile to get updated values
       const updatedProfile = await getProfile();
       if (updatedProfile) {
         console.log("Settings Page - Updated profile:", updatedProfile);
+        console.log("Settings Page - Updated privacy:", updatedProfile.privacy);
         setProfile(updatedProfile as any);
       }
       showToast.success("تم حفظ إعدادات الخصوصية");
@@ -109,11 +115,12 @@ export function SettingsPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Privacy Settings */}
-      <PrivacySettingsComponent
+      {/* Privacy Settings - Hidden */}
+      {/* <PrivacySettingsComponent
+        key={profile?._id || 'no-profile'}
         profile={profile as any}
         onSave={handleSavePrivacy}
-      />
+      /> */}
 
       {/* Account Security */}
       <Card>

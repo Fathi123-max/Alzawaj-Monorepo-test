@@ -298,14 +298,15 @@ export function DashboardHome() {
           {user?.firstname} {user?.lastname}
           👋
         </h1>
-        <p className="text-xs sm:text-sm lg:text-base text-gray-600 max-w-2xl mx-auto sm:mx-0 leading-relaxed">
+        {/* <p className="text-xs sm:text-sm lg:text-base text-gray-600 max-w-2xl mx-auto sm:mx-0 leading-relaxed">
           إليك نظرة عامة على نشاطك في منصة الزواج الإسلامية. نسأل الله أن يبارك
           لك ويوفقك في إيجاد شريك حياتك.
-        </p>
+        </p> */}
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 xl:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4 xl:gap-6">
+        {/* Hidden: Profile Views Card
         <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
           <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center">
@@ -323,8 +324,10 @@ export function DashboardHome() {
             </div>
           </CardContent>
         </Card>
+        */}
 
-        <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+        {/* Statistics Cards - Hidden */}
+        {/* <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
           <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl flex items-center justify-center text-white text-base sm:text-lg lg:text-xl xl:text-2xl shadow-lg">
@@ -376,7 +379,7 @@ export function DashboardHome() {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">

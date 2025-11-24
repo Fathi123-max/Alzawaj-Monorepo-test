@@ -41,6 +41,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
+    const search = searchParams.get("search");
+    const status = searchParams.get("status");
 
     // Forward to backend API
     const backendUrl =
@@ -48,7 +50,16 @@ export async function GET(request: NextRequest) {
       process.env["NEXT_PUBLIC_BACKEND_API_URL"] ||
       process.env["NEXT_PUBLIC_API_BASE_URL"] ||
       "https://alzawaj-backend-staging.onrender.com/api";
-    const apiUrl = `${backendUrl}/admin/users?page=${page}&limit=${limit}`;
+    
+    // Build query string
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    if (search) queryParams.append("search", search);
+    if (status) queryParams.append("status", status);
+    
+    const apiUrl = `${backendUrl}/admin/users?${queryParams.toString()}`;
 
     // Extract token from header for backend call
     const token = authHeader.replace("Bearer ", "");
@@ -86,9 +97,12 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         users: responseData.data?.users || responseData.data || [],
-        totalUsers: responseData.data?.totalUsers || 0,
-        currentPage: responseData.data?.currentPage || page,
-        totalPages: responseData.data?.totalPages || 1,
+        pagination: responseData.data?.pagination || {
+          page: responseData.data?.currentPage || page,
+          limit: limit,
+          total: responseData.data?.totalUsers || responseData.data?.total || 0,
+          totalPages: responseData.data?.totalPages || 1,
+        },
       },
       message: "تم جلب بيانات المستخدمين بنجاح",
     });

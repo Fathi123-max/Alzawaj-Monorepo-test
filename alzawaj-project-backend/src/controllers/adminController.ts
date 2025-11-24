@@ -71,6 +71,7 @@ export const getUsers = async (
     );
 
     console.log('[AdminController] Result:', { total: result.pagination.total, count: result.users.length });
+    console.log('[AdminController] Full result object:', JSON.stringify(result, null, 2));
 
     res.json(createSuccessResponse("تم جلب المستخدمين بنجاح", result));
   } catch (error) {

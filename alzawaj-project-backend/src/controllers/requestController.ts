@@ -87,11 +87,46 @@ export const sendMarriageRequest = async (
     const canReceiveRequest = await receiverProfile.canReceiveRequestFrom(
       senderId as string
     );
+    
+    console.log('[sendMarriageRequest] Receiver check:', {
+      receiverId,
+      receiverName: receiverProfile.name,
+      canReceiveRequest,
+      isComplete: receiverProfile.isComplete,
+      isApproved: receiverProfile.isApproved,
+      isDeleted: receiverProfile.isDeleted,
+      allowMessagesFrom: receiverProfile.privacy?.allowMessagesFrom,
+      allowContactRequests: receiverProfile.privacy?.allowContactRequests,
+    });
+    
     if (!canReceiveRequest) {
       res
         .status(403)
         .json(createErrorResponse("لا يمكن إرسال طلب زواج لهذا المستخدم"));
       return;
+    }
+
+    // Check privacy settings for contact requests
+    if (receiverProfile.privacy?.allowContactRequests) {
+      const setting = receiverProfile.privacy.allowContactRequests;
+      
+      if (setting === 'none') {
+        res.status(403).json(createErrorResponse("المستخدم لا يقبل طلبات تواصل"));
+        return;
+      }
+      
+      if (setting === 'verified-only') {
+        // Check if sender is verified
+        if (!senderProfile.verification?.isVerified) {
+          res.status(403).json(createErrorResponse("يجب أن تكون موثقاً لإرسال طلب تواصل"));
+          return;
+        }
+      }
+      
+      if (setting === 'guardian-approved') {
+        // Mark request as requiring guardian approval
+        // This will be handled in the request creation below
+      }
     }
 
     // Check if there's already an active request between these users
@@ -145,8 +180,12 @@ export const sendMarriageRequest = async (
       },
     } as any);
 
-    // Check if guardian approval is required (for female receivers)
-    if (receiverProfile.gender === "f" && receiverProfile.guardianInfo) {
+    // Check if guardian approval is required (for female receivers or privacy setting)
+    const requiresGuardianApproval = 
+      (receiverProfile.gender === "f" && receiverProfile.guardianInfo) ||
+      receiverProfile.privacy?.requireGuardianApproval === true;
+      
+    if (requiresGuardianApproval) {
       marriageRequest.guardianApproval = {
         isRequired: true,
         isApproved: false,

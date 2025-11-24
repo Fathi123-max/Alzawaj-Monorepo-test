@@ -210,7 +210,7 @@ export class AdminService {
     reason?: string
   ): Promise<any> {
     try {
-      const user = await User.findById(userId);
+      const user = await User.findById(userId).populate('profile');
       if (!user) {
         throw new Error("User not found");
       }
@@ -236,8 +236,30 @@ export class AdminService {
           await user.softDelete();
           break;
         case "verify":
+          console.log('[AdminService] Verifying user:', userId);
           user.isEmailVerified = true;
           user.emailVerifiedAt = new Date();
+          
+          // Update profile verification
+          if (user.profile) {
+            console.log('[AdminService] User has profile:', user.profile);
+            const profile = await Profile.findById(user.profile);
+            if (profile) {
+              console.log('[AdminService] Profile found, updating verification');
+              if (!profile.verification) {
+                (profile as any).verification = {};
+              }
+              profile.verification!.isVerified = true;
+              profile.verification!.verifiedAt = new Date();
+              profile.verification!.verificationMethod = 'admin';
+              await profile.save();
+              console.log('[AdminService] Profile verification saved');
+            } else {
+              console.log('[AdminService] Profile not found in database');
+            }
+          } else {
+            console.log('[AdminService] User has no profile');
+          }
           break;
       }
 

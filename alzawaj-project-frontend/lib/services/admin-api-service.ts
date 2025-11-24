@@ -372,6 +372,7 @@ class AdminApiService {
 
     const responseData = await response.json();
     console.log(`✅ API Response received successfully`);
+    console.log(`📦 Raw response data:`, JSON.stringify(responseData, null, 2));
     return responseData;
   }
 
@@ -426,24 +427,39 @@ class AdminApiService {
       success: boolean;
       data: {
         users: AdminUser[];
-        pagination: {
+        pagination?: {
           page: number;
           limit: number;
           total: number;
           totalPages: number;
         };
+        totalUsers?: number;
+        currentPage?: number;
+        totalPages?: number;
+        total?: number;
       };
       message?: string;
     }>(url);
 
     console.log('[AdminAPI] getUsers response:', response);
+    console.log('[AdminAPI] response.data:', response.data);
+    console.log('[AdminAPI] response.data.users:', response.data?.users);
+    console.log('[AdminAPI] response.data.pagination:', response.data?.pagination);
 
     // Transform the response to match our PaginatedResponse interface
+    // Handle both structures: with pagination object or flattened
+    const pagination = response.data.pagination || {
+      page: response.data.currentPage || 1,
+      limit: limit,
+      total: response.data.totalUsers || response.data.total || 0,
+      totalPages: response.data.totalPages || 1,
+    };
+
     return {
       success: response.success,
       data: {
         items: response.data.users,
-        pagination: response.data.pagination,
+        pagination,
       },
     };
   }

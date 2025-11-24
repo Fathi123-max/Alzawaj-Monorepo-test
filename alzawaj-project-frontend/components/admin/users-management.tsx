@@ -60,7 +60,7 @@ export function UsersManagement() {
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useState<SearchParams>({
     page: 1,
-    limit: 5,
+    limit: 10,
   });
   const [searchInput, setSearchInput] = useState(""); // Local search input state
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -105,6 +105,7 @@ export function UsersManagement() {
 
       if (response.success && response.data) {
         console.log('[UsersManagement] Users loaded:', response.data.items?.length, 'users');
+        console.log('[UsersManagement] Pagination data:', response.data.pagination);
         setUsersData(response);
       } else {
         throw new Error("Failed to load users");
@@ -256,7 +257,18 @@ export function UsersManagement() {
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          {/* Search and filter hidden as requested */}
+          <div className="flex gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Input
+                type="text"
+                placeholder="البحث بالاسم أو البريد الإلكتروني..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="pr-10"
+              />
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -652,7 +664,7 @@ export function UsersManagement() {
                                         تفعيل المستخدم
                                       </Button>
                                     )}
-                                    {!selectedUser.isEmailVerified && (
+                                    {!selectedUser.profile?.verification?.isVerified && (
                                       <Button
                                         variant="outline"
                                         className="w-full"
@@ -704,7 +716,7 @@ export function UsersManagement() {
                               <UserCheck className="w-4 h-4" />
                             </Button>
                           )}
-                          {!user.isEmailVerified && (
+                          {!user.profile?.verification?.isVerified && (
                             <Button
                               size="sm"
                               variant="ghost"
@@ -1069,7 +1081,7 @@ export function UsersManagement() {
                                   تفعيل المستخدم
                                 </Button>
                               )}
-                              {!selectedUser.isEmailVerified && (
+                              {!selectedUser.profile?.verification?.isVerified && (
                                 <Button
                                   variant="outline"
                                   className="w-full"
@@ -1137,92 +1149,53 @@ export function UsersManagement() {
         </>
       )}
 
-      {/* Enhanced Pagination */}
-      {usersData?.data?.pagination && (
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="text-sm text-gray-700">
-                    <span className="font-medium">
-                      صفحة {usersData.data.pagination.page} من{" "}
-                      {usersData.data.pagination.totalPages}
-                    </span>
-                    <span className="text-gray-500 mr-2">
-                      (إجمالي {usersData.data.pagination.total} مستخدم)
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">عرض:</span>
-                    <select
-                      value={searchParams.limit}
-                      onChange={(e) => handleLimitChange(Number(e.target.value))}
-                      className="px-2 py-1 text-sm border rounded-md bg-white"
-                    >
-                      <option value={5}>5</option>
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                    </select>
-                  </div>
-                </div>
-                {usersData.data.pagination.totalPages > 1 && (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(1)}
-                      disabled={usersData.data.pagination.page <= 1}
-                      className="hidden sm:flex"
-                    >
-                      الأولى
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        handlePageChange(usersData.data.pagination.page - 1)
-                      }
-                      disabled={usersData.data.pagination.page <= 1}
-                    >
-                      السابق
-                    </Button>
-                    <span className="px-3 py-1 text-sm font-medium bg-primary text-primary-foreground rounded">
-                      {usersData.data.pagination.page}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        handlePageChange(usersData.data.pagination.page + 1)
-                      }
-                      disabled={
-                        usersData.data.pagination.page >=
-                        usersData.data.pagination.totalPages
-                      }
-                    >
-                      التالي
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        handlePageChange(usersData.data.pagination.totalPages)
-                      }
-                      disabled={
-                        usersData.data.pagination.page >=
-                        usersData.data.pagination.totalPages
-                      }
-                      className="hidden sm:flex"
-                    >
-                      الأخيرة
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+      {/* Pagination Controls */}
+      {usersData?.data?.pagination && usersData.data.pagination.totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-6">
+          <Button
+            onClick={() => handlePageChange(1)}
+            disabled={usersData.data.pagination.page === 1}
+            variant="outline"
+            size="sm"
+          >
+            الأولى
+          </Button>
+          <Button
+            onClick={() => handlePageChange(usersData.data.pagination.page - 1)}
+            disabled={usersData.data.pagination.page === 1}
+            variant="outline"
+            size="sm"
+          >
+            السابق
+          </Button>
+          <span className="px-4 py-2 text-sm">
+            صفحة {usersData.data.pagination.page} من {usersData.data.pagination.totalPages}
+          </span>
+          <Button
+            onClick={() => handlePageChange(usersData.data.pagination.page + 1)}
+            disabled={usersData.data.pagination.page >= usersData.data.pagination.totalPages}
+            variant="outline"
+            size="sm"
+          >
+            التالي
+          </Button>
+          <Button
+            onClick={() => handlePageChange(usersData.data.pagination.totalPages)}
+            disabled={usersData.data.pagination.page >= usersData.data.pagination.totalPages}
+            variant="outline"
+            size="sm"
+          >
+            الأخيرة
+          </Button>
+        </div>
+      )}
+
+      {/* Total Count */}
+      {usersData?.data?.pagination && usersData.data.pagination.total > 0 && (
+        <div className="text-center text-sm text-gray-600 mt-4">
+          عرض {displayedUsers?.length || 0} من {usersData.data.pagination.total} مستخدم
+        </div>
+      )}
 
       {/* Empty State */}
       {!loading && displayedUsers?.length === 0 && (

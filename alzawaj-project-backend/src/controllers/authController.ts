@@ -396,7 +396,32 @@ export const login = async (
       return;
     }
 
-    console.log("User is active, checking password");
+    console.log("User is active, checking email verification");
+    // Check if email is verified
+    if (!user.isEmailVerified) {
+      console.log("User email is not verified");
+      res
+        .status(403)
+        .json(createErrorResponse("يجب تأكيد البريد الإلكتروني قبل تسجيل الدخول"));
+      return;
+    }
+
+    console.log("Email verified, checking admin verification");
+    console.log("User profile:", user.profile ? "exists" : "missing");
+    if (user.profile) {
+      console.log("Profile verification:", (user.profile as any).verification);
+    }
+    
+    // Check if profile is verified by admin
+    if (user.profile && !(user.profile as any).verification?.isVerified) {
+      console.log("User profile is not verified by admin");
+      res
+        .status(403)
+        .json(createErrorResponse("حسابك قيد المراجعة. يرجى انتظار موافقة الإدارة"));
+      return;
+    }
+
+    console.log("Admin verification passed, checking password");
     // Check password
     const isPasswordMatch = await user.comparePassword(password);
     console.log("Password comparison result:", isPasswordMatch);

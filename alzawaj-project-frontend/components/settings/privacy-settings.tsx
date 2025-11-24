@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Info, Shield, Eye, Users, UserCheck, Crown } from "lucide-react";
+import { Info, Shield, Eye, Users } from "lucide-react";
 import { PrivacySettings, Profile, isFemaleProfile } from "@/lib/types";
 import { useAuth } from "@/providers/auth-provider";
 import { showToast } from "@/components/ui/toaster";
@@ -28,15 +28,8 @@ export function PrivacySettingsComponent({
     showLocation: true,
     showOccupation: true,
     allowMessagesFrom: "everyone",
-    // Enhanced privacy controls for females
-    profileVisibility: "everyone",
-    allowProfileViews: "everyone",
-    showBasicInfo: "everyone",
-    showDetailedInfo: "matches-only",
     requireGuardianApproval: false,
     allowContactRequests: "everyone",
-    showOnlineStatus: true,
-    showLastSeen: "everyone",
     hideFromLocalUsers: false,
     allowNearbySearch: true,
   });
@@ -44,15 +37,33 @@ export function PrivacySettingsComponent({
   const isFemale = profile ? isFemaleProfile(profile) : false;
 
   useEffect(() => {
+    console.log("=== Privacy Settings useEffect Triggered ===");
     console.log("Privacy Settings - Profile data:", profile);
+    console.log("Privacy Settings - Profile._id:", profile?._id);
+    console.log("Privacy Settings - Profile.privacy:", profile?.privacy);
+    console.log("Privacy Settings - Profile.privacySettings:", profile?.privacySettings);
+    
     if (profile?.privacy) {
       console.log("Privacy Settings - Using privacy field:", profile.privacy);
-      setSettings(profile.privacy as PrivacySettings);
+      console.log("Privacy Settings - Current settings before merge:", settings);
+      // Merge with defaults to ensure all fields are present
+      const newSettings = {
+        ...settings,
+        ...profile.privacy
+      };
+      console.log("Privacy Settings - New settings after merge:", newSettings);
+      setSettings(newSettings);
     } else if (profile?.privacySettings) {
       console.log("Privacy Settings - Using privacySettings field:", profile.privacySettings);
       // Fallback for old data structure
-      setSettings(profile.privacySettings);
+      setSettings(prev => ({
+        ...prev,
+        ...profile.privacySettings
+      }));
+    } else {
+      console.log("Privacy Settings - No privacy data found in profile");
     }
+    console.log("=== Privacy Settings useEffect Complete ===");
   }, [profile]);
 
   const handleSave = async () => {
@@ -69,50 +80,6 @@ export function PrivacySettingsComponent({
     } finally {
       setLoading(false);
     }
-  };
-
-  const privacyLevels = [
-    { value: "everyone", label: "الجميع", icon: Users, color: "bg-primary" },
-    {
-      value: "verified-only",
-      label: "الأعضاء المتحققين فقط",
-      icon: UserCheck,
-      color: "bg-green-500",
-    },
-    {
-      value: "premium-only",
-      label: "الأعضاء المميزين فقط",
-      icon: Crown,
-      color: "bg-purple-500",
-    },
-    {
-      value: "guardian-approved",
-      label: "بموافقة الولي",
-      icon: Shield,
-      color: "bg-orange-500",
-    },
-    {
-      value: "matches-only",
-      label: "المتطابقين فقط",
-      icon: Eye,
-      color: "bg-red-500",
-    },
-    { value: "none", label: "لا أحد", icon: Shield, color: "bg-gray-500" },
-  ];
-
-  const getPrivacyIcon = (value: string) => {
-    const level = privacyLevels.find((l) => l.value === value);
-    return level ? level.icon : Users;
-  };
-
-  const getPrivacyColor = (value: string) => {
-    const level = privacyLevels.find((l) => l.value === value);
-    return level ? level.color : "bg-primary";
-  };
-
-  const getPrivacyLabel = (value: string) => {
-    const level = privacyLevels.find((l) => l.value === value);
-    return level ? level.label : value;
   };
 
   return (
@@ -150,68 +117,6 @@ export function PrivacySettingsComponent({
               <option value="none">مخفية</option>
             </select>
           </div>
-
-          {isFemale && (
-            <>
-              {/* Enhanced Profile Visibility for Females */}
-              <div className="space-y-3">
-                <Label
-                  htmlFor="profile-visibility"
-                  className="text-sm font-medium"
-                >
-                  من يمكنه رؤية ملفي الشخصي؟
-                </Label>
-                <select
-                  id="profile-visibility"
-                  value={settings.profileVisibility || "everyone"}
-                  onChange={(e) =>
-                    setSettings((prev) => ({
-                      ...prev,
-                      profileVisibility: e.target.value as any,
-                    }))
-                  }
-                  className="w-full border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  {privacyLevels.map((level) => (
-                    <option key={level.value} value={level.value}>
-                      {level.label}
-                    </option>
-                  ))}
-                </select>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Info className="h-3 w-3" />
-                  <span>
-                    الإعدادات الأكثر تقييداً توفر حماية أفضل وفقاً للقيم
-                    الإسلامية
-                  </span>
-                </div>
-              </div>
-
-              {/* Who Can View Profile Details */}
-              <div className="space-y-3">
-                <Label htmlFor="profile-views" className="text-sm font-medium">
-                  من يمكنه عرض تفاصيل الملف؟
-                </Label>
-                <select
-                  id="profile-views"
-                  value={settings.allowProfileViews || "everyone"}
-                  onChange={(e) =>
-                    setSettings((prev) => ({
-                      ...prev,
-                      allowProfileViews: e.target.value as any,
-                    }))
-                  }
-                  className="w-full border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="everyone">الجميع</option>
-                  <option value="verified-males">الرجال المتحققين فقط</option>
-                  <option value="premium-males">الرجال المميزين فقط</option>
-                  <option value="guardian-approved">بموافقة الولي</option>
-                  <option value="matches-only">المتطابقين فقط</option>
-                </select>
-              </div>
-            </>
-          )}
 
           {/* Information Visibility */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -253,27 +158,6 @@ export function PrivacySettingsComponent({
                 }
               />
             </div>
-
-            {isFemale && (
-              <div className="flex items-center justify-between">
-                <Label
-                  htmlFor="show-online-status"
-                  className="text-sm font-medium"
-                >
-                  عرض حالة الاتصال
-                </Label>{" "}
-                <Switch
-                  id="show-online-status"
-                  checked={settings.showOnlineStatus || false}
-                  onCheckedChange={(checked: boolean) =>
-                    setSettings((prev) => ({
-                      ...prev,
-                      showOnlineStatus: checked,
-                    }))
-                  }
-                />
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
@@ -364,28 +248,6 @@ export function PrivacySettingsComponent({
                   }
                 />
               </div>
-
-              {/* Last Seen Settings */}
-              <div className="space-y-3">
-                <Label htmlFor="last-seen" className="text-sm font-medium">
-                  من يمكنه رؤية آخر ظهور؟
-                </Label>
-                <select
-                  id="last-seen"
-                  value={settings.showLastSeen || "everyone"}
-                  onChange={(e) =>
-                    setSettings((prev) => ({
-                      ...prev,
-                      showLastSeen: e.target.value as any,
-                    }))
-                  }
-                  className="w-full border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="everyone">للجميع</option>
-                  <option value="matches-only">للمتطابقين فقط</option>
-                  <option value="none">مخفي</option>
-                </select>
-              </div>
             </>
           )}
         </CardContent>
@@ -448,48 +310,6 @@ export function PrivacySettingsComponent({
           </CardContent>
         </Card>
       )}
-
-      {/* Current Privacy Level Summary */}
-      <Card>
-        <CardHeader>
-          <h3 className="text-lg font-semibold">ملخص مستوى الخصوصية</h3>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-3">
-            {(() => {
-              const PrivacyIcon = getPrivacyIcon(
-                settings.profileVisibility || "everyone",
-              );
-              return <PrivacyIcon className="h-5 w-5" />;
-            })()}
-            <div className="flex-1">
-              <p className="font-medium">
-                المستوى الحالي:{" "}
-                {getPrivacyLabel(settings.profileVisibility || "everyone")}
-              </p>{" "}
-              <p className="text-sm text-muted-foreground">
-                {settings.profileVisibility === "everyone" &&
-                  "ملفك مرئي للجميع"}
-                {settings.profileVisibility === "verified-only" &&
-                  "ملفك مرئي للأعضاء المتحققين فقط"}
-                {settings.profileVisibility === "premium-only" &&
-                  "ملفك مرئي للأعضاء المميزين فقط"}
-                {settings.profileVisibility === "guardian-approved" &&
-                  "يتطلب موافقة الولي لرؤية ملفك"}
-                {settings.profileVisibility === "matches-only" &&
-                  "ملفك مرئي للمتطابقين فقط"}
-                {!settings.profileVisibility && "ملفك مرئي للجميع"}
-              </p>
-            </div>
-            <Badge
-              variant="secondary"
-              className={`${getPrivacyColor(settings.profileVisibility || "everyone")} text-white`}
-            >
-              {isFemale && settings.requireGuardianApproval ? "محمي" : "عادي"}
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Save Button */}
       <div className="flex justify-end">

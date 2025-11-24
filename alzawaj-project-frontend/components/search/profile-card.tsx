@@ -19,6 +19,7 @@ import {
   GraduationCap,
   Briefcase,
   Clock,
+  Heart,
 } from "lucide-react";
 import { Profile } from "@/lib/mock-data/profiles";
 // Toast functionality - can be replaced with your preferred toast library
@@ -120,6 +121,21 @@ export function ProfileCard({
     );
   };
 
+  const getProfileImage = () => {
+    const privacy = (profile as any).privacy || (profile as any).privacySettings;
+    if (!privacy?.showProfilePicture || privacy.showProfilePicture === 'everyone') {
+      return profile.profilePicture;
+    }
+    
+    if (privacy.showProfilePicture === 'none') return null;
+    
+    if (privacy.showProfilePicture === 'matches-only' && !(profile as any).isMatched) {
+      return null;
+    }
+    
+    return profile.profilePicture;
+  };
+
   const getAppearanceBadges = () => {
     const badges = [];
 
@@ -158,13 +174,15 @@ export function ProfileCard({
           <div className="flex items-start space-x-4 space-x-reverse">
             {/* Avatar */}
             <Avatar className="w-16 h-16 flex-shrink-0 border-2 border-gray-100">
-              <AvatarImage
-                src={profile.profilePicture}
-                alt={`${profile.firstname} ${profile.lastname}`}
-                className="object-cover"
-                referrerPolicy="no-referrer"
-                crossOrigin="anonymous"
-              />
+              {getProfileImage() && (
+                <AvatarImage
+                  src={getProfileImage()!}
+                  alt={`${profile.firstname} ${profile.lastname}`}
+                  className="object-cover"
+                  referrerPolicy="no-referrer"
+                  crossOrigin="anonymous"
+                />
+              )}
               <AvatarFallback
                 className={`text-white text-lg font-semibold ${
                   profile.gender === "female" ? "bg-pink-500" : "bg-blue-500"
@@ -262,13 +280,15 @@ export function ProfileCard({
           {/* Main Profile Info */}
           <div className="text-center mb-4">
             <Avatar className="w-24 h-24 mx-auto mb-3 ring-4 ring-white shadow-lg">
-              <AvatarImage
-                src={profile.profilePicture}
-                alt={`${profile.firstname} ${profile.lastname}`}
-                className="object-cover"
-                referrerPolicy="no-referrer"
-                crossOrigin="anonymous"
-              />
+              {getProfileImage() && (
+                <AvatarImage
+                  src={getProfileImage()!}
+                  alt={`${profile.firstname} ${profile.lastname}`}
+                  className="object-cover"
+                  referrerPolicy="no-referrer"
+                  crossOrigin="anonymous"
+                />
+              )}
               <AvatarFallback
                 className={`text-white text-xl font-semibold ${
                   profile.gender === "female"

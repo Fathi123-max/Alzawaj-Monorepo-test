@@ -316,6 +316,30 @@ export const sendMessage = async (
       return;
     }
 
+    // Get recipient's profile to check privacy settings
+    const recipientId = chatRoom.participants.find(
+      (p) => p.user.toString() !== userId
+    )?.user;
+    
+    if (recipientId) {
+      const recipientProfile = await Profile.findOne({ userId: recipientId });
+      
+      if (recipientProfile?.privacy?.allowMessagesFrom) {
+        const setting = recipientProfile.privacy.allowMessagesFrom;
+        
+        // Check if sender is allowed to send messages
+        if (setting === 'none') {
+          res.status(403).json(createErrorResponse("المستخدم لا يقبل رسائل من أحد"));
+          return;
+        }
+        
+        if (setting === 'matches-only') {
+          // TODO: Check if users are matched
+          // For now, allow if chat room exists (they must have matched to create chat)
+        }
+      }
+    }
+
     // Check if chat room is expired
     if ((chatRoom as any).expiresAt && (chatRoom as any).expiresAt < new Date()) {
       res.status(400).json(createErrorResponse("غرفة الدردشة منتهية الصلاحية"));

@@ -178,7 +178,13 @@ export const searchProfiles = async (
       isDeleted: false,
       "gender": searcherProfile.gender === "m" ? "f" : "m", // Opposite gender
       "privacy.profileVisibility": { $in: ["everyone", "verified-only", "matches-only"] },
+      "privacy.allowNearbySearch": { $ne: false }, // Exclude users who disabled nearby search
     };
+    
+    // If searching by location, respect hideFromLocalUsers setting
+    if (city || country || location) {
+      searchQuery["privacy.hideFromLocalUsers"] = { $ne: true };
+    }
 
     // Age filter
     if (ageMin || ageMax) {
@@ -330,7 +336,7 @@ export const searchProfiles = async (
 
     // Execute the exact search
     let profiles = await Profile.find(searchQuery)
-      .select({ __v: 0 })
+      .select('-__v')
       .skip((Number(page) - 1) * Number(limit))
       .limit(Number(limit));
 
@@ -466,7 +472,7 @@ export const searchProfiles = async (
       if (fuzzyTotalProfiles > 0) {
         // Now execute the fuzzy search with pagination
         profiles = await Profile.find(fuzzySearchQuery)
-          .select({ __v: 0 })
+          .select('-__v')
           .skip((Number(page) - 1) * Number(limit))
           .limit(Number(limit));
 
