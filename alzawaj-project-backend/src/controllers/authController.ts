@@ -231,7 +231,7 @@ export const register = async (
         });
 
         const uploadResult = await imagekit.upload({
-          file: req.file.buffer,
+          file: req.file.buffer.toString('base64'),
           fileName: `profile-${user._id}-${Date.now()}`,
           folder: "profile-pictures",
           useUniqueFileName: true,
