@@ -64,7 +64,7 @@ export function ChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
 function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
   const router = useRouter();
   const { user } = useAuth();
-  const { isConnected } = useChat();
+  const { isConnected, fetchChatRooms } = useChat();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -111,12 +111,11 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
             }
           }
 
-          // Load messages from API
+          // Load messages from API (this marks them as read on backend)
           const messagesResponse = await chatApi.getMessages(chatRoomId, 1, 50);
 
           if (messagesResponse.success && messagesResponse.data) {
             // Set messages with sender info
-            // IMPORTANT: Don't set isCurrentUser here, it will be calculated on the client
             const loadedMessages = messagesResponse.data.messages.map(
               (msg: any) => {
                 return {
@@ -130,6 +129,9 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
             );
 
             setMessages(loadedMessages);
+            
+            // Refresh chat rooms to update unread count badge
+            await fetchChatRooms();
           }
         } catch (error) {
           console.error("Failed to load chat data:", error);

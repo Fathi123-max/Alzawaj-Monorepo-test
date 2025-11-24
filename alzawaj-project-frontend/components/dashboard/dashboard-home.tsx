@@ -156,9 +156,13 @@ export function DashboardHome() {
             chatRoomsRes.value?.success
           ) {
             const chatRooms = chatRoomsRes.value.data || [];
+            // Calculate total unread messages
+            const totalUnread = chatRooms.reduce((sum: number, room: any) => {
+              return sum + (room.unreadCount || 0);
+            }, 0);
             setStats((prev) => ({
               ...prev,
-              activeChats: chatRooms.length,
+              activeChats: totalUnread,
             }));
           }
 
