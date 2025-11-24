@@ -20,6 +20,23 @@ import {
 import { validateRequest } from "../middleware/validationMiddleware";
 import { protect, protectAllowingPending } from "../middleware/authMiddleware";
 import { rateLimitConfig } from "../config/rateLimiting";
+import multer from "multer";
+
+// Configure multer for registration photo upload
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(null, false);
+    }
+  }
+});
 
 const router: Router = express.Router();
 
@@ -164,6 +181,7 @@ const refreshTokenValidation = [
 router.post(
   "/register",
   rateLimitConfig.auth,
+  upload.single('profilePicture'),
   registerValidation,
   validateRequest,
   register,

@@ -220,6 +220,53 @@ export const register = async (
 
     await profile.save();
 
+    // Upload profile picture if provided
+    if (req.file) {
+      try {
+        const ImageKit = require('imagekit');
+        const imagekit = new ImageKit({
+          publicKey: process.env.IMAGEKIT_PUBLIC_KEY || "",
+          privateKey: process.env.IMAGEKIT_PRIVATE_KEY || "",
+          urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT || "",
+        });
+
+        const uploadResult = await imagekit.upload({
+          file: req.file.buffer,
+          fileName: `profile-${user._id}-${Date.now()}`,
+          folder: "profile-pictures",
+          useUniqueFileName: true,
+        });
+
+        const thumbnailUrl = imagekit.url({
+          path: uploadResult.filePath,
+          transformation: [{ width: "300", height: "300", crop: "fit" }],
+        });
+
+        profile.profilePicture = {
+          url: uploadResult.url,
+          thumbnailUrl: thumbnailUrl,
+          uploadedAt: new Date(),
+          fileId: uploadResult.fileId,
+        };
+
+        if (!profile.photos) profile.photos = [];
+        profile.photos.push({
+          url: uploadResult.url,
+          thumbnailUrl: thumbnailUrl,
+          uploadedAt: new Date(),
+          isApproved: false,
+          order: 0,
+          fileId: uploadResult.fileId,
+        });
+
+        await profile.save();
+        console.log("Profile picture uploaded successfully during registration");
+      } catch (uploadError) {
+        console.error("Failed to upload profile picture during registration:", uploadError);
+        // Continue without photo - don't fail registration
+      }
+    }
+
     // Update user with profile reference
     user.profile = profile._id as any;
     await user.save();

@@ -244,23 +244,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         showToast.success("تم تسجيل الدخول بنجاح");
         console.log("AuthProvider: Success toast shown");
 
-        // Upload pending profile photo if exists
-        const pendingPhoto = localStorage.getItem("pending_profile_photo");
-        const pendingPhotoName = localStorage.getItem("pending_profile_photo_name");
-        if (pendingPhoto && pendingPhotoName) {
-          try {
-            const { uploadProfilePicture } = await import("@/lib/api/profile");
-            const blob = await fetch(pendingPhoto).then(r => r.blob());
-            const file = new File([blob], pendingPhotoName, { type: blob.type });
-            await uploadProfilePicture(file);
-            localStorage.removeItem("pending_profile_photo");
-            localStorage.removeItem("pending_profile_photo_name");
-            console.log("AuthProvider: Pending profile photo uploaded successfully");
-          } catch (uploadError) {
-            console.error("AuthProvider: Failed to upload pending photo:", uploadError);
-          }
-        }
-
         console.log("AuthProvider: Login completed successfully");
       } else {
         console.log(
