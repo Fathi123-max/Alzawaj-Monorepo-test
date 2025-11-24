@@ -5,8 +5,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Upload, X, User } from "lucide-react";
 
-// Note: This component is only shown for male users
-// Female users skip this step for Islamic modesty requirements
 const StepPhoto = ({
   data,
   clearError,
@@ -18,15 +16,6 @@ const StepPhoto = ({
   profilePicture: File | null;
   setProfilePicture: (file: File | null) => void;
 }) => {
-  // Additional safeguard: This component should not render for female users
-  if (data.gender === "f") {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-600">هذه الخطوة مخصصة للمستخدمين للإخوة فقط</p>
-      </div>
-    );
-  }
-
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     clearError();
     const file = event.target.files?.[0];

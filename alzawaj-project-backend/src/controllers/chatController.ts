@@ -118,7 +118,19 @@ export const getChatRoomById = async (
       return;
     }
 
-    res.json(createSuccessResponse("تم جلب غرفة الدردشة بنجاح", chatRoom));
+    // Get profile pictures for participants
+    const chatRoomObj = chatRoom.toObject();
+    for (let i = 0; i < chatRoomObj.participants.length; i++) {
+      const participant = chatRoomObj.participants[i];
+      if (participant && participant.user && typeof participant.user === 'object') {
+        const profile = await Profile.findOne({ userId: (participant.user as any)._id }).select('profilePicture');
+        if (profile && profile.profilePicture) {
+          (participant.user as any).profilePicture = profile.profilePicture;
+        }
+      }
+    }
+
+    res.json(createSuccessResponse("تم جلب غرفة الدردشة بنجاح", chatRoomObj));
   } catch (error) {
     next(error);
   }

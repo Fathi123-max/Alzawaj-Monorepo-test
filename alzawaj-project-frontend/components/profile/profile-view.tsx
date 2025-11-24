@@ -63,9 +63,39 @@ export function ProfileView() {
   const [editData, setEditData] = useState<any>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // Load selector data for dropdowns
   const { data: selectorData, loading: selectorLoading } = useSelectorData();
+  
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setError("يرجى اختيار ملف صورة");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("حجم الصورة يجب أن يكون أقل من 5 ميجابايت");
+      return;
+    }
+
+    setUploadingPhoto(true);
+    setError(null);
+    
+    try {
+      const { uploadProfilePicture } = await import("@/lib/api/profile");
+      await uploadProfilePicture(file);
+      await loadProfile();
+    } catch (error: any) {
+      setError("فشل في رفع الصورة");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+  
   useEffect(() => {
     loadProfile();
   }, []);
@@ -1539,8 +1569,30 @@ export function ProfileView() {
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center space-x-4 space-x-reverse">
-            <div className="h-20 w-20 rounded-full bg-gradient-to-r from-primary-500 to-secondary-500 sm:flex hidden items-center justify-center">
-              <User className="h-10 w-10 text-white" />
+            <div className="relative">
+              <div className="h-20 w-20 rounded-full bg-gradient-to-r from-primary-500 to-secondary-500 sm:flex hidden items-center justify-center overflow-hidden">
+                {profile.profilePicture?.url ? (
+                  <img src={profile.profilePicture.url} alt={profile.name} className="h-full w-full object-cover" />
+                ) : (
+                  <User className="h-10 w-10 text-white" />
+                )}
+              </div>
+              <label htmlFor="photo-upload" className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-1.5 cursor-pointer hover:bg-primary-600 transition-colors">
+                <Edit3 className="h-3 w-3" />
+                <input
+                  id="photo-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  disabled={uploadingPhoto}
+                  className="hidden"
+                />
+              </label>
+              {uploadingPhoto && (
+                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                </div>
+              )}
             </div>
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-gray-900">

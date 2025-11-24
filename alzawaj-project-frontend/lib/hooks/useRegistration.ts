@@ -610,7 +610,17 @@ const useRegistration = (): UseRegistrationResult => {
       console.log("Registration response:", response);
 
       if (response.success) {
-        showToast.success("تم إنشاء الحساب بنجاح. يرجى التحقق من بريدك الإلكتروني للتأكيد");
+        // Store photo for upload after first login
+        if (state.profilePicture) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            localStorage.setItem("pending_profile_photo", reader.result as string);
+            localStorage.setItem("pending_profile_photo_name", state.profilePicture!.name);
+          };
+          reader.readAsDataURL(state.profilePicture);
+        }
+        
+        showToast.success(response.message || "تم إنشاء الحساب بنجاح. يرجى التحقق من بريدك الإلكتروني للتأكيد");
       } else {
         throw new Error(response.message || "فشل في إنشاء الحساب");
       }

@@ -72,6 +72,7 @@ export function RegistrationWizard({
     goToStep,
     updateData,
     profilePicture,
+    setProfilePicture,
     sendOTP,
     otpSent,
     submitRegistration,
@@ -132,7 +133,7 @@ export function RegistrationWizard({
           />
         );
       case 2:
-        return <Step2AllData {...stepProps} />;
+        return <Step2AllData {...stepProps} profilePicture={profilePicture} setProfilePicture={setProfilePicture} />;
       case 3:
         return (
           <Step3Review

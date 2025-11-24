@@ -106,6 +106,7 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
                 setOtherUser({
                   id: participantUser._id || participantUser.id,
                   name: getUserFullName(participantUser),
+                  profilePicture: participantUser.profilePicture,
                 } as Profile);
               }
             }
@@ -417,8 +418,16 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
 
               <div className="flex items-center gap-4 justify-start flex-1">
                 <div className="relative">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <User className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {otherUser?.profilePicture ? (
+                      <img 
+                        src={typeof otherUser.profilePicture === 'string' ? otherUser.profilePicture : otherUser.profilePicture.url} 
+                        alt={otherUser.name} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                    )}
                   </div>
                   <div
                     className={`absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white ${
