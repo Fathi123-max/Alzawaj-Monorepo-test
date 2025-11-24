@@ -11,7 +11,7 @@ import {
   isFemaleApiProfile,
 } from "@/lib/types/auth.types";
 import { showToast } from "@/components/ui/toaster";
-import { ArrowLeft, Heart, MessageCircle, Flag } from "lucide-react";
+import { ArrowLeft, Heart, MessageCircle, Flag, Bookmark } from "lucide-react";
 import { getUserFromLocalStorage } from "@/lib/utils/localstorage";
 
 const user = getUserFromLocalStorage();
@@ -33,10 +33,39 @@ export function PublicProfileView({
   //   const { user } = useAuth();
   const [profile, setProfile] = useState<ApiProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSaved, setIsSaved] = useState(false);
+  const [savingBookmark, setSavingBookmark] = useState(false);
 
   useEffect(() => {
     loadProfile();
   }, [userId]);
+
+  const handleBookmarkToggle = async () => {
+    if (!user) {
+      showToast.error("يجب تسجيل الدخول لحفظ الملفات");
+      return;
+    }
+
+    setSavingBookmark(true);
+    try {
+      const { bookmarkApi } = await import("@/lib/api/bookmark");
+      
+      if (isSaved) {
+        await bookmarkApi.remove(userId);
+        setIsSaved(false);
+        showToast.success("تم إلغاء حفظ الملف الشخصي");
+      } else {
+        await bookmarkApi.add(userId);
+        setIsSaved(true);
+        showToast.success("تم حفظ الملف الشخصي");
+      }
+    } catch (error: any) {
+      showToast.error(error.message || "حدث خطأ");
+    } finally {
+      setSavingBookmark(false);
+    }
+  };
+
   const loadProfile = async () => {
     setLoading(true);
     try {
@@ -239,14 +268,6 @@ export function PublicProfileView({
               </div>
             </div>
           </div>
-
-          {/* Bio */}
-          {profile.bio && (
-            <div className="border-t pt-4">
-              <h3 className="font-medium text-gray-900 mb-2">نبذة شخصية</h3>
-              <p className="text-gray-700 leading-relaxed">{profile.bio}</p>
-            </div>
-          )}
         </CardContent>
       </Card>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -617,6 +638,16 @@ export function PublicProfileView({
             >
               <Heart className="h-5 w-5" />
               إرسال طلب تعارف
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="flex items-center gap-2"
+              onClick={handleBookmarkToggle}
+              disabled={!user || savingBookmark}
+            >
+              <Bookmark className={`h-5 w-5 ${isSaved ? "fill-blue-500 text-blue-500" : ""}`} />
+              {isSaved ? "محفوظ" : "حفظ الملف"}
             </Button>
             <Button
               variant="outline"

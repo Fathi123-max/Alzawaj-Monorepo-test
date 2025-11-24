@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import {
   Search,
   Users,
-  Heart,
   ChevronLeft,
   ChevronRight,
   X,
@@ -227,6 +226,7 @@ const convertToMockProfile = (apiProfile: Profile): MockProfile => {
 };
 import { Badge } from "@/components/ui/badge";
 import { showToast } from "@/components/ui/toaster";
+import { bookmarkApi } from "@/lib/api/bookmark";
 
 // Use actual toast notifications
 const toast = {
@@ -407,23 +407,16 @@ function SearchPageContent() {
 
   // Note: Request handling is now done through ProfileDialog
 
-  const handleLikeProfile = async (profileId: string) => {
+  const handleSaveProfile = async (profileId: string, isSaved: boolean) => {
     try {
-      // TODO: Implement like profile API
-      console.log("Like profile:", profileId);
-      toast.success("تم الإعجاب بالملف الشخصي");
-    } catch (error) {
-      toast.error("حدث خطأ في الإعجاب");
-    }
-  };
-
-  const handleSaveProfile = async (profileId: string) => {
-    try {
-      // TODO: Implement save profile API
-      console.log("Save profile:", profileId);
-      toast.success("تم حفظ الملف الشخصي");
-    } catch (error) {
-      toast.error("حدث خطأ في الحفظ");
+      if (isSaved) {
+        await bookmarkApi.add(profileId);
+      } else {
+        await bookmarkApi.remove(profileId);
+      }
+    } catch (error: any) {
+      console.error("Bookmark error:", error);
+      throw new Error(error.response?.data?.message || "حدث خطأ في الحفظ");
     }
   };
 
@@ -661,7 +654,6 @@ function SearchPageContent() {
                       <ProfileCard
                         key={profile.id}
                         profile={convertToMockProfile(profile)}
-                        onLike={handleLikeProfile}
                         onSave={handleSaveProfile}
                         onSendRequest={handleSendRequest}
                         currentUserGender="male"
@@ -677,7 +669,6 @@ function SearchPageContent() {
                       <ProfileCard
                         key={profileData.profile.id}
                         profile={convertToMockProfile(profileData.profile)}
-                        onLike={handleLikeProfile}
                         onSave={handleSaveProfile}
                         onSendRequest={handleSendRequest}
                         currentUserGender="male"

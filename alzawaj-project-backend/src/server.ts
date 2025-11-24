@@ -30,6 +30,7 @@ import reportsRoutes from './routes/reportsRoutes';
 import adminRoutes from './routes/adminRoutes';
 import debugRoutes from './routes/debugRoutes';
 import verificationRoutes from './routes/verificationRoutes';
+import bookmarkRoutes from './routes/bookmarkRoutes';
 
 const app: Express = express();
 const server = createServer(app);
@@ -142,6 +143,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/bookmarks', bookmarkRoutes);
 
 app.use('/api/debug', debugRoutes);
 

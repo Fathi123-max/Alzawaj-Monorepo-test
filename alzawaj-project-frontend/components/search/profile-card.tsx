@@ -9,7 +9,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProfileDialog } from "@/components/profile/profile-dialog";
 import {
   Eye,
-  Heart,
   MapPin,
   Calendar,
   User,
@@ -31,8 +30,7 @@ const toast = {
 interface ProfileCardProps {
   profile: Profile;
   onSendRequest?: (profileId: string) => Promise<void>;
-  onLike?: (profileId: string) => Promise<void>;
-  onSave?: (profileId: string) => Promise<void>;
+  onSave?: (profileId: string, isSaved: boolean) => Promise<void>;
   currentUserGender: "male" | "female";
   compact?: boolean;
   showActions?: boolean;
@@ -45,7 +43,6 @@ interface ProfileCardProps {
 export function ProfileCard({
   profile,
   onSendRequest,
-  onLike,
   onSave,
   currentUserGender,
   compact = false,
@@ -56,8 +53,7 @@ export function ProfileCard({
   userPhone,
 }: ProfileCardProps) {
   const router = useRouter();
-  const [isLiked, setIsLiked] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
+  const [isSaved, setIsSaved] = useState((profile as any).isSaved || false);
   const [isRequestSent, setIsRequestSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
@@ -65,29 +61,15 @@ export function ProfileCard({
     "profile" | "request"
   >("profile");
 
-  const handleLike = async () => {
-    try {
-      setLoading(true);
-      if (onLike) {
-        await onLike(profile.id);
-      }
-      setIsLiked(!isLiked);
-      toast.success(isLiked ? "تم إلغاء الإعجاب" : "تم الإعجاب بالملف الشخصي");
-    } catch (error) {
-      toast.error("حدث خطأ، حاول مرة أخرى");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSave = async () => {
     try {
       setLoading(true);
+      const newSavedState = !isSaved;
       if (onSave) {
-        await onSave(profile.id);
+        await onSave(profile.id, newSavedState);
       }
-      setIsSaved(!isSaved);
-      toast.success(isSaved ? "تم إلغاء الحفظ" : "تم حفظ الملف الشخصي");
+      setIsSaved(newSavedState);
+      toast.success(newSavedState ? "تم حفظ الملف الشخصي" : "تم إلغاء الحفظ");
     } catch (error) {
       toast.error("حدث خطأ، حاول مرة أخرى");
     } finally {
@@ -223,11 +205,11 @@ export function ProfileCard({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={handleLike}
+                    onClick={handleSave}
                     disabled={loading}
                   >
-                    <Heart
-                      className={`w-4 h-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
+                    <Bookmark
+                      className={`w-4 h-4 ${isSaved ? "fill-blue-500 text-blue-500" : ""}`}
                     />
                   </Button>
                 </div>
@@ -394,12 +376,12 @@ export function ProfileCard({
 
           {/* Action Buttons */}
           {showActions && (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="flex gap-2">
               <Button
                 size="sm"
                 onClick={handleSendRequest}
                 disabled={isRequestSent || loading || !canSendRequest}
-                className="col-span-2"
+                className="flex-1"
               >
                 <MessageCircle className="w-4 h-4 ml-1" />
                 {!canSendRequest
@@ -409,31 +391,17 @@ export function ProfileCard({
                     : "طلب تواصل"}
               </Button>
 
-              <div className="flex gap-1">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleLike}
-                  disabled={loading}
-                  className="flex-1"
-                >
-                  <Heart
-                    className={`w-4 h-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`}
-                  />
-                </Button>
-
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleSave}
-                  disabled={loading}
-                  className="flex-1"
-                >
-                  <Bookmark
-                    className={`w-4 h-4 ${isSaved ? "fill-blue-500 text-blue-500" : ""}`}
-                  />
-                </Button>
-              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleSave}
+                disabled={loading}
+                className="w-12"
+              >
+                <Bookmark
+                  className={`w-4 h-4 ${isSaved ? "fill-blue-500 text-blue-500" : ""}`}
+                />
+              </Button>
             </div>
           )}
 

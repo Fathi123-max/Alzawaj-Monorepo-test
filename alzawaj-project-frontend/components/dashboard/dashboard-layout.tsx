@@ -38,6 +38,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: "الرئيسية", href: "/dashboard", icon: "home" },
     { name: "الملف الشخصي", href: "/dashboard/profile", icon: "user" },
     { name: "البحث", href: "/dashboard/search", icon: "search" },
+    { name: "المحفوظات", href: "/dashboard/bookmarks", icon: "bookmark" },
     { name: "الطلبات", href: "/dashboard/requests", icon: "heart" },
     { name: "المحادثات", href: "/dashboard/chat", icon: "message-circle" },
     { name: "الإعدادات", href: "/dashboard/settings", icon: "settings" },
