@@ -96,7 +96,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             {/* User Menu */}
             <div className="flex items-center gap-2 sm:gap-4">
               {/* Notifications */}
-              <button className="relative hidden sm:block p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary rounded-full">
+              <button className="relative hidden p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary rounded-full">
                 <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
                 <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
               </button>

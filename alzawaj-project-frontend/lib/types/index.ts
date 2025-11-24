@@ -340,7 +340,7 @@ export interface RegistrationData {
   country: string;
   city: string;
   nationality: string;
-  maritalStatus: "single" | "divorced" | "widowed";
+  maritalStatus?: "single" | "divorced" | "widowed";
   religiousLevel: "practicing" | "basic" | "very-religious" | "moderate";
   isPrayerRegular: boolean;
   areParentsAlive: "both" | "father" | "mother" | "none";

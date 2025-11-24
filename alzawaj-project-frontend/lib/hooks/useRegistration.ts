@@ -499,6 +499,7 @@ const useRegistration = (): UseRegistrationResult => {
         basicInfo: {
           name: `${regData.firstname.trim()} ${regData.lastname.trim()}`, // Combine names to single field
           age: regData.age,
+          maritalStatus: regData.maritalStatus || "single",
           ...(regData.gender === "m" && { hasBeard: regData.hasBeard ?? true }), // Only include for males
           ...(regData.gender === "f" && {
             guardianName: regData.guardianName?.trim() || "",
@@ -571,9 +572,7 @@ const useRegistration = (): UseRegistrationResult => {
           }),
         },
         familyInfo: {
-          hasChildren: (regData.wantsChildren === "yes" ? "yes" : "no") as
-            | "yes"
-            | "no",
+          hasChildren: "no" as "yes" | "no",
           childrenCount: 0,
         },
         lifestyle: {

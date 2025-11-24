@@ -31,7 +31,7 @@ interface ProfileUpdateData {
       country: string;
       coordinates?: [number, number];
     };
-    maritalStatus?: "never_married" | "divorced" | "widowed";
+    maritalStatus?: "single" | "divorced" | "widowed";
     hasChildren?: boolean;
     wantChildren?: boolean;
     age?: number;
@@ -529,7 +529,7 @@ export const updateProfile = async (
             country: updateData.basicInfo.currentLocation?.country || "",
             ...(updateData.basicInfo.currentLocation?.coordinates !== undefined ? { coordinates: updateData.basicInfo.currentLocation.coordinates } : {}),
           },
-          maritalStatus: updateData.basicInfo.maritalStatus || "never_married",
+          maritalStatus: updateData.basicInfo.maritalStatus || "single",
           hasChildren: updateData.basicInfo.hasChildren || false,
           wantChildren: updateData.basicInfo.wantChildren || false,
         };
@@ -1304,12 +1304,58 @@ export const updatePrivacySettings = async (
       return;
     }
 
-    // Update privacy settings
-    if (profile.privacy) {
-      Object.assign(profile.privacy, privacySettings);
-    } else {
-      profile.privacy = privacySettings;
+    // Initialize privacy object if it doesn't exist
+    if (!profile.privacy) {
+      profile.privacy = {};
     }
+
+    // Update each privacy field individually to ensure proper typing
+    if (privacySettings.showProfilePicture !== undefined) {
+      profile.privacy.showProfilePicture = privacySettings.showProfilePicture;
+    }
+    if (privacySettings.showAge !== undefined) {
+      profile.privacy.showAge = privacySettings.showAge;
+    }
+    if (privacySettings.showLocation !== undefined) {
+      profile.privacy.showLocation = privacySettings.showLocation;
+    }
+    if (privacySettings.showOccupation !== undefined) {
+      profile.privacy.showOccupation = privacySettings.showOccupation;
+    }
+    if (privacySettings.allowMessagesFrom !== undefined) {
+      profile.privacy.allowMessagesFrom = privacySettings.allowMessagesFrom;
+    }
+    if (privacySettings.profileVisibility !== undefined) {
+      profile.privacy.profileVisibility = privacySettings.profileVisibility;
+    }
+    if (privacySettings.allowProfileViews !== undefined) {
+      profile.privacy.allowProfileViews = privacySettings.allowProfileViews;
+    }
+    if (privacySettings.showBasicInfo !== undefined) {
+      profile.privacy.showBasicInfo = privacySettings.showBasicInfo;
+    }
+    if (privacySettings.showDetailedInfo !== undefined) {
+      profile.privacy.showDetailedInfo = privacySettings.showDetailedInfo;
+    }
+    if (privacySettings.allowContactRequests !== undefined) {
+      profile.privacy.allowContactRequests = privacySettings.allowContactRequests;
+    }
+    if (privacySettings.showLastSeen !== undefined) {
+      profile.privacy.showLastSeen = privacySettings.showLastSeen;
+    }
+    if (privacySettings.hideFromLocalUsers !== undefined) {
+      profile.privacy.hideFromLocalUsers = privacySettings.hideFromLocalUsers;
+    }
+    if (privacySettings.requireGuardianApproval !== undefined) {
+      profile.privacy.requireGuardianApproval = privacySettings.requireGuardianApproval;
+    }
+    if (privacySettings.showOnlineStatus !== undefined) {
+      profile.privacy.showOnlineStatus = privacySettings.showOnlineStatus;
+    }
+    if (privacySettings.allowNearbySearch !== undefined) {
+      profile.privacy.allowNearbySearch = privacySettings.allowNearbySearch;
+    }
+
     profile.lastModified = new Date();
     await profile.save();
 

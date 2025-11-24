@@ -11,7 +11,7 @@ export const ALLOWED_EDUCATION_LEVELS = [
 ];
 
 export const ALLOWED_MARITAL_STATUS = [
-  'never_married', 
+  'single', 
   'divorced', 
   'widowed'
 ];

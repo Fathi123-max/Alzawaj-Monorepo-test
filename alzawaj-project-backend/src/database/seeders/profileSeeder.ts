@@ -111,7 +111,7 @@ export const seedProfiles = async () => {
           country: profileData.country,
           coordinates: [faker.location.latitude(), faker.location.longitude()]
         },
-        maritalStatus: maritalStatus === 'single' ? 'never_married' : maritalStatus,
+        maritalStatus: maritalStatus === 'single' ? 'single' : maritalStatus,
         hasChildren: profileData.hasChildren === 'yes',
         wantChildren: profileData.wantsChildren === 'yes'
       };

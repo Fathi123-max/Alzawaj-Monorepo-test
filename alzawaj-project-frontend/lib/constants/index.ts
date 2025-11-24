@@ -114,7 +114,7 @@ export const COUNTRIES = [
 ] as const;
 
 export const MARITAL_STATUS_OPTIONS = [
-  { value: "never_married", label: "أعزب/عزباء" },
+  { value: "single", label: "أعزب/عزباء" },
   { value: "divorced", label: "مطلق/مطلقة" },
   { value: "widowed", label: "أرمل/أرملة" },
 ] as const;

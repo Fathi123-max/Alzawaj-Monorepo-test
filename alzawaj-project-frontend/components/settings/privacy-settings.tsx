@@ -44,7 +44,13 @@ export function PrivacySettingsComponent({
   const isFemale = profile ? isFemaleProfile(profile) : false;
 
   useEffect(() => {
-    if (profile?.privacySettings) {
+    console.log("Privacy Settings - Profile data:", profile);
+    if (profile?.privacy) {
+      console.log("Privacy Settings - Using privacy field:", profile.privacy);
+      setSettings(profile.privacy as PrivacySettings);
+    } else if (profile?.privacySettings) {
+      console.log("Privacy Settings - Using privacySettings field:", profile.privacySettings);
+      // Fallback for old data structure
       setSettings(profile.privacySettings);
     }
   }, [profile]);
@@ -52,6 +58,7 @@ export function PrivacySettingsComponent({
   const handleSave = async () => {
     setLoading(true);
     try {
+      console.log("Privacy Settings - Saving settings:", settings);
       if (onSave) {
         await onSave(settings);
       }

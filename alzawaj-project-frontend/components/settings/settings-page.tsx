@@ -1,17 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/providers/auth-provider";
 import { showToast } from "@/components/ui/toaster";
 import { PrivacySettingsComponent } from "./privacy-settings";
-import { PrivacySettings } from "@/lib/types";
+import { PrivacySettings, Profile } from "@/lib/types";
+import { updatePrivacySettings, getProfile } from "@/lib/api/profile";
+import { authApi } from "@/lib/api";
 
 export function SettingsPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [settings, setSettings] = useState({
     notifications: {
       email: true,
@@ -30,10 +33,24 @@ export function SettingsPage() {
     },
   });
 
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const profileData = await getProfile();
+        if (profileData) {
+          setProfile(profileData as any);
+        }
+      } catch (error) {
+        console.error("Error loading profile:", error);
+      }
+    };
+    loadProfile();
+  }, []);
+
   const handleSaveNotifications = async () => {
     setLoading(true);
     try {
-      // TODO: Save notification settings
+      // TODO: Implement notification settings endpoint when backend is ready
       showToast.success("تم حفظ إعدادات التنبيهات");
     } catch (error) {
       showToast.error("خطأ في حفظ الإعدادات");
@@ -45,10 +62,17 @@ export function SettingsPage() {
   const handleSavePrivacy = async (privacySettings: PrivacySettings) => {
     setLoading(true);
     try {
-      // TODO: Save privacy settings to backend
-      console.log("Saving privacy settings:", privacySettings);
+      console.log("Settings Page - Saving privacy settings:", privacySettings);
+      await updatePrivacySettings(privacySettings);
+      // Reload profile to get updated values
+      const updatedProfile = await getProfile();
+      if (updatedProfile) {
+        console.log("Settings Page - Updated profile:", updatedProfile);
+        setProfile(updatedProfile as any);
+      }
       showToast.success("تم حفظ إعدادات الخصوصية");
     } catch (error) {
+      console.error("Settings Page - Error saving privacy settings:", error);
       showToast.error("خطأ في حفظ الإعدادات");
     } finally {
       setLoading(false);
@@ -63,7 +87,10 @@ export function SettingsPage() {
 
     setLoading(true);
     try {
-      // TODO: Change password
+      await authApi.changePassword({
+        currentPassword: settings.account.currentPassword,
+        newPassword: settings.account.newPassword,
+      });
       showToast.success("تم تغيير كلمة المرور");
       setSettings((prev) => ({
         ...prev,
@@ -82,102 +109,9 @@ export function SettingsPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">الإعدادات</h1>
-        <p className="text-gray-600">إدارة إعدادات حسابك وخصوصيتك</p>
-      </div>
-
-      {/* Notification Settings */}
-      <Card>
-        <CardHeader>
-          <h2 className="text-xl font-semibold">إعدادات التنبيهات</h2>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">
-              تنبيهات البريد الإلكتروني
-            </span>
-            <input
-              type="checkbox"
-              checked={settings.notifications.email}
-              onChange={(e) =>
-                setSettings((prev) => ({
-                  ...prev,
-                  notifications: {
-                    ...prev.notifications,
-                    email: e.target.checked,
-                  },
-                }))
-              }
-              className="h-4 w-4"
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">التنبيهات الفورية</span>
-            <input
-              type="checkbox"
-              checked={settings.notifications.push}
-              onChange={(e) =>
-                setSettings((prev) => ({
-                  ...prev,
-                  notifications: {
-                    ...prev.notifications,
-                    push: e.target.checked,
-                  },
-                }))
-              }
-              className="h-4 w-4"
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">الرسائل الجديدة</span>
-            <input
-              type="checkbox"
-              checked={settings.notifications.newMessages}
-              onChange={(e) =>
-                setSettings((prev) => ({
-                  ...prev,
-                  notifications: {
-                    ...prev.notifications,
-                    newMessages: e.target.checked,
-                  },
-                }))
-              }
-              className="h-4 w-4"
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">طلبات الزواج الجديدة</span>
-            <input
-              type="checkbox"
-              checked={settings.notifications.newRequests}
-              onChange={(e) =>
-                setSettings((prev) => ({
-                  ...prev,
-                  notifications: {
-                    ...prev.notifications,
-                    newRequests: e.target.checked,
-                  },
-                }))
-              }
-              className="h-4 w-4"
-            />
-          </div>
-
-          <div className="pt-4">
-            <Button onClick={handleSaveNotifications} disabled={loading}>
-              حفظ إعدادات التنبيهات
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Privacy Settings */}
       <PrivacySettingsComponent
-        profile={user?.profile}
+        profile={profile as any}
         onSave={handleSavePrivacy}
       />
 

@@ -144,7 +144,7 @@ export interface IProfile extends BaseDocument {
       country: string;
       coordinates?: [number, number];
     };
-    maritalStatus: "never_married" | "divorced" | "widowed";
+    maritalStatus: "single" | "divorced" | "widowed";
     hasChildren: boolean;
     wantChildren: boolean;
     age?: number; // Added age property

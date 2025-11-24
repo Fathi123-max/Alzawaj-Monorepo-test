@@ -113,7 +113,7 @@ export function ProfileView() {
     const initialData = { ...profile };
     // Fix legacy data
     if ((initialData.maritalStatus as string) === "single") {
-      initialData.maritalStatus = "never_married";
+      initialData.maritalStatus = "single";
     }
     setEditData(initialData);
   };

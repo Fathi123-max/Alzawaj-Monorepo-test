@@ -300,11 +300,6 @@ export function RequestsList() {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">طلبات الزواج</h1>
-        <p className="text-gray-600">إدارة طلبات الزواج المرسلة والمستلمة</p>
-      </div>
-
       {/* Tabs */}
       <div className="flex border-b border-gray-200 mb-6">
         <button

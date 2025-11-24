@@ -181,7 +181,7 @@ export const register = async (
       country: location?.country || "Unknown",
       city: location?.city || "Unknown",
       nationality: location?.nationality || "Unknown",
-      maritalStatus: "single",
+      maritalStatus: (basicInfo as any)?.maritalStatus || "single",
       education: education?.education || "bachelor",
       occupation: professional?.occupation || education?.occupation || "",
       religiousLevel: religiousInfo?.religiousLevel || "moderate",

@@ -85,6 +85,46 @@ export const getChatRooms = async (
 };
 
 /**
+ * Get a single chat room by ID
+ */
+export const getChatRoomById = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const { chatRoomId } = req.params;
+
+    const chatRoom = await ChatRoom.findOne({
+      _id: chatRoomId,
+      "participants.user": userId,
+      isActive: true,
+    })
+      .populate({
+        path: "participants.user",
+        select: "firstname lastname",
+      })
+      .populate({
+        path: "lastMessage",
+        populate: {
+          path: "sender",
+          select: "firstname lastname",
+        },
+      });
+
+    if (!chatRoom) {
+      res.status(404).json(createErrorResponse("غرفة الدردشة غير موجودة"));
+      return;
+    }
+
+    res.json(createSuccessResponse("تم جلب غرفة الدردشة بنجاح", chatRoom));
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Get or create chat room for a marriage request
  */
 export const getOrCreateChatRoomByRequest = async (
@@ -550,6 +590,7 @@ export const deleteChat = async (
 
 export default {
   getChatRooms,
+  getChatRoomById,
   getOrCreateChatRoomByRequest,
   getChatMessages,
   sendMessage,

@@ -343,37 +343,7 @@ export function PublicProfileView({
                 )}
             </div>
           </CardContent>
-        </Card>{" "}
-        {/* Contact Information - Only show for female profiles */}
-        {profile.gender === "f" && profile.guardianName && (
-          <Card>
-            <CardHeader>
-              <h3 className="text-xl font-semibold">معلومات الولي</h3>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {profile.guardianName && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    اسم الولي
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {profile.guardianName}
-                  </p>
-                </div>
-              )}
-              {profile.guardianPhone && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    هاتف الولي
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {profile.guardianPhone}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+        </Card>
       </div>
       {/* Gender-specific Information */}
       {isMaleApiProfile(profile) && (
@@ -619,68 +589,6 @@ export function PublicProfileView({
                 </div>
               )}
             </div>
-
-            {/* Guardian Information */}
-            {(profile.guardianName || profile.guardianPhone) && (
-              <div className="bg-white p-4 rounded-lg border">
-                <h4 className="font-medium text-gray-800 mb-3 flex items-center gap-2">
-                  <span className="text-pink-600">🛡️</span>
-                  معلومات ولي الأمر
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  {profile.guardianName && (
-                    <div>
-                      <span className="text-gray-600 block">اسم ولي الأمر</span>
-                      <span className="font-semibold">
-                        {profile.guardianName}
-                      </span>
-                    </div>
-                  )}
-                  {profile.guardianRelationship && (
-                    <div>
-                      <span className="text-gray-600 block">صلة القرابة</span>
-                      <span className="font-medium">
-                        {profile.guardianRelationship === "father"
-                          ? "👨 الأب"
-                          : profile.guardianRelationship === "brother"
-                            ? "👨‍👦 الأخ"
-                            : profile.guardianRelationship === "uncle"
-                              ? "👨‍👦‍👦 العم/الخال"
-                              : "👤 آخر"}
-                      </span>
-                    </div>
-                  )}
-                  {profile.guardianPhone && (
-                    <div>
-                      <span className="text-gray-600 block">رقم الهاتف</span>
-                      <span className="font-mono text-sm" dir="ltr">
-                        {profile.guardianPhone}
-                      </span>
-                    </div>
-                  )}
-                  {profile.guardianEmail && (
-                    <div>
-                      <span className="text-gray-600 block">
-                        البريد الإلكتروني
-                      </span>
-                      <span className="font-mono text-sm" dir="ltr">
-                        {profile.guardianEmail}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                {profile.guardianNotes && (
-                  <div className="mt-4">
-                    <span className="text-gray-600 block mb-1">
-                      ملاحظات إضافية
-                    </span>
-                    <p className="text-sm bg-gray-50 p-3 rounded">
-                      {profile.guardianNotes}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
           </CardContent>
         </Card>
       )}

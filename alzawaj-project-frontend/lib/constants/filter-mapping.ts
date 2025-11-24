@@ -13,7 +13,7 @@ export const BACKEND_VALUES = {
     OTHER: "other",
   },
   MARITAL_STATUS: {
-    NEVER_MARRIED: "never_married",
+    single: "single",
     DIVORCED: "divorced",
     WIDOWED: "widowed",
   },
@@ -82,8 +82,8 @@ export const FRONTEND_TO_BACKEND_MAP = {
     دبلوم: BACKEND_VALUES.EDUCATION.DIPLOMA,
   },
   maritalStatus: {
-    أعزب: BACKEND_VALUES.MARITAL_STATUS.NEVER_MARRIED,
-    عزباء: BACKEND_VALUES.MARITAL_STATUS.NEVER_MARRIED,
+    أعزب: BACKEND_VALUES.MARITAL_STATUS.single,
+    عزباء: BACKEND_VALUES.MARITAL_STATUS.single,
     مطلق: BACKEND_VALUES.MARITAL_STATUS.DIVORCED,
     مطلقة: BACKEND_VALUES.MARITAL_STATUS.DIVORCED,
     أرمل: BACKEND_VALUES.MARITAL_STATUS.WIDOWED,

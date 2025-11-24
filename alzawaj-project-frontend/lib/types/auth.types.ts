@@ -21,14 +21,12 @@ export interface PrivacySettings {
     | "matches-only";
   showBasicInfo?: "everyone" | "verified-only" | "matches-only";
   showDetailedInfo?: "matches-only" | "guardian-approved" | "none";
+  allowContactRequests?: "everyone" | "verified-only" | "guardian-approved" | "none";
+  showLastSeen?: "everyone" | "matches-only" | "none";
+  hideFromLocalUsers?: boolean;
   requireGuardianApproval?: boolean;
-  requirePhoneVerification?: boolean;
-  minimumAge?: number;
-  maximumAge?: number;
-  allowFavorites?: boolean;
-  allowBlocking?: boolean;
   showOnlineStatus?: boolean;
-  allowProfileDownload?: boolean;
+  allowNearbySearch?: boolean;
 }
 
 export interface User {
@@ -80,7 +78,7 @@ export interface BaseRegisterRequest {
   country: string;
   city: string;
   nationality: string;
-  maritalStatus: "never_married" | "divorced" | "widowed";
+  maritalStatus: "single" | "divorced" | "widowed";
   education?: string;
   occupation?: string;
 
@@ -296,7 +294,7 @@ export interface BaseProfile {
   country: string;
   city: string;
   nationality: string;
-  maritalStatus: "never_married" | "divorced" | "widowed";
+  maritalStatus: "single" | "divorced" | "widowed";
   education?: string;
   occupation?: string;
   religiousLevel: "basic" | "practicing" | "very-religious" | "moderate";
@@ -335,7 +333,8 @@ export interface BaseProfile {
   areParentsAlive?: "both" | "father" | "mother" | "none";
   parentRelationship?: "excellent" | "good" | "average" | "poor";
 
-  // Privacy settings
+  // Privacy settings (backend uses 'privacy', frontend uses 'privacySettings')
+  privacy?: PrivacySettings;
   privacySettings?: PrivacySettings;
 }
 
@@ -398,7 +397,7 @@ export interface ApiProfile {
   country: string;
   city: string;
   nationality: string;
-  maritalStatus: "never_married" | "divorced" | "widowed";
+  maritalStatus: "single" | "divorced" | "widowed";
   religiousLevel: "basic" | "moderate" | "practicing" | "very-religious";
   isPrayerRegular: boolean;
   hasChildren: "yes" | "no";
@@ -492,10 +491,16 @@ export interface ApiProfile {
   privacy: {
     showAge: boolean;
     showLocation: boolean;
+    showOccupation: boolean;
     profileVisibility: string;
     showProfilePicture: string;
-    showOccupation: boolean;
     allowMessagesFrom: string;
+    allowProfileViews?: string;
+    showBasicInfo?: string;
+    showDetailedInfo?: string;
+    allowContactRequests?: string;
+    showLastSeen?: string;
+    hideFromLocalUsers?: boolean;
     requireGuardianApproval: boolean;
     showOnlineStatus: boolean;
     allowNearbySearch: boolean;
@@ -687,7 +692,7 @@ export const RELIGIOUS_LEVELS = [
   "moderate",
 ] as const;
 
-export const MARITAL_STATUS = ["never_married", "divorced", "widowed"] as const;
+export const MARITAL_STATUS = ["single", "divorced", "widowed"] as const;
 
 export const PARENT_STATUS = ["both", "father", "mother", "none"] as const;
 

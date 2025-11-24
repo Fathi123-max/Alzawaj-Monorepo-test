@@ -90,7 +90,6 @@ const convertToMockProfile = (apiProfile: Profile): MockProfile => {
   const mapMaritalStatus = (status: string) => {
     if (!status) return "غير محدد";
     const statusMap: { [key: string]: string } = {
-      never_married: "أعزب/عزباء",
       single: "أعزب/عزباء",
       divorced: "مطلق/مطلقة",
       widowed: "أرمل/أرملة",

@@ -32,6 +32,9 @@ const getOrCreateRoomByRequestIdValidation = [
 // Get chat rooms
 router.get("/rooms", protect, chatController.getChatRooms);
 
+// Get single chat room by ID
+router.get("/room/:chatRoomId", protect, chatController.getChatRoomById);
+
 // Get or create chat room by marriage request ID
 router.get("/room-by-request/:requestId", protect, getOrCreateRoomByRequestIdValidation, validateRequest, chatController.getOrCreateChatRoomByRequest);
 

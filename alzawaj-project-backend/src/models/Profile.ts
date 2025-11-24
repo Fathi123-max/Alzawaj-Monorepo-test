@@ -9,7 +9,7 @@ export interface IProfile extends Document {
   country: string;
   city: string;
   nationality: string;
-  maritalStatus: "never_married" | "divorced" | "widowed";
+  maritalStatus: "single" | "divorced" | "widowed";
   occupation?: string;
   religiousLevel: "basic" | "practicing" | "very-religious" | "moderate";
   isPrayerRegular: boolean;
@@ -98,7 +98,7 @@ export interface IProfile extends Document {
       country: string;
       coordinates?: [number, number];
     };
-    maritalStatus: "never_married" | "divorced" | "widowed";
+    maritalStatus: "single" | "divorced" | "widowed";
     hasChildren: boolean;
     wantChildren: boolean;
   };
@@ -185,6 +185,12 @@ export interface IProfile extends Document {
       | "premium-only"
       | "guardian-approved"
       | "matches-only";
+    allowProfileViews?: "everyone" | "verified-males" | "premium-males" | "guardian-approved" | "matches-only";
+    showBasicInfo?: "everyone" | "verified-only" | "matches-only";
+    showDetailedInfo?: "matches-only" | "guardian-approved" | "none";
+    allowContactRequests?: "everyone" | "verified-only" | "guardian-approved" | "none";
+    showLastSeen?: "everyone" | "matches-only" | "none";
+    hideFromLocalUsers?: boolean;
     requireGuardianApproval?: boolean;
     showOnlineStatus?: boolean;
     allowNearbySearch?: boolean;
@@ -302,8 +308,8 @@ const profileSchema = new Schema<IProfile>(
     maritalStatus: {
       type: String,
       enum: {
-        values: ["never_married", "divorced", "widowed"],
-        message: "الحالة الاجتماعية يجب أن تكون never_married أو divorced أو widowed",
+        values: ["single", "divorced", "widowed"],
+        message: "الحالة الاجتماعية يجب أن تكون single أو divorced أو widowed",
       },
       required: [true, "الحالة الاجتماعية مطلوبة"],
     },
@@ -551,7 +557,7 @@ const profileSchema = new Schema<IProfile>(
       },
       maritalStatus: {
         type: String,
-        enum: ["never_married", "divorced", "widowed"],
+        enum: ["single", "divorced", "widowed"],
       },
       hasChildren: Boolean,
       wantChildren: Boolean,
@@ -666,6 +672,35 @@ const profileSchema = new Schema<IProfile>(
         default: function (this: IProfile) {
           return this.gender === "f" ? "verified-only" : "everyone";
         },
+      },
+      allowProfileViews: {
+        type: String,
+        enum: ["everyone", "verified-males", "premium-males", "guardian-approved", "matches-only"],
+        default: "everyone",
+      },
+      showBasicInfo: {
+        type: String,
+        enum: ["everyone", "verified-only", "matches-only"],
+        default: "everyone",
+      },
+      showDetailedInfo: {
+        type: String,
+        enum: ["matches-only", "guardian-approved", "none"],
+        default: "matches-only",
+      },
+      allowContactRequests: {
+        type: String,
+        enum: ["everyone", "verified-only", "guardian-approved", "none"],
+        default: "everyone",
+      },
+      showLastSeen: {
+        type: String,
+        enum: ["everyone", "matches-only", "none"],
+        default: "matches-only",
+      },
+      hideFromLocalUsers: {
+        type: Boolean,
+        default: false,
       },
       requireGuardianApproval: {
         type: Boolean,

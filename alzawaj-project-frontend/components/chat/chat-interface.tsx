@@ -21,6 +21,7 @@ import { showToast } from "@/components/ui/toaster";
 import { ChatMenu } from "./chat-menu";
 import { TypingIndicator } from "./typing-indicator";
 import { MobileChatInterface } from "./mobile-chat-interface";
+import { getUserFullName, getInitials } from "@/lib/utils/chat-helpers";
 import { chatApi } from "@/lib/api";
 
 interface ChatInterfaceProps {
@@ -86,6 +87,30 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
       const fetchData = async () => {
         setIsLoading(true);
         try {
+          // Load chat room details first
+          const chatRoomResponse = await chatApi.getChatRoomById(chatRoomId);
+          if (chatRoomResponse.success && chatRoomResponse.data) {
+            setChatRoom(chatRoomResponse.data);
+            
+            // Extract other participant info
+            const otherParticipant = chatRoomResponse.data.participants.find(
+              (p: any) => {
+                const userId = typeof p === 'string' ? p : (p.user?._id || p.user?.id || p.user);
+                return userId !== user?.id;
+              }
+            );
+            
+            if (otherParticipant && typeof otherParticipant !== 'string') {
+              const participantUser = otherParticipant.user;
+              if (typeof participantUser !== 'string') {
+                setOtherUser({
+                  id: participantUser._id || participantUser.id,
+                  name: getUserFullName(participantUser),
+                } as Profile);
+              }
+            }
+          }
+
           // Load messages from API
           const messagesResponse = await chatApi.getMessages(chatRoomId, 1, 50);
 
@@ -96,37 +121,15 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
               (msg: any) => {
                 return {
                   ...msg,
-                  // Keep the original sender object! Don't overwrite it.
-                  // Just add a name property if it doesn't exist
                   sender: {
-                    ...msg.sender, // ← Keep ALL original sender properties
-                    name:
-                      msg.sender?.firstname && msg.sender?.lastname
-                        ? `${msg.sender.firstname} ${msg.sender.lastname}`
-                        : msg.sender?.fullName || "مستخدم",
+                    ...msg.sender,
+                    name: getUserFullName(msg.sender),
                   },
                 };
               },
             );
 
             setMessages(loadedMessages);
-
-            // Get chat room details to show other user
-            if (chatRoom) {
-              const otherParticipant = chatRoom.participants.find(
-                (p: any) => p.user?.id !== user?.id,
-              );
-              if (otherParticipant?.user) {
-                setOtherUser({
-                  id: otherParticipant.user.id,
-                  name:
-                    otherParticipant.user.firstname &&
-                    otherParticipant.user.lastname
-                      ? `${otherParticipant.user.firstname} ${otherParticipant.user.lastname}`
-                      : "مستخدم",
-                } as Profile);
-              }
-            }
           }
         } catch (error) {
           console.error("Failed to load chat data:", error);
@@ -342,16 +345,6 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
     }
   };
 
-  // Helper function to get initials from name
-  const getInitials = (name: string) => {
-    if (!name) return "م";
-    const words = name.trim().split(" ");
-    if (words.length === 1) {
-      return words[0].charAt(0);
-    }
-    return words[0].charAt(0) + words[1].charAt(0);
-  };
-
   // Determine message status based on timestamp and current time
   const getMessageStatus = (message: ChatMessage) => {
     if (message.isCurrentUser) {
@@ -440,25 +433,19 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
                   <div className="flex items-center space-x-3 space-x-reverse text-xs sm:text-sm text-gray-500">
                     <div className="flex items-center">
                       <span>
-                        {isTyping ? (
-                          <span className="text-primary italic">جاري الكتابة...</span>
-                        ) : isConnected ? (
+                        {isConnected ? (
                           <span className="text-green-600">متصل الآن</span>
                         ) : (
                           "غير متصل"
                         )}
                       </span>
                     </div>
-                    {!isTyping && (
-                      <div className="text-gray-400">•</div>
-                    )}
-                    {!isTyping && (
-                      <div className="text-xs text-gray-500">
-                        {chatRoom && chatRoom.lastActivity
-                          ? `آخر نشاط: ${getRelativeTime(chatRoom.lastActivity)}`
-                          : "منذ قليل"}
-                      </div>
-                    )}
+                    <div className="text-gray-400">•</div>
+                    <div className="text-xs text-gray-500">
+                      {chatRoom && chatRoom.lastActivity
+                        ? `آخر نشاط: ${getRelativeTime(chatRoom.lastActivity)}`
+                        : "منذ قليل"}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -480,59 +467,6 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
               >
                 <MoreVertical className="h-4 w-4" />
               </Button>
-            </div>
-          </div>
-
-          {/* Chat Info Bar */}
-          <div className="mt-2 sm:mt-3 p-2 sm:p-3 bg-primary-subtle rounded-lg border border-primary-light">
-            <div className="flex items-center justify-between text-xs sm:text-sm">
-              <div className="flex items-center space-x-2 sm:space-x-4 space-x-reverse text-gray-600">
-                <div className="flex items-center">
-                  <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 ml-1" />
-                  <span className="hidden sm:inline">
-                    {messages.length} رسالة
-                  </span>
-                  <span className="sm:hidden">{messages.length}</span>
-                </div>
-                <div className="flex items-center">
-                  <Clock className="h-3 w-3 sm:h-4 sm:w-4 ml-1" />
-                  <span className="hidden sm:inline">
-                    {(() => {
-                      if (chatRoom && chatRoom.expiresAt) {
-                        const expiryDate = new Date(chatRoom.expiresAt);
-                        const now = new Date();
-                        const diffMs = expiryDate.getTime() - now.getTime();
-                        const diffDays = Math.ceil(
-                          diffMs / (1000 * 60 * 60 * 24),
-                        );
-                        if (diffDays > 0) {
-                          return `تنتهي في ${diffDays} ${diffDays === 1 ? "يوم" : "أيام"}`;
-                        }
-                      }
-                      return "تنتهي في 7 أيام";
-                    })()}
-                  </span>
-                  <span className="sm:hidden">
-                    {(() => {
-                      if (chatRoom && chatRoom.expiresAt) {
-                        const expiryDate = new Date(chatRoom.expiresAt);
-                        const now = new Date();
-                        const diffMs = expiryDate.getTime() - now.getTime();
-                        const diffDays = Math.ceil(
-                          diffMs / (1000 * 60 * 60 * 24),
-                        );
-                        if (diffDays > 0) {
-                          return `${diffDays} يوم`;
-                        }
-                      }
-                      return "7 أيام";
-                    })()}
-                  </span>
-                </div>
-              </div>
-              <div className="text-primary font-medium text-xs sm:text-sm">
-                #{chatRoomId.substring(0, 6)}
-              </div>
             </div>
           </div>
         </CardHeader>
@@ -697,7 +631,6 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
                   </div>
                 );
               })}
-              {isTyping && <TypingIndicator />}
               <div ref={messagesEndRef} />
 
               {/* Scroll to Bottom Button */}

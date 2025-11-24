@@ -6,14 +6,17 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ChatRoom } from "@/lib/types";
 import { useChat } from "@/providers/chat-provider";
-import { ChatWindow } from "./chat-window";
+import { useAuth } from "@/providers/auth-provider";
+import { getUserFullName } from "@/lib/utils/chat-helpers";
 
 function ChatRoomItem({
   room,
   onClick,
+  currentUserId,
 }: {
   room: ChatRoom;
   onClick: () => void;
+  currentUserId?: string;
 }) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("ar-SA", {
@@ -24,6 +27,25 @@ function ChatRoomItem({
 
   const isExpired = new Date(room.expiresAt) < new Date();
 
+  // Get the other participant's name
+  const getOtherParticipantName = () => {
+    const otherParticipant = room.participants.find((p: any) => {
+      const userId = typeof p === 'string' ? p : (p.user?._id || p.user?.id || p.user);
+      return userId !== currentUserId;
+    });
+
+    if (!otherParticipant) return "مستخدم";
+    
+    if (typeof otherParticipant === 'string') return "مستخدم";
+    
+    const user = otherParticipant.user;
+    if (typeof user === 'string') return "مستخدم";
+    
+    return getUserFullName(user);
+  };
+
+  const participantName = getOtherParticipantName();
+
   return (
     <div
       onClick={onClick}
@@ -33,7 +55,7 @@ function ChatRoomItem({
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-r from-primary to-primary-600 rounded-full flex-shrink-0"></div>
           <h4 className="font-medium text-sm sm:text-base truncate">
-            محادثة #{room.id.substring(0, 8)}
+            {participantName}
           </h4>
         </div>
         <Badge
@@ -86,6 +108,7 @@ function ChatRoomItem({
 
 export function ChatList() {
   const router = useRouter();
+  const { user } = useAuth();
   const { chatRooms, fetchChatRooms } = useChat();
   const [loading, setLoading] = useState(true);
 
@@ -176,6 +199,7 @@ export function ChatList() {
                       key={room.id}
                       room={room}
                       onClick={() => handleSelectChat(room.id)}
+                      currentUserId={user?.id}
                     />
                   ))}
                 </div>

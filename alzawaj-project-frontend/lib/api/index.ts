@@ -126,6 +126,12 @@ export const authApi = {
       API_ENDPOINTS.AUTH.REFRESH_TOKEN, // POST /refresh (assumed)
       { refreshToken },
     ),
+
+  changePassword: (data: { currentPassword: string; newPassword: string }) =>
+    ApiClient.post<{ success: boolean; message: string }>(
+      "/auth/change-password",
+      data,
+    ),
 };
 
 // Profile API (unchanged)
@@ -231,6 +237,8 @@ export const requestsApi = {
 // Chat API (unchanged)
 export const chatApi = {
   getChatRooms: () => ApiClient.get<ChatRoom[]>(API_ENDPOINTS.CHAT.GET_ROOMS),
+  getChatRoomById: (chatRoomId: string) =>
+    ApiClient.get<ChatRoom>(`${API_ENDPOINTS.CHAT.GET_ROOMS.replace('/rooms', '/room')}/${chatRoomId}`),
   getOrCreateRoomByRequest: (requestId: string) =>
     ApiClient.get<ChatRoom>(
       `${API_ENDPOINTS.CHAT.GET_ROOM_BY_REQUEST}/${requestId}`,

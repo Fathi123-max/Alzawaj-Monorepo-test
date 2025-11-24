@@ -8,7 +8,7 @@ export interface SelectOption {
 
 // Marital Status Options (consistent across all components)
 export const MARITAL_STATUS_OPTIONS: SelectOption[] = [
-  { value: "never_married", label: "أعزب/عزباء" },
+  { value: "single", label: "أعزب/عزباء" },
   { value: "divorced", label: "مطلق/مطلقة" },
   { value: "widowed", label: "أرمل/أرملة" },
 ];
