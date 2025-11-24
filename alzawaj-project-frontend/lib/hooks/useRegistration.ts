@@ -623,6 +623,16 @@ const useRegistration = (): UseRegistrationResult => {
       console.log("Registration response:", response);
 
       if (response.success) {
+        // Store photo in localStorage as fallback if upload failed during registration
+        if (state.profilePicture) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            localStorage.setItem("pending_profile_photo", reader.result as string);
+            localStorage.setItem("pending_profile_photo_name", state.profilePicture!.name);
+          };
+          reader.readAsDataURL(state.profilePicture);
+        }
+        
         showToast.success(response.message || "تم إنشاء الحساب بنجاح. يرجى التحقق من بريدك الإلكتروني للتأكيد");
       } else {
         throw new Error(response.message || "فشل في إنشاء الحساب");
