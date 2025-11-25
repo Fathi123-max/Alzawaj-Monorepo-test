@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, MessageCircle, X } from "lucide-react";
+import { Heart, MessageCircle } from "lucide-react";
 import { PublicProfileView } from "./public-profile-view";
 import { showToast } from "@/components/ui/toaster";
 
@@ -171,23 +171,18 @@ export function ProfileDialog({
           className="h-full"
         >
           <div className="flex items-center justify-between p-4 border-b">
-            <TabsList className="grid w-auto grid-cols-2">
+            <TabsList className={`grid w-auto ${hideMarriageRequest ? 'grid-cols-1' : 'grid-cols-2'}`}>
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <MessageCircle className="h-4 w-4" />
                 الملف الشخصي
               </TabsTrigger>
-              <TabsTrigger value="request" className="flex items-center gap-2">
-                <Heart className="h-4 w-4" />
-                إرسال طلب تعارف
-              </TabsTrigger>
+              {!hideMarriageRequest && (
+                <TabsTrigger value="request" className="flex items-center gap-2">
+                  <Heart className="h-4 w-4" />
+                  إرسال طلب تعارف
+                </TabsTrigger>
+              )}
             </TabsList>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onOpenChange(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </div>
 
           <TabsContent
@@ -206,11 +201,12 @@ export function ProfileDialog({
             </div>
           </TabsContent>
 
-          <TabsContent
-            value="request"
-            className="m-0 h-[calc(95vh-60px)] overflow-y-auto"
-          >
-            <div className="p-6 space-y-6">
+          {!hideMarriageRequest && (
+            <TabsContent
+              value="request"
+              className="m-0 h-[calc(95vh-60px)] overflow-y-auto"
+            >
+              <div className="p-6 space-y-6">
               <div className="text-center border-b pb-4">
                 <h2 className="text-xl font-bold">إرسال طلب تعارف</h2>
                 <p className="text-gray-600">إلى: {profileName}</p>
@@ -340,6 +336,7 @@ export function ProfileDialog({
               </div>
             </div>
           </TabsContent>
+          )}
         </Tabs>
       </DialogContent>
     </Dialog>

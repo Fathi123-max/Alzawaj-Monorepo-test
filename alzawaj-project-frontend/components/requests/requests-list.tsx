@@ -10,15 +10,17 @@ import { requestsApi, chatApi } from "@/lib/api";
 import { requestsApiService } from "@/lib/services/requests-api-service";
 import { showToast } from "@/components/ui/toaster";
 import { useChat } from "@/providers/chat-provider";
-import { CheckCircle, X, Clock } from "lucide-react";
+import { CheckCircle, X, Clock, User } from "lucide-react";
+import { ProfileDialog } from "@/components/profile/profile-dialog";
 
 interface RequestCardProps {
   request: MarriageRequest;
   type: "received" | "sent";
   onUpdate?: () => void;
+  onViewProfile?: (userId: string) => void;
 }
 
-function RequestCard({ request, type, onUpdate }: RequestCardProps) {
+function RequestCard({ request, type, onUpdate, onViewProfile }: RequestCardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -112,7 +114,21 @@ function RequestCard({ request, type, onUpdate }: RequestCardProps) {
               {formatDate(request.createdAt)}
             </p>
           </div>
-          {getStatusBadge(request.status)}
+          <div className="flex items-center gap-2">
+            {getStatusBadge(request.status)}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const userId = type === "received" ? request.sender.id : request.receiver.id;
+                onViewProfile?.(userId);
+              }}
+              className="text-primary hover:text-primary hover:bg-primary/10 transition-colors"
+            >
+              <User className="h-4 w-4 ml-1" />
+              عرض الملف الشخصي
+            </Button>
+          </div>
         </div>
       </CardHeader>
 
@@ -260,6 +276,13 @@ export function RequestsList() {
   );
   const [sentRequests, setSentRequests] = useState<MarriageRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
+  const handleViewProfile = (userId: string) => {
+    setSelectedUserId(userId);
+    setProfileDialogOpen(true);
+  };
 
   useEffect(() => {
     loadRequests();
@@ -353,9 +376,21 @@ export function RequestsList() {
               request={request}
               type={activeTab}
               onUpdate={loadRequests}
+              onViewProfile={handleViewProfile}
             />
           ))}
         </div>
+      )}
+
+      {/* Profile Dialog */}
+      {selectedUserId && (
+        <ProfileDialog
+          userId={selectedUserId}
+          open={profileDialogOpen}
+          onOpenChange={setProfileDialogOpen}
+          hideMarriageRequest={true}
+          showPhotos={false}
+        />
       )}
     </div>
   );
