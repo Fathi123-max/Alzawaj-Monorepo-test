@@ -14,9 +14,11 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const { id } = use(params);
   const searchParams = useSearchParams();
   const fromChat = searchParams.get('fromChat') === 'true';
+  const showPhotos = searchParams.get('showPhotos') === 'true';
   
   console.log("Profile Page Debug:", {
     fromChat,
+    showPhotos,
     searchParams: searchParams.toString(),
     hideMarriageRequest: fromChat
   });
@@ -28,6 +30,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
           userId={id} 
           isDialog={false} 
           hideMarriageRequest={fromChat}
+          showPhotos={showPhotos}
         />
       </div>
     </div>

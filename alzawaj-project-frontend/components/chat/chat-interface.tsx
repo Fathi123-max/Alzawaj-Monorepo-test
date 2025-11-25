@@ -484,7 +484,7 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
 
             <div 
               className="flex items-center gap-3 flex-1 cursor-pointer hover:bg-primary-subtle/50 rounded-lg p-2 -m-2 transition-colors"
-              onClick={() => otherUser?.id && router.push(`/profile/${otherUser.id}?fromChat=true`)}
+              onClick={() => otherUser?.id && router.push(`/profile/${otherUser.id}?fromChat=true&showPhotos=true`)}
             >
               <Avatar className="h-10 w-10 border-2 border-primary-200">
                 <AvatarImage src={otherUser?.profilePicture as string} alt={otherUser?.name} />

@@ -47,7 +47,9 @@ export function PublicProfileView({
   console.log("PublicProfileView Props:", {
     hideActions,
     hideMarriageRequest,
-    shouldShowButton: !hideActions && !hideMarriageRequest
+    showPhotos,
+    shouldShowButton: !hideActions && !hideMarriageRequest,
+    shouldShowPhotos: showPhotos
   });
 
   useEffect(() => {
