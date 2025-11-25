@@ -28,6 +28,7 @@ interface ProfileDialogProps {
   userEmail?: string | undefined;
   userPhone?: string | undefined;
   openToTab?: "profile" | "request";
+  hideMarriageRequest?: boolean;
 }
 
 export function ProfileDialog({
@@ -37,6 +38,7 @@ export function ProfileDialog({
   userEmail,
   userPhone,
   openToTab,
+  hideMarriageRequest = false,
 }: ProfileDialogProps) {
   const [currentTab, setCurrentTab] = useState("profile");
   const [message, setMessage] = useState("");
@@ -196,6 +198,7 @@ export function ProfileDialog({
                 isDialog={true}
                 onRequestClick={() => setCurrentTab("request")}
                 onProfileNameLoad={setProfileName}
+                hideMarriageRequest={hideMarriageRequest}
               />
             </div>
           </TabsContent>

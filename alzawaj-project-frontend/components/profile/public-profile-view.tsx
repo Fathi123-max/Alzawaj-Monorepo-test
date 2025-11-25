@@ -44,6 +44,12 @@ export function PublicProfileView({
   const [savingBookmark, setSavingBookmark] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
 
+  console.log("PublicProfileView Props:", {
+    hideActions,
+    hideMarriageRequest,
+    shouldShowButton: !hideActions && !hideMarriageRequest
+  });
+
   useEffect(() => {
     loadProfile();
   }, [userId]);
@@ -268,7 +274,7 @@ export function PublicProfileView({
               </div>
             </div>
             <div className="flex flex-col items-end gap-2">
-              {!isDialog && (
+              {!isDialog && !hideMarriageRequest && (
                 <div className="flex gap-2">
                   <Button
                     onClick={handleSendRequestClick}
@@ -822,7 +828,7 @@ export function PublicProfileView({
                   إرسال طلب تعارف
                 </Button>
               )}
-              {!hideActions && (
+              {!hideActions && !hideMarriageRequest && (
                 <Button
                   variant="outline"
                   size="lg"
@@ -834,16 +840,18 @@ export function PublicProfileView({
                   {isSaved ? "محفوظ" : "حفظ الملف"}
                 </Button>
               )}
-              <Button
-                variant="outline"
-                size="lg"
-                className="flex items-center gap-2"
-                disabled={true}
-                title="يجب قبول طلبات الزواج من الطرفين أولاً"
-              >
-                <MessageCircle className="h-5 w-5" />
-                إرسال رسالة
-              </Button>
+              {!hideMarriageRequest && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="flex items-center gap-2"
+                  disabled={true}
+                  title="يجب قبول طلبات الزواج من الطرفين أولاً"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  إرسال رسالة
+                </Button>
+              )}
             </div>
             {!user && (
               <p className="text-center text-sm text-gray-500 mt-4">

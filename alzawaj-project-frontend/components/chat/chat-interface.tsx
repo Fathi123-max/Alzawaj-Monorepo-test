@@ -350,6 +350,41 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
     return date.toLocaleDateString("ar-SA");
   };
 
+  const getMessageStatus = (message: ChatMessage) => {
+    const isCurrentUser = message.sender?.id === user?.id || message.sender === user?.id;
+    if (isCurrentUser) {
+      // Check if message is read by recipient
+      const isRead = message.readBy && message.readBy.length > 1;
+      
+      if (isRead) {
+        return { icon: <CheckCheck className="h-3 w-3 text-blue-400" />, tooltip: "قُرئت" };
+      }
+      
+      switch (message.status) {
+        case "pending":
+          return { icon: <Clock className="h-3 w-3 text-yellow-500" />, tooltip: "قيد الإرسال" };
+        case "approved":
+          return { icon: <Check className="h-3 w-3 opacity-70" />, tooltip: "تم الإرسال" };
+        case "rejected":
+          return { icon: <span className="text-xs text-red-400">✕</span>, tooltip: "مرفوضة" };
+        case "flagged":
+          return { icon: <span className="text-xs text-yellow-500">⚠</span>, tooltip: "مُبلغ عنها" };
+        default:
+          return { icon: <Check className="h-3 w-3 opacity-70" />, tooltip: "تم الإرسال" };
+      }
+    }
+    return null;
+  };
+
+  const renderStatusIcon = (statusData: { icon: React.ReactNode; tooltip: string } | null) => {
+    if (!statusData) return null;
+    return (
+      <span title={statusData.tooltip} className="cursor-help">
+        {statusData.icon}
+      </span>
+    );
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "pending":
@@ -401,29 +436,6 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
     }
   };
 
-  // Determine message status based on timestamp and current time
-  const getMessageStatus = (message: ChatMessage) => {
-    if (message.isCurrentUser) {
-      const messageTime = new Date(message.createdAt).getTime();
-      const now = new Date().getTime();
-      const diffMs = now - messageTime;
-      const diffMinutes = diffMs / (1000 * 60);
-
-      // If message is very recent, show as sent
-      if (diffMinutes < 1) return "sent";
-
-      // After 1 minute, consider it delivered
-      if (diffMinutes >= 1 && diffMinutes < 5) return "delivered";
-
-      // For demo purposes, randomly show some as read
-      // In production, this would come from the backend
-      if (diffMinutes > 5 && Math.random() > 0.3) return "read";
-
-      return "delivered";
-    }
-    return null;
-  };
-
   // Group messages by sender and time
   const groupedMessages = messages.reduce((groups: any[], message, index) => {
     const prevMessage = index > 0 ? messages[index - 1] : null;
@@ -472,7 +484,7 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
 
             <div 
               className="flex items-center gap-3 flex-1 cursor-pointer hover:bg-primary-subtle/50 rounded-lg p-2 -m-2 transition-colors"
-              onClick={() => otherUser?.id && router.push(`/profile/${otherUser.id}`)}
+              onClick={() => otherUser?.id && router.push(`/profile/${otherUser.id}?fromChat=true`)}
             >
               <Avatar className="h-10 w-10 border-2 border-primary-200">
                 <AvatarImage src={otherUser?.profilePicture as string} alt={otherUser?.name} />
@@ -542,12 +554,16 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
             return (
               <div
                 key={message.id || index}
-                className={`flex gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300 ${
+                className={cn(
+                  "flex gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300",
                   isCurrentUser ? "justify-end" : "justify-start"
-                }`}
+                )}
               >
                 {!isCurrentUser && (
-                  <Avatar className={`h-8 w-8 flex-shrink-0 ${!showAvatar && "invisible"}`}>
+                  <Avatar className={cn(
+                    "h-8 w-8 flex-shrink-0",
+                    !showAvatar && "invisible"
+                  )}>
                     <AvatarImage src={message.sender?.profilePicture as string} />
                     <AvatarFallback className="bg-secondary-100 text-secondary-700 text-xs">
                       {getInitials(message.sender?.name || "م")}
@@ -556,12 +572,53 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
                 )}
 
                 <div
-                  className={`group relative max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm transition-all hover:shadow-md ${
+                  className={cn(
+                    "group relative max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm transition-all hover:shadow-md",
                     isCurrentUser
                       ? "bg-primary-500 text-white rounded-br-sm"
                       : "bg-card text-text rounded-bl-sm border border-border"
-                  }`}
+                  )}
                 >
+                  {/* Reply Preview */}
+                  {message.replyTo && (
+                    <div className={cn(
+                      "rounded-lg px-2 py-1 mb-2 text-xs border-r-2",
+                      isCurrentUser 
+                        ? "bg-white/20 border-white/50" 
+                        : "bg-gray-100 border-gray-400"
+                    )}>
+                      <span className={isCurrentUser ? "opacity-80" : "text-gray-600"}>
+                        رد على رسالة
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Rejection Warning (for sender) */}
+                  {isCurrentUser && message.status === "rejected" && message.rejectionReason && (
+                    <div className="bg-red-500/30 rounded-lg px-2 py-1 mb-2 text-xs border-r-2 border-red-300">
+                      <span className="font-semibold">مرفوضة:</span> {message.rejectionReason}
+                    </div>
+                  )}
+                  
+                  {/* Pending Moderation (for receiver) */}
+                  {!isCurrentUser && message.status === "pending" && (
+                    <div className="bg-yellow-50 rounded-lg px-2 py-1 mb-2 text-xs border-r-2 border-yellow-400 text-yellow-700">
+                      <span>⏳ قيد المراجعة</span>
+                    </div>
+                  )}
+                  
+                  {/* Flagged Content Warning */}
+                  {message.islamicCompliance && !message.islamicCompliance.isAppropriate && (
+                    <div className={cn(
+                      "rounded-lg px-2 py-1 mb-2 text-xs border-r-2",
+                      isCurrentUser 
+                        ? "bg-yellow-500/30 border-yellow-300" 
+                        : "bg-yellow-50 border-yellow-400 text-yellow-700"
+                    )}>
+                      <span>⚠️ محتوى مشكوك فيه</span>
+                    </div>
+                  )}
+                  
                   {/* Guardian Info Message */}
                   {message.content?.messageType === "guardian-info" ? (
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
@@ -590,30 +647,86 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
                         }
                       })()}
                     </div>
+                  ) : message.isDeleted ? (
+                    <p className={cn(
+                      "text-sm italic",
+                      isCurrentUser ? "opacity-70" : "text-gray-400"
+                    )}>
+                      تم حذف هذه الرسالة
+                    </p>
                   ) : (
                     <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
                       {typeof message.content === 'string' ? message.content : message.content?.text || ""}
                     </p>
                   )}
+                  
+                  {/* Media Attachment */}
+                  {message.content?.media && !message.isDeleted && (
+                    <div className="mt-2">
+                      {message.content.media.type === "image" && (
+                        <img 
+                          src={message.content.media.url} 
+                          alt={message.content.media.filename}
+                          className="rounded-lg max-w-full max-h-64 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={() => window.open(message.content.media?.url, '_blank')}
+                        />
+                      )}
+                      {message.content.media.type === "document" && (
+                        <a 
+                          href={message.content.media.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className={cn(
+                            "flex items-center gap-2 rounded-lg px-3 py-2 transition-colors",
+                            isCurrentUser 
+                              ? "bg-white/20 hover:bg-white/30" 
+                              : "bg-gray-100 hover:bg-gray-200"
+                          )}
+                        >
+                          <span>📄</span>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-xs truncate block">{message.content.media.filename}</span>
+                            <span className={cn(
+                              "text-[10px]",
+                              isCurrentUser ? "text-white/70" : "text-gray-500"
+                            )}>
+                              {(message.content.media.size / 1024).toFixed(1)} KB
+                            </span>
+                          </div>
+                        </a>
+                      )}
+                    </div>
+                  )}
 
                   <div
-                    className={`mt-1 flex items-center gap-1 text-xs ${
+                    className={cn(
+                      "mt-1 flex items-center gap-1 text-xs",
                       isCurrentUser ? "text-primary-100" : "text-text-secondary"
-                    }`}
+                    )}
                   >
                     <span>{formatTime(message.createdAt)}</span>
-                    {isCurrentUser && (
-                      <CheckCheck className="h-3 w-3 text-primary-100" />
+                    {message.isEdited && (
+                      <span 
+                        className={cn(
+                          "text-[9px]",
+                          isCurrentUser ? "text-white/70" : "text-gray-400"
+                        )}
+                        title={`معدلة في ${formatTime(message.editedAt || message.updatedAt)}`}
+                      >
+                        • معدلة
+                      </span>
                     )}
+                    {isCurrentUser && renderStatusIcon(getMessageStatus(message))}
                   </div>
 
                   {/* Message tail */}
                   <div
-                    className={`absolute bottom-0 h-4 w-4 ${
+                    className={cn(
+                      "absolute bottom-0 h-4 w-4",
                       isCurrentUser
                         ? "-right-1 bg-primary-500"
                         : "-left-1 bg-card border-l border-b border-border"
-                    }`}
+                    )}
                     style={{
                       clipPath: isCurrentUser
                         ? "polygon(0 0, 100% 0, 100% 100%)"
