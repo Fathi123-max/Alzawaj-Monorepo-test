@@ -23,6 +23,8 @@ interface PublicProfileViewProps {
   showPhotos?: boolean;
   onRequestClick?: () => void;
   onProfileNameLoad?: (name: string) => void;
+  hideActions?: boolean;
+  hideMarriageRequest?: boolean;
 }
 
 export function PublicProfileView({
@@ -31,6 +33,8 @@ export function PublicProfileView({
   showPhotos = false,
   onRequestClick,
   onProfileNameLoad,
+  hideActions = false,
+  hideMarriageRequest = false,
 }: PublicProfileViewProps) {
   const router = useRouter();
   //   const { user } = useAuth();
@@ -81,6 +85,13 @@ export function PublicProfileView({
 
       if (profileData) {
         setProfile(profileData);
+        console.log("Profile Life Goals Data:", {
+          marriageGoals: profileData.marriageGoals,
+          personalityDescription: profileData.personalityDescription,
+          familyPlans: profileData.familyPlans,
+          relocationPlans: profileData.relocationPlans,
+          marriageTimeline: profileData.marriageTimeline
+        });
         // Call the callback to pass the profile name to parent component
         if (onProfileNameLoad) {
           onProfileNameLoad(profileData.name || "المستخدم");
@@ -310,6 +321,48 @@ export function PublicProfileView({
             </div>
           </CardContent>
         </Card>
+
+        {/* Physical Appearance */}
+        <Card>
+          <CardHeader>
+            <h3 className="text-xl font-semibold">المظهر الخارجي</h3>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {profile.height && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">الطول</label>
+                <p className="mt-1 text-sm text-gray-900">{profile.height} سم</p>
+              </div>
+            )}
+            {profile.weight && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">الوزن</label>
+                <p className="mt-1 text-sm text-gray-900">{profile.weight} كجم</p>
+              </div>
+            )}
+            {profile.bodyType && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">البنية</label>
+                <p className="mt-1 text-sm text-gray-900">
+                  {profile.bodyType === "slim" ? "نحيف" : 
+                   profile.bodyType === "average" ? "متوسط" :
+                   profile.bodyType === "athletic" ? "رياضي" : "ممتلئ"}
+                </p>
+              </div>
+            )}
+            {profile.skinColor && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">لون البشرة</label>
+                <p className="mt-1 text-sm text-gray-900">
+                  {profile.skinColor === "fair" ? "فاتح" :
+                   profile.skinColor === "medium" ? "متوسط" :
+                   profile.skinColor === "olive" ? "حنطي" : "داكن"}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Education & Work */}
         <Card>
           <CardHeader>
@@ -334,6 +387,7 @@ export function PublicProfileView({
             </div>
           </CardContent>
         </Card>
+
         {/* Religious Information */}
         <Card>
           <CardHeader>
@@ -368,7 +422,130 @@ export function PublicProfileView({
             </div>
           </CardContent>
         </Card>
+
+        {/* Family Information */}
+        <Card>
+          <CardHeader>
+            <h3 className="text-xl font-semibold">معلومات العائلة</h3>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {profile.areParentsAlive && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">حالة الوالدين</label>
+                <p className="mt-1 text-sm text-gray-900">
+                  {profile.areParentsAlive === "both" ? "كلاهما على قيد الحياة" :
+                   profile.areParentsAlive === "father" ? "الأب فقط" :
+                   profile.areParentsAlive === "mother" ? "الأم فقط" : "كلاهما متوفى"}
+                </p>
+              </div>
+            )}
+            {profile.parentRelationship && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">العلاقة مع الوالدين</label>
+                <p className="mt-1 text-sm text-gray-900">
+                  {profile.parentRelationship === "excellent" ? "ممتازة" :
+                   profile.parentRelationship === "good" ? "جيدة" :
+                   profile.parentRelationship === "average" ? "متوسطة" : "ضعيفة"}
+                </p>
+              </div>
+            )}
+            {profile.hasChildren && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">لديه أطفال</label>
+                <p className="mt-1 text-sm text-gray-900">
+                  {profile.hasChildren === "yes" ? `نعم${profile.childrenCount ? ` (${profile.childrenCount})` : ""}` : "لا"}
+                </p>
+              </div>
+            )}
+            {profile.wantsChildren && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">يريد أطفال</label>
+                <p className="mt-1 text-sm text-gray-900">
+                  {profile.wantsChildren === "yes" ? "نعم" :
+                   profile.wantsChildren === "no" ? "لا" : "ربما"}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Lifestyle */}
+        {profile.smokingStatus && (
+          <Card>
+            <CardHeader>
+              <h3 className="text-xl font-semibold">نمط الحياة</h3>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">التدخين</label>
+                <p className="mt-1 text-sm text-gray-900">
+                  {profile.smokingStatus === "never" ? "لا يدخن" :
+                   profile.smokingStatus === "quit" ? "أقلع عن التدخين" :
+                   profile.smokingStatus === "occasionally" ? "أحياناً" : "بانتظام"}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
+
+      {/* Interests */}
+      {profile.interests && profile.interests.length > 0 && (
+        <Card>
+          <CardHeader>
+            <h3 className="text-xl font-semibold">الاهتمامات والهوايات</h3>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {profile.interests.map((interest, index) => (
+                <Badge key={index} variant="secondary">{interest}</Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Life Goals & Vision */}
+      {(profile.marriageGoals || profile.personalityDescription || profile.familyPlans || 
+        profile.relocationPlans || profile.marriageTimeline) && (
+        <Card>
+          <CardHeader>
+            <h3 className="text-xl font-semibold">الأهداف والرؤية المستقبلية</h3>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {profile.marriageGoals && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">أهداف الزواج</label>
+                <p className="text-sm text-gray-900 whitespace-pre-wrap">{profile.marriageGoals}</p>
+              </div>
+            )}
+            {profile.personalityDescription && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">وصف الشخصية</label>
+                <p className="text-sm text-gray-900 whitespace-pre-wrap">{profile.personalityDescription}</p>
+              </div>
+            )}
+            {profile.familyPlans && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">خطط العائلة</label>
+                <p className="text-sm text-gray-900 whitespace-pre-wrap">{profile.familyPlans}</p>
+              </div>
+            )}
+            {profile.relocationPlans && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">خطط الانتقال</label>
+                <p className="text-sm text-gray-900 whitespace-pre-wrap">{profile.relocationPlans}</p>
+              </div>
+            )}
+            {profile.marriageTimeline && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">توقيت الزواج</label>
+                <p className="text-sm text-gray-900 whitespace-pre-wrap">{profile.marriageTimeline}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
       {/* Gender-specific Information */}
       {isMaleApiProfile(profile) && (
         <Card className="border-primary-light bg-gradient-to-r from-primary-subtle to-primary-subtle/50">
@@ -634,25 +811,29 @@ export function PublicProfileView({
         <Card>
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                onClick={handleSendRequestClick}
-                size="lg"
-                className="flex items-center gap-2"
-                disabled={!user}
-              >
-                <Heart className="h-5 w-5" />
-                إرسال طلب تعارف
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="flex items-center gap-2"
-                onClick={handleBookmarkToggle}
-                disabled={!user || savingBookmark}
-              >
-                <Bookmark className={`h-5 w-5 ${isSaved ? "fill-blue-500 text-blue-500" : ""}`} />
-                {isSaved ? "محفوظ" : "حفظ الملف"}
-              </Button>
+              {!hideActions && !hideMarriageRequest && (
+                <Button
+                  onClick={handleSendRequestClick}
+                  size="lg"
+                  className="flex items-center gap-2"
+                  disabled={!user}
+                >
+                  <Heart className="h-5 w-5" />
+                  إرسال طلب تعارف
+                </Button>
+              )}
+              {!hideActions && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="flex items-center gap-2"
+                  onClick={handleBookmarkToggle}
+                  disabled={!user || savingBookmark}
+                >
+                  <Bookmark className={`h-5 w-5 ${isSaved ? "fill-blue-500 text-blue-500" : ""}`} />
+                  {isSaved ? "محفوظ" : "حفظ الملف"}
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="lg"

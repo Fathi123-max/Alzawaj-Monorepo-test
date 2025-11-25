@@ -11,7 +11,7 @@ export interface IMessage extends Document {
       filename: string;
       size: number;
     };
-    messageType: "text" | "media" | "system";
+    messageType: "text" | "media" | "system" | "guardian-info";
   };
   readBy: {
     user: mongoose.Types.ObjectId;
@@ -93,7 +93,7 @@ const messageSchema = new Schema<IMessage>(
       },
       messageType: {
         type: String,
-        enum: ["text", "media", "system"],
+        enum: ["text", "media", "system", "guardian-info"],
         default: "text",
         required: true,
       },

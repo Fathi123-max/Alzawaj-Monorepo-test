@@ -685,6 +685,95 @@ export const deleteChat = async (
   }
 };
 
+/**
+ * Send guardian information (females only)
+ */
+export const sendGuardianInfo = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.user?._id instanceof mongoose.Types.ObjectId 
+      ? req.user._id 
+      : new mongoose.Types.ObjectId(req.user?._id as string);
+    const { chatRoomId } = req.body;
+
+    if (!chatRoomId) {
+      res.status(400).json(createErrorResponse("معرف غرفة الدردشة مطلوب"));
+      return;
+    }
+
+    // Get user's profile
+    const profile = await Profile.findOne({ userId });
+    if (!profile) {
+      res.status(404).json(createErrorResponse("الملف الشخصي غير موجود"));
+      return;
+    }
+
+    // Verify sender is female
+    if (profile.gender !== "f") {
+      res.status(403).json(createErrorResponse("هذه الميزة متاحة للإناث فقط"));
+      return;
+    }
+
+    // Verify chat room exists and user is participant
+    const chatRoom = await ChatRoom.findById(chatRoomId);
+    if (!chatRoom) {
+      res.status(404).json(createErrorResponse("غرفة الدردشة غير موجودة"));
+      return;
+    }
+
+    const isParticipant = chatRoom.participants.some(
+      (p) => p.user.toString() === userId.toString()
+    );
+    if (!isParticipant) {
+      res.status(403).json(createErrorResponse("غير مصرح لك بإرسال رسائل في هذه الغرفة"));
+      return;
+    }
+
+    // Prepare guardian info
+    const guardianInfo = {
+      name: profile.guardianName,
+      phone: profile.guardianPhone,
+      email: profile.guardianEmail || "",
+      relationship: profile.guardianRelationship,
+      notes: profile.guardianNotes || "",
+    };
+
+    // Create guardian info message
+    const message = await Message.create({
+      chatRoom: chatRoomId,
+      sender: userId,
+      content: {
+        text: JSON.stringify(guardianInfo),
+        messageType: "guardian-info",
+      },
+      islamicCompliance: {
+        isAppropriate: true,
+        checkedBy: "system",
+      },
+      status: "approved",
+    });
+
+    // Update chat room
+    chatRoom.lastMessage = {
+      content: "تم إرسال معلومات الولي",
+      sender: userId,
+      timestamp: new Date(),
+      type: "system",
+    };
+    await chatRoom.save();
+
+    // Populate sender info
+    await message.populate("sender", "firstname lastname");
+
+    res.json(createSuccessResponse("تم إرسال معلومات الولي بنجاح", { message }));
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getChatRooms,
   getChatRoomById,
@@ -696,4 +785,5 @@ export default {
   archiveChat,
   unarchiveChat,
   deleteChat,
+  sendGuardianInfo,
 };

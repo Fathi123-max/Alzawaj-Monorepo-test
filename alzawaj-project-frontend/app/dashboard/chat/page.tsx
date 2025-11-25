@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { ChatList } from "@/components/chat/chat-list";
 import { ChatInterface } from "@/components/chat/chat-interface";
+import { ChatInterfaceRedesigned } from "@/components/chat/chat-interface-redesigned";
 
 function ChatPageContent() {
   const searchParams = useSearchParams();
@@ -18,6 +19,7 @@ function ChatPageContent() {
           requestId={requestId || undefined}
           chatRoomId={chatRoomId}
         />
+     
       </div>
     );
   }

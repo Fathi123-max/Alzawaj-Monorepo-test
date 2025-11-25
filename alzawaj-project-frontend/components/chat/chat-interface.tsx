@@ -58,10 +58,46 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
   const [isTyping, setIsTyping] = useState(false);
   const [showChatMenu, setShowChatMenu] = useState(false);
   const [failedMessages, setFailedMessages] = useState<Set<string>>(new Set());
+  const [sendingGuardianInfo, setSendingGuardianInfo] = useState(false);
+  const [userGender, setUserGender] = useState<"m" | "f" | undefined>(undefined);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  // Check if guardian info already sent
+  const guardianInfoSent = messages.some(
+    (msg) => msg.content?.messageType === "guardian-info" && 
+    (msg.sender?.id === user?.id || msg.sender === user?.id)
+  );
+
+  // Fetch user profile to get gender
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user?.id) {
+        try {
+          const { getProfile } = await import("@/lib/api/profile");
+          const profile = await getProfile();
+          if (profile) {
+            setUserGender(profile.gender);
+          }
+        } catch (error) {
+          console.error("Failed to fetch user profile:", error);
+        }
+      }
+    };
+    fetchUserProfile();
+  }, [user?.id]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log("Guardian Info Debug:", {
+      userGender,
+      guardianInfoSent,
+      shouldShowButton: userGender === "f" && !guardianInfoSent,
+      messagesCount: messages.length,
+    });
+  }, [userGender, guardianInfoSent, messages.length]);
 
   useEffect(() => {
     // Only load when user is available
@@ -260,6 +296,28 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
     }
   };
 
+  const handleSendGuardianInfo = async () => {
+    setSendingGuardianInfo(true);
+    try {
+      await chatApi.sendGuardianInfo(chatRoomId);
+      showToast.success("تم إرسال معلومات الولي بنجاح");
+      
+      // Reload messages to show the guardian info
+      const messagesResponse = await chatApi.getMessages(chatRoomId, 1, 50);
+      if (messagesResponse.success && messagesResponse.data) {
+        const fetchedMessages = messagesResponse.data.messages.map((msg: any) => ({
+          ...msg,
+          isCurrentUser: msg.sender?._id === user?.id || msg.sender?.id === user?.id || msg.sender === user?.id,
+        }));
+        setMessages(fetchedMessages);
+      }
+    } catch (error: any) {
+      showToast.error(error.message || "فشل إرسال معلومات الولي");
+    } finally {
+      setSendingGuardianInfo(false);
+    }
+  };
+
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString("ar-SA", {
       hour: "2-digit",
@@ -412,30 +470,35 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
               <ArrowLeft className="h-5 w-5" />
             </Button>
 
-            <Avatar className="h-10 w-10 border-2 border-primary-200">
-              <AvatarImage src={otherUser?.profilePicture as string} alt={otherUser?.name} />
-              <AvatarFallback className="bg-primary-100 text-primary-700 font-medium">
-                {getInitials(otherUser?.name || "مستخدم")}
-              </AvatarFallback>
-            </Avatar>
+            <div 
+              className="flex items-center gap-3 flex-1 cursor-pointer hover:bg-primary-subtle/50 rounded-lg p-2 -m-2 transition-colors"
+              onClick={() => otherUser?.id && router.push(`/profile/${otherUser.id}`)}
+            >
+              <Avatar className="h-10 w-10 border-2 border-primary-200">
+                <AvatarImage src={otherUser?.profilePicture as string} alt={otherUser?.name} />
+                <AvatarFallback className="bg-primary-100 text-primary-700 font-medium">
+                  {getInitials(otherUser?.name || "مستخدم")}
+                </AvatarFallback>
+              </Avatar>
 
-            <div className="flex-1">
-              <h2 className="text-base font-semibold text-text">
-                {otherUser?.name || "مستخدم"}
-              </h2>
-              <div className="flex items-center gap-2">
-                {isConnected && (
-                  <span className="flex items-center gap-1 text-xs text-text-secondary">
-                    <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                    متصل
-                  </span>
-                )}
-                {chatRoom?.settings?.guardianSupervision?.isRequired && (
-                  <Badge variant="outline" className="text-xs">
-                    <Shield className="mr-1 h-3 w-3" />
-                    محادثة محمية
-                  </Badge>
-                )}
+              <div className="flex-1">
+                <h2 className="text-base font-semibold text-text">
+                  {otherUser?.name || "مستخدم"}
+                </h2>
+                <div className="flex items-center gap-2">
+                  {isConnected && (
+                    <span className="flex items-center gap-1 text-xs text-text-secondary">
+                      <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                      متصل
+                    </span>
+                  )}
+                  {chatRoom?.settings?.guardianSupervision?.isRequired && (
+                    <Badge variant="outline" className="text-xs">
+                      <Shield className="mr-1 h-3 w-3" />
+                      محادثة محمية
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -499,9 +562,39 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
                       : "bg-card text-text rounded-bl-sm border border-border"
                   }`}
                 >
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                    {typeof message.content === 'string' ? message.content : message.content?.text || ""}
-                  </p>
+                  {/* Guardian Info Message */}
+                  {message.content?.messageType === "guardian-info" ? (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Shield className="h-4 w-4 text-blue-600" />
+                        <h4 className="font-semibold text-blue-900 text-sm">معلومات الولي</h4>
+                      </div>
+                      {(() => {
+                        try {
+                          const guardianData = JSON.parse(message.content.text || "{}");
+                          return (
+                            <div className="space-y-1.5 text-xs text-gray-800">
+                              <p><strong>الاسم:</strong> {guardianData.name}</p>
+                              <p><strong>الهاتف:</strong> <span className="dir-ltr inline-block">{guardianData.phone}</span></p>
+                              {guardianData.email && <p><strong>البريد:</strong> {guardianData.email}</p>}
+                              <p><strong>الصلة:</strong> {
+                                guardianData.relationship === "father" ? "الأب" :
+                                guardianData.relationship === "brother" ? "الأخ" :
+                                guardianData.relationship === "uncle" ? "العم" : "آخر"
+                              }</p>
+                              {guardianData.notes && <p><strong>ملاحظات:</strong> {guardianData.notes}</p>}
+                            </div>
+                          );
+                        } catch {
+                          return <p className="text-xs text-gray-600">معلومات الولي</p>;
+                        }
+                      })()}
+                    </div>
+                  ) : (
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                      {typeof message.content === 'string' ? message.content : message.content?.text || ""}
+                    </p>
+                  )}
 
                   <div
                     className={`mt-1 flex items-center gap-1 text-xs ${
@@ -552,6 +645,24 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
 
       {/* Input Area */}
       <div className="border-t border-border bg-card px-4 py-4 shadow-lg">
+        {/* Guardian Info Button (Females Only) */}
+        {userGender === "f" && !guardianInfoSent && (
+          <div className="mb-3">
+            <Button
+              onClick={handleSendGuardianInfo}
+              disabled={sendingGuardianInfo}
+              variant="outline"
+              size="sm"
+              className="w-full flex items-center justify-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-50"
+            >
+              <Shield className="h-4 w-4" />
+              <span className="text-sm">
+                {sendingGuardianInfo ? "جاري الإرسال..." : "إرسال معلومات الولي"}
+              </span>
+            </Button>
+          </div>
+        )}
+
         <div className="flex items-end gap-2">
           <div className="flex-1 relative">
             <textarea

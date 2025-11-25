@@ -264,18 +264,68 @@ export interface ChatRoom {
 
 export interface Message {
   id: string;
+  _id?: string;
   chatRoomId: string;
   senderId: string;
   content: {
-    text: string;
-    messageType: string;
+    text?: string;
+    messageType: "text" | "media" | "system" | "guardian-info";
+    media?: {
+      type: "image" | "video" | "document";
+      url: string;
+      filename: string;
+      size: number;
+    };
   };
+  
+  // Read receipts
+  readBy: Array<{
+    user: string;
+    readAt: string;
+    _id?: string;
+  }>;
+  
+  // Edit status
+  isEdited: boolean;
+  editedAt?: string;
+  
+  // Delete status
+  isDeleted: boolean;
+  deletedAt?: string;
+  
+  // Reply feature
+  replyTo?: string | Message;
+  
+  // Islamic compliance
+  islamicCompliance: {
+    isAppropriate: boolean;
+    checkedBy: "system" | "moderator";
+    flaggedContent?: string[];
+  };
+  
+  // Moderation
   status: "pending" | "approved" | "rejected" | "flagged";
-  createdAt: string;
   approvedAt?: string;
   approvedBy?: string;
+  rejectionReason?: string;
+  rejectedAt?: string;
+  rejectedBy?: string;
+  
+  // Timestamps
+  createdAt: string;
+  updatedAt: string;
+  
+  // Populated sender
+  sender?: {
+    _id: string;
+    id?: string;
+    firstname?: string;
+    lastname?: string;
+    email?: string;
+  };
+  
+  // Legacy
   flagReason?: string;
-  sender?: Profile;
 }
 
 export interface Report {

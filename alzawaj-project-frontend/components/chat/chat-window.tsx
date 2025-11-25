@@ -22,34 +22,58 @@ function MessageBubble({
   isCurrentUser: boolean;
   senderName?: string;
 }) {
-  const formatTime = (dateString: string) => {
+  const formatTime = (dateString: string | undefined) => {
+    if (!dateString) return "";
     return new Date(dateString).toLocaleTimeString("ar-SA", {
       hour: "2-digit",
       minute: "2-digit",
     });
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("ar-SA", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
+  const getRelativeTime = (dateString: string) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "الآن";
+    if (diffMins < 60) return `${diffMins}د`;
+    if (diffHours < 24) return `${diffHours}س`;
+    if (diffDays < 7) return `${diffDays}ي`;
+    return formatTime(dateString);
   };
 
-  // Get message status icon
+  // Get message status icon with read receipts
   const getStatusIcon = () => {
     if (!isCurrentUser) return null;
 
+    // Check if message is read by recipient (more than just sender)
+    const isRead = message.readBy && message.readBy.length > 1;
+    const readInfo = isRead && message.readBy.length > 1 
+      ? `قُرئت في ${formatTime(message.readBy[message.readBy.length - 1]?.readAt)}`
+      : "";
+    
+    if (isRead) {
+      return (
+        <span className="text-xs text-blue-400 cursor-help" title={readInfo}>
+          ✓✓
+        </span>
+      );
+    }
+    
     switch (message.status) {
       case "pending":
-        return <span className="text-xs opacity-70">🕐</span>;
+        return <span className="text-xs opacity-50" title="قيد الإرسال">🕐</span>;
       case "approved":
-        return <span className="text-xs opacity-70">✓</span>;
+        return <span className="text-xs opacity-70" title="تم الإرسال">✓</span>;
       case "rejected":
-        return <span className="text-xs opacity-70">✕</span>;
+        return <span className="text-xs text-red-400" title="مرفوضة">✕</span>;
+      case "flagged":
+        return <span className="text-xs text-yellow-500" title="مُبلغ عنها">⚠</span>;
       default:
-        return null;
+        return <span className="text-xs opacity-70">✓</span>;
     }
   };
 
@@ -59,11 +83,18 @@ function MessageBubble({
       <div className="flex justify-end mb-4 message-sender">
         <div className="flex items-end gap-2 max-w-[85%] sm:max-w-xs lg:max-w-md xl:max-w-lg">
           {/* Status and Time */}
-          <div className="flex flex-col items-end gap-1 min-w-[60px]">
+          <div className="flex flex-col items-end gap-0.5 min-w-[60px]">
             <span className="text-[10px] text-gray-500 arabic-optimized">
-              {formatTime(message.createdAt)}
+              {getRelativeTime(message.createdAt)}
             </span>
-            {getStatusIcon()}
+            <div className="flex items-center gap-1">
+              {message.isEdited && (
+                <span className="text-[9px] text-gray-400" title={`معدلة في ${formatTime(message.editedAt || message.updatedAt)}`}>
+                  معدلة
+                </span>
+              )}
+              {getStatusIcon()}
+            </div>
           </div>
 
           {/* Message Bubble */}
@@ -72,9 +103,59 @@ function MessageBubble({
             <div className="absolute bottom-0 right-0 w-0 h-0 border-l-[8px] border-l-transparent border-b-[8px] border-b-primary translate-x-2"></div>
 
             <div className="bg-gradient-to-br from-primary via-primary-hover to-primary-600 text-white px-4 py-3 rounded-2xl rounded-br-sm shadow-lg hover:shadow-xl transition-shadow">
-              <p className="text-sm leading-relaxed arabic-optimized break-words">
-                {message.content?.text || ""}
-              </p>
+              {/* Reply Preview */}
+              {message.replyTo && (
+                <div className="bg-white/20 rounded-lg px-2 py-1 mb-2 text-xs border-r-2 border-white/50">
+                  <span className="opacity-80">رد على رسالة</span>
+                </div>
+              )}
+              
+              {/* Rejection Warning */}
+              {message.status === "rejected" && message.rejectionReason && (
+                <div className="bg-red-500/30 rounded-lg px-2 py-1 mb-2 text-xs border-r-2 border-red-300">
+                  <span className="font-semibold">مرفوضة:</span> {message.rejectionReason}
+                </div>
+              )}
+              
+              {/* Flagged Content Warning */}
+              {message.islamicCompliance && !message.islamicCompliance.isAppropriate && (
+                <div className="bg-yellow-500/30 rounded-lg px-2 py-1 mb-2 text-xs border-r-2 border-yellow-300">
+                  <span className="opacity-90">⚠️ محتوى مشكوك فيه</span>
+                </div>
+              )}
+              
+              {/* Message Text */}
+              {message.isDeleted ? (
+                <p className="text-sm italic opacity-70">تم حذف هذه الرسالة</p>
+              ) : (
+                <p className="text-sm leading-relaxed arabic-optimized break-words">
+                  {message.content?.text || ""}
+                </p>
+              )}
+              
+              {/* Media Attachment */}
+              {message.content?.media && !message.isDeleted && (
+                <div className="mt-2">
+                  {message.content.media.type === "image" && (
+                    <img 
+                      src={message.content.media.url} 
+                      alt={message.content.media.filename}
+                      className="rounded-lg max-w-full max-h-64 object-cover"
+                    />
+                  )}
+                  {message.content.media.type === "document" && (
+                    <a 
+                      href={message.content.media.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 bg-white/20 rounded-lg px-3 py-2 hover:bg-white/30"
+                    >
+                      <span>📄</span>
+                      <span className="text-xs truncate">{message.content.media.filename}</span>
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -98,7 +179,7 @@ function MessageBubble({
 
         {/* Message Bubble */}
         <div className="relative">
-          {/* Sender name (if provided and not current user) */}
+          {/* Sender name */}
           {senderName && (
             <span className="text-xs text-gray-600 mb-1 block px-1 arabic-optimized font-medium">
               {senderName}
@@ -109,16 +190,112 @@ function MessageBubble({
           <div className="absolute bottom-0 left-0 w-0 h-0 border-r-[8px] border-r-transparent border-b-[8px] border-b-gray-200 -translate-x-2"></div>
 
           <div className="bg-white hover:bg-gray-50 text-gray-800 px-4 py-3 rounded-2xl rounded-bl-sm shadow-md hover:shadow-lg border border-gray-100 transition-all">
-            <p className="text-sm leading-relaxed arabic-optimized break-words">
-              {message.content?.text || ""}
-            </p>
+            {/* Reply Preview */}
+            {message.replyTo && (
+              <div className="bg-gray-100 rounded-lg px-2 py-1 mb-2 text-xs border-r-2 border-gray-400">
+                <span className="text-gray-600">رد على رسالة</span>
+              </div>
+            )}
+            
+            {/* Pending Moderation */}
+            {message.status === "pending" && (
+              <div className="bg-yellow-50 rounded-lg px-2 py-1 mb-2 text-xs border-r-2 border-yellow-400">
+                <span className="text-yellow-700">⏳ قيد المراجعة</span>
+              </div>
+            )}
+            
+            {/* Flagged Content Warning */}
+            {message.islamicCompliance && !message.islamicCompliance.isAppropriate && (
+              <div className="bg-yellow-50 rounded-lg px-2 py-1 mb-2 text-xs border-r-2 border-yellow-400">
+                <span className="text-yellow-700">⚠️ محتوى مشكوك فيه</span>
+              </div>
+            )}
+            
+            {/* Guardian Info Message */}
+            {message.content?.messageType === "guardian-info" && !message.isDeleted ? (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-blue-600">🛡️</span>
+                  <h4 className="font-semibold text-blue-900 text-sm">معلومات الولي</h4>
+                </div>
+                {(() => {
+                  try {
+                    const guardianData = JSON.parse(message.content.text || "{}");
+                    return (
+                      <div className="space-y-1.5 text-xs">
+                        <p><strong className="text-gray-700">الاسم:</strong> <span className="text-gray-900">{guardianData.name}</span></p>
+                        <p><strong className="text-gray-700">الهاتف:</strong> <span className="text-gray-900 dir-ltr inline-block">{guardianData.phone}</span></p>
+                        {guardianData.email && <p><strong className="text-gray-700">البريد:</strong> <span className="text-gray-900">{guardianData.email}</span></p>}
+                        <p><strong className="text-gray-700">الصلة:</strong> <span className="text-gray-900">
+                          {guardianData.relationship === "father" ? "الأب" :
+                           guardianData.relationship === "brother" ? "الأخ" :
+                           guardianData.relationship === "uncle" ? "العم" : "آخر"}
+                        </span></p>
+                        {guardianData.notes && <p><strong className="text-gray-700">ملاحظات:</strong> <span className="text-gray-900">{guardianData.notes}</span></p>}
+                      </div>
+                    );
+                  } catch {
+                    return <p className="text-xs text-gray-600">معلومات الولي</p>;
+                  }
+                })()}
+              </div>
+            ) : (
+              /* Message Text */
+              message.isDeleted ? (
+                <p className="text-sm italic text-gray-400">تم حذف هذه الرسالة</p>
+              ) : (
+                <p className="text-sm leading-relaxed arabic-optimized break-words">
+                  {message.content?.text || ""}
+                </p>
+              )
+            )}
+            
+            {/* Media Attachment */}
+            {message.content?.media && !message.isDeleted && (
+              <div className="mt-2">
+                {message.content.media.type === "image" && (
+                  <img 
+                    src={message.content.media.url} 
+                    alt={message.content.media.filename}
+                    className="rounded-lg max-w-full max-h-64 object-cover cursor-pointer hover:opacity-90"
+                    onClick={() => window.open(message.content.media?.url, '_blank')}
+                  />
+                )}
+                {message.content.media.type === "document" && (
+                  <a 
+                    href={message.content.media.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2 hover:bg-gray-200"
+                  >
+                    <span>📄</span>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs truncate block">{message.content.media.filename}</span>
+                      <span className="text-[10px] text-gray-500">
+                        {(message.content.media.size / 1024).toFixed(1)} KB
+                      </span>
+                    </div>
+                  </a>
+                )}
+              </div>
+            )}
+            
+            {/* Edited Indicator */}
+            {message.isEdited && (
+              <span 
+                className="text-[9px] text-gray-400 mt-1 block cursor-help" 
+                title={`معدلة في ${formatTime(message.editedAt || message.updatedAt)}`}
+              >
+                معدلة
+              </span>
+            )}
           </div>
         </div>
 
         {/* Time */}
         <div className="flex flex-col items-start gap-1 min-w-[60px]">
           <span className="text-[10px] text-gray-500 arabic-optimized">
-            {formatTime(message.createdAt)}
+            {getRelativeTime(message.createdAt)}
           </span>
         </div>
       </div>
@@ -205,6 +382,7 @@ export function ChatWindow({ chatRoom }: ChatWindowProps) {
   const { user } = useAuth();
   const { messages, sendMessage, fetchMessages, rateLimited } = useChat();
   const [loading, setLoading] = useState(true);
+  const [sendingGuardianInfo, setSendingGuardianInfo] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   console.log('[ChatWindow] chatRoom.id:', chatRoom.id);
@@ -214,6 +392,11 @@ export function ChatWindow({ chatRoom }: ChatWindowProps) {
   const roomMessages = messages[chatRoom.id] || [];
   
   console.log('[ChatWindow] roomMessages length:', roomMessages.length);
+
+  // Check if guardian info already sent
+  const guardianInfoSent = roomMessages.some(
+    (msg) => msg.content?.messageType === "guardian-info" && msg.senderId === user?.id
+  );
 
   useEffect(() => {
     const loadMessages = async () => {
@@ -240,6 +423,20 @@ export function ChatWindow({ chatRoom }: ChatWindowProps) {
     } catch (error: any) {
       // Error is already handled in the provider with showToast
       console.error("Failed to send message:", error);
+    }
+  };
+
+  const handleSendGuardianInfo = async () => {
+    setSendingGuardianInfo(true);
+    try {
+      const { chatApi } = await import("@/lib/api");
+      await chatApi.sendGuardianInfo(chatRoom.id);
+      showToast.success("تم إرسال معلومات الولي بنجاح");
+      await fetchMessages(chatRoom.id);
+    } catch (error: any) {
+      showToast.error(error.message || "فشل إرسال معلومات الولي");
+    } finally {
+      setSendingGuardianInfo(false);
     }
   };
 
@@ -438,6 +635,24 @@ export function ChatWindow({ chatRoom }: ChatWindowProps) {
                 </p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Guardian Info Button (Females Only) */}
+        {!isExpired && user?.gender === "f" && !guardianInfoSent && (
+          <div className="px-3 sm:px-4 pb-2">
+            <Button
+              onClick={handleSendGuardianInfo}
+              disabled={sendingGuardianInfo}
+              variant="outline"
+              size="sm"
+              className="w-full flex items-center justify-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-50"
+            >
+              <span>🛡️</span>
+              <span className="text-sm">
+                {sendingGuardianInfo ? "جاري الإرسال..." : "إرسال معلومات الولي"}
+              </span>
+            </Button>
           </div>
         )}
 

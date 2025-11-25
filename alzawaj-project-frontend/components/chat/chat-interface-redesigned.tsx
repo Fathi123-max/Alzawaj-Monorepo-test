@@ -154,38 +154,63 @@ export function ChatInterfaceRedesigned({ requestId, chatRoomId }: ChatInterface
     }
   };
 
-  const formatTime = (dateString: string) => {
+  const formatTime = (dateString: string | undefined) => {
+    if (!dateString) return "";
     return new Date(dateString).toLocaleTimeString("ar-SA", {
       hour: "2-digit",
       minute: "2-digit",
     });
   };
 
+  const getRelativeTime = (dateString: string) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "الآن";
+    if (diffMins < 60) return `${diffMins}د`;
+    if (diffHours < 24) return `${diffHours}س`;
+    if (diffDays < 7) return `${diffDays}ي`;
+    return formatTime(dateString);
+  };
+
   const getMessageStatus = (message: ChatMessage) => {
     if (!message.isCurrentUser) return null;
     
-    const messageTime = new Date(message.createdAt).getTime();
-    const now = new Date().getTime();
-    const diffMinutes = (now - messageTime) / (1000 * 60);
-
-    if (diffMinutes < 1) return "sent";
-    if (diffMinutes < 5) return "delivered";
-    return "read";
+    // Check read receipts
+    const isRead = message.readBy && message.readBy.length > 1;
+    const readInfo = isRead && message.readBy.length > 1 
+      ? `قُرئت في ${formatTime(message.readBy[message.readBy.length - 1]?.readAt)}`
+      : "";
+    
+    if (isRead) {
+      return { icon: <CheckCheck className="h-3 w-3 text-blue-400" />, tooltip: readInfo };
+    }
+    
+    switch (message.status) {
+      case "pending":
+        return { icon: <Clock className="h-3 w-3 opacity-50" />, tooltip: "قيد الإرسال" };
+      case "approved":
+        return { icon: <Check className="h-3 w-3 opacity-70" />, tooltip: "تم الإرسال" };
+      case "rejected":
+        return { icon: <span className="text-xs text-red-400">✕</span>, tooltip: "مرفوضة" };
+      case "flagged":
+        return { icon: <span className="text-xs text-yellow-500">⚠</span>, tooltip: "مُبلغ عنها" };
+      default:
+        return { icon: <Check className="h-3 w-3 opacity-70" />, tooltip: "تم الإرسال" };
+    }
   };
 
-  const renderStatusIcon = (status: string | null) => {
-    if (!status) return null;
-
-    switch (status) {
-      case "sent":
-        return <Check className="h-3 w-3 text-gray-400" />;
-      case "delivered":
-        return <CheckCheck className="h-3 w-3 text-gray-500" />;
-      case "read":
-        return <CheckCheck className="h-3 w-3 text-primary-500" />;
-      default:
-        return null;
-    }
+  const renderStatusIcon = (statusData: { icon: React.ReactNode; tooltip: string } | null) => {
+    if (!statusData) return null;
+    return (
+      <span title={statusData.tooltip} className="cursor-help">
+        {statusData.icon}
+      </span>
+    );
   };
 
   if (isLoading) {
@@ -317,9 +342,100 @@ export function ChatInterfaceRedesigned({ requestId, chatRoomId }: ChatInterface
                       : "bg-card text-text rounded-bl-sm border border-border"
                   )}
                 >
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                    {message.content?.text || message.content}
-                  </p>
+                  {/* Reply Preview */}
+                  {message.replyTo && (
+                    <div className={cn(
+                      "rounded-lg px-2 py-1 mb-2 text-xs border-r-2",
+                      isCurrentUser 
+                        ? "bg-white/20 border-white/50" 
+                        : "bg-gray-100 border-gray-400"
+                    )}>
+                      <span className={isCurrentUser ? "opacity-80" : "text-gray-600"}>
+                        رد على رسالة
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Rejection Warning (for sender) */}
+                  {isCurrentUser && message.status === "rejected" && message.rejectionReason && (
+                    <div className="bg-red-500/30 rounded-lg px-2 py-1 mb-2 text-xs border-r-2 border-red-300">
+                      <span className="font-semibold">مرفوضة:</span> {message.rejectionReason}
+                    </div>
+                  )}
+                  
+                  {/* Pending Moderation (for receiver) */}
+                  {!isCurrentUser && message.status === "pending" && (
+                    <div className={cn(
+                      "rounded-lg px-2 py-1 mb-2 text-xs border-r-2",
+                      "bg-yellow-50 border-yellow-400 text-yellow-700"
+                    )}>
+                      <span>⏳ قيد المراجعة</span>
+                    </div>
+                  )}
+                  
+                  {/* Flagged Content Warning */}
+                  {message.islamicCompliance && !message.islamicCompliance.isAppropriate && (
+                    <div className={cn(
+                      "rounded-lg px-2 py-1 mb-2 text-xs border-r-2",
+                      isCurrentUser 
+                        ? "bg-yellow-500/30 border-yellow-300" 
+                        : "bg-yellow-50 border-yellow-400 text-yellow-700"
+                    )}>
+                      <span>⚠️ محتوى مشكوك فيه</span>
+                    </div>
+                  )}
+                  
+                  {/* Message Text */}
+                  {message.isDeleted ? (
+                    <p className={cn(
+                      "text-sm italic",
+                      isCurrentUser ? "opacity-70" : "text-gray-400"
+                    )}>
+                      تم حذف هذه الرسالة
+                    </p>
+                  ) : (
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                      {message.content?.text || message.content}
+                    </p>
+                  )}
+                  
+                  {/* Media Attachment */}
+                  {message.content?.media && !message.isDeleted && (
+                    <div className="mt-2">
+                      {message.content.media.type === "image" && (
+                        <img 
+                          src={message.content.media.url} 
+                          alt={message.content.media.filename}
+                          className="rounded-lg max-w-full max-h-64 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={() => window.open(message.content.media?.url, '_blank')}
+                        />
+                      )}
+                      {message.content.media.type === "document" && (
+                        <a 
+                          href={message.content.media.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className={cn(
+                            "flex items-center gap-2 rounded-lg px-3 py-2 transition-colors",
+                            isCurrentUser 
+                              ? "bg-white/20 hover:bg-white/30" 
+                              : "bg-gray-100 hover:bg-gray-200"
+                          )}
+                        >
+                          <span>📄</span>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-xs truncate block">{message.content.media.filename}</span>
+                            <span className={cn(
+                              "text-[10px]",
+                              isCurrentUser ? "text-white/70" : "text-gray-500"
+                            )}>
+                              {(message.content.media.size / 1024).toFixed(1)} KB
+                            </span>
+                          </div>
+                        </a>
+                      )}
+                    </div>
+                  )}
 
                   <div
                     className={cn(
@@ -327,7 +443,18 @@ export function ChatInterfaceRedesigned({ requestId, chatRoomId }: ChatInterface
                       isCurrentUser ? "text-primary-100" : "text-text-secondary"
                     )}
                   >
-                    <span>{formatTime(message.createdAt)}</span>
+                    <span>{getRelativeTime(message.createdAt)}</span>
+                    {message.isEdited && (
+                      <span 
+                        className={cn(
+                          "text-[9px]",
+                          isCurrentUser ? "text-white/70" : "text-gray-400"
+                        )}
+                        title={`معدلة في ${formatTime(message.editedAt || message.updatedAt)}`}
+                      >
+                        • معدلة
+                      </span>
+                    )}
                     {isCurrentUser && renderStatusIcon(getMessageStatus(message))}
                   </div>
 

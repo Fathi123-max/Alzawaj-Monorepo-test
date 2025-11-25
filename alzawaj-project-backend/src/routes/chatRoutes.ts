@@ -23,6 +23,10 @@ const markAsReadValidation = [
   param("chatRoomId").isMongoId().withMessage("معرف غرفة الدردشة غير صحيح"),
 ];
 
+const sendGuardianInfoValidation = [
+  body("chatRoomId").isMongoId().withMessage("معرف غرفة الدردشة غير صحيح"),
+];
+
 const getOrCreateRoomByRequestIdValidation = [
   param("requestId").isMongoId().withMessage("معرف طلب الزواج غير صحيح"),
 ];
@@ -49,6 +53,15 @@ router.post(
   sendMessageValidation,
   validateRequest,
   chatController.sendMessage,
+);
+
+// Send guardian info (females only)
+router.post(
+  "/send-guardian-info",
+  protect,
+  sendGuardianInfoValidation,
+  validateRequest,
+  chatController.sendGuardianInfo,
 );
 
 // Get chat limits
