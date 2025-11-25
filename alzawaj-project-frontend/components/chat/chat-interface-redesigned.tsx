@@ -14,12 +14,16 @@ import {
   CheckCheck,
   Image as ImageIcon,
   Paperclip,
+  Smile,
+  Phone,
+  Video,
+  Info,
 } from "lucide-react";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Message, ChatRoom, MarriageRequest, Profile } from "@/lib/types";
+import { Tooltip } from "@/components/ui/tooltip";
+import { Message, ChatRoom, Profile } from "@/lib/types";
 import { useChat } from "@/providers/chat-provider";
 import { useAuth } from "@/providers/auth-provider";
 import { showToast } from "@/components/ui/toaster";
@@ -39,12 +43,7 @@ interface ChatMessage extends Message {
   isCurrentUser?: boolean;
 }
 
-export function ChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
-  return <DesktopChatInterface requestId={requestId || undefined} chatRoomId={chatRoomId} />;
-}
-
-
-function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
+export function ChatInterfaceRedesigned({ requestId, chatRoomId }: ChatInterfaceProps) {
   const router = useRouter();
   const { user } = useAuth();
   const { isConnected, fetchChatRooms } = useChat();
@@ -57,24 +56,21 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
   const [otherUser, setOtherUser] = useState<Profile | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [showChatMenu, setShowChatMenu] = useState(false);
-  const [failedMessages, setFailedMessages] = useState<Set<string>>(new Set());
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
+  // Load chat data
   useEffect(() => {
-    // Only load when user is available
     if (user?.id) {
       const fetchData = async () => {
         setIsLoading(true);
         try {
-          // Load chat room details first
           const chatRoomResponse = await chatApi.getChatRoomById(chatRoomId);
           if (chatRoomResponse.success && chatRoomResponse.data) {
             setChatRoom(chatRoomResponse.data);
             
-            // Extract other participant info
             const otherParticipant = chatRoomResponse.data.participants.find(
               (p: any) => {
                 const userId = typeof p === 'string' ? p : (p.user?._id || p.user?.id || p.user);
@@ -94,34 +90,14 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
             }
           }
 
-          // Load messages from API (this marks them as read on backend)
           const messagesResponse = await chatApi.getMessages(chatRoomId, 1, 50);
-
           if (messagesResponse.success && messagesResponse.data) {
-            // Set messages with sender info
-            const loadedMessages = messagesResponse.data.messages.map(
-              (msg: any) => {
-                // Ensure sender is handled correctly whether it's an ID or object
-                const sender = msg.sender || {};
-                const senderName = typeof sender === 'object' 
-                  ? getUserFullName(sender) 
-                  : "مستخدم";
-                  
-                return {
-                  ...msg,
-                  sender: {
-                    ...(typeof sender === 'object' ? sender : {}),
-                    name: senderName,
-                    // Ensure ID is preserved if sender was just an ID string
-                    ...(typeof sender === 'string' ? { id: sender, _id: sender } : {})
-                  },
-                };
-              },
-            );
-
+            const loadedMessages = messagesResponse.data.messages.map((msg: any) => ({
+              ...msg,
+              sender: typeof msg.sender === 'object' ? msg.sender : { id: msg.sender },
+              isCurrentUser: msg.sender?.id === user?.id || msg.sender === user?.id,
+            }));
             setMessages(loadedMessages);
-            
-            // Refresh chat rooms to update unread count badge
             await fetchChatRooms();
           }
         } catch (error) {
@@ -137,65 +113,16 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
   }, [chatRoomId, user?.id]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  useEffect(() => {
-    const messagesContainer = messagesContainerRef.current;
-    if (!messagesContainer) return;
-
-    const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = messagesContainer;
-      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 100;
-      setShowScrollButton(!isNearBottom);
-    };
-
-    messagesContainer.addEventListener("scroll", handleScroll);
-    return () => messagesContainer.removeEventListener("scroll", handleScroll);
-  }, [messages]);
-
-  // Rate limiting state
-  const [rateLimited, setRateLimited] = useState(false);
-
-  // Helper function to check if a message is from current user
-  const isMessageFromCurrentUser = (message: any): boolean => {
-    // Check populated sender object first (MongoDB populated relationship)
-    // This is more reliable than senderId which might be undefined
-    if (message.sender) {
-      // Handle both string ID and object cases
-      const senderId = typeof message.sender === 'string' 
-        ? message.sender 
-        : (message.sender._id || message.sender.id);
-        
-      if (senderId && user?.id && senderId === user.id) {
-        return true;
-      }
-    }
-
-    // Fallback: Check senderId (if it exists)
-    if (message.senderId && user?.id && message.senderId === user.id) {
-      return true;
-    }
-
-    return false;
-  };
-
-  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, [messages]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || isSending) return;
 
-    const tempId = `temp-${Date.now()}`;
     const messageContent = newMessage.trim();
-
-    // Add to failed messages set for tracking
-    setFailedMessages((prev) => new Set(prev).add(tempId));
-
     setIsSending(true);
+    
     try {
-      // Send message via API
       const response = await chatApi.sendMessage({
         type: "text",
         chatRoomId,
@@ -203,53 +130,20 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
       });
 
       if (response.success && response.data) {
-        // Add the new message to the local state
-        const responseData = response.data as any;
         const newMsg = {
-          ...responseData.message,
+          ...(response.data as any).message,
           isCurrentUser: true,
-          sender: {
-            id: user?.id,
-            name: "أنت",
-          },
+          sender: { id: user?.id, name: "أنت" },
         };
         setMessages((prev) => [...prev, newMsg]);
         setNewMessage("");
-        setFailedMessages((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(tempId);
-          return newSet;
-        });
         showToast.success("تم إرسال الرسالة");
-
-        // Check if rate limited
-        if (responseData.rateLimited) {
-          setRateLimited(true);
-        }
       }
     } catch (error: any) {
       console.error("Failed to send message:", error);
-      // Keep message in input on error
-      setNewMessage(messageContent);
-      if (error.message?.includes("rate") || error.message?.includes("limit")) {
-        setRateLimited(true);
-        showToast.error(
-          "تم الوصول للحد الأقصى من الرسائل. حاول مرة أخرى لاحقاً",
-        );
-      } else {
-        showToast.error(error.message || "خطأ في إرسال الرسالة");
-      }
+      showToast.error(error.message || "خطأ في إرسال الرسالة");
     } finally {
       setIsSending(false);
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setNewMessage(e.target.value);
-    // Simulate typing indicator
-    if (!isTyping) {
-      setIsTyping(true);
-      setTimeout(() => setIsTyping(false), 2000);
     }
   };
 
@@ -267,123 +161,32 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
     });
   };
 
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString("ar-SA", {
-      hour: "2-digit",
-      minute: "2-digit",
-      day: "2-digit",
-      month: "short",
-    });
+  const getMessageStatus = (message: ChatMessage) => {
+    if (!message.isCurrentUser) return null;
+    
+    const messageTime = new Date(message.createdAt).getTime();
+    const now = new Date().getTime();
+    const diffMinutes = (now - messageTime) / (1000 * 60);
+
+    if (diffMinutes < 1) return "sent";
+    if (diffMinutes < 5) return "delivered";
+    return "read";
   };
 
-  const getRelativeTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
+  const renderStatusIcon = (status: string | null) => {
+    if (!status) return null;
 
-    if (diffMins < 1) return "الآن";
-    if (diffMins < 60) return `منذ ${diffMins} دقيقة`;
-    if (diffHours < 24) return `منذ ${diffHours} ساعة`;
-    if (diffDays < 7) return `منذ ${diffDays} يوم`;
-    return date.toLocaleDateString("ar-SA");
-  };
-
-  const getStatusIcon = (status: string) => {
     switch (status) {
-      case "pending":
-        return (
-          <div className="flex items-center gap-1" title="في الانتظار">
-            <Clock className="h-3 w-3 text-yellow-500" />
-          </div>
-        );
       case "sent":
-        return (
-          <div className="flex items-center gap-1" title="تم الإرسال">
-            <svg className="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-        );
+        return <Check className="h-3 w-3 text-gray-400" />;
       case "delivered":
-        return (
-          <div className="flex items-center gap-1" title="تم التسليم">
-            <svg className="h-3 w-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" transform="translate(4, -4)" />
-            </svg>
-          </div>
-        );
+        return <CheckCheck className="h-3 w-3 text-gray-500" />;
       case "read":
-        return (
-          <div className="flex items-center gap-1" title="تم القراءة">
-            <svg className="h-3 w-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" transform="translate(4, -4)" />
-            </svg>
-            <svg className="h-3 w-3 text-blue-500 -ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" transform="translate(4, -4)" />
-            </svg>
-          </div>
-        );
-      case "rejected":
-        return (
-          <div className="flex items-center gap-1" title="مرفوض">
-            <svg className="h-3 w-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </div>
-        );
+        return <CheckCheck className="h-3 w-3 text-primary-500" />;
       default:
         return null;
     }
   };
-
-  // Determine message status based on timestamp and current time
-  const getMessageStatus = (message: ChatMessage) => {
-    if (message.isCurrentUser) {
-      const messageTime = new Date(message.createdAt).getTime();
-      const now = new Date().getTime();
-      const diffMs = now - messageTime;
-      const diffMinutes = diffMs / (1000 * 60);
-
-      // If message is very recent, show as sent
-      if (diffMinutes < 1) return "sent";
-
-      // After 1 minute, consider it delivered
-      if (diffMinutes >= 1 && diffMinutes < 5) return "delivered";
-
-      // For demo purposes, randomly show some as read
-      // In production, this would come from the backend
-      if (diffMinutes > 5 && Math.random() > 0.3) return "read";
-
-      return "delivered";
-    }
-    return null;
-  };
-
-  // Group messages by sender and time
-  const groupedMessages = messages.reduce((groups: any[], message, index) => {
-    const prevMessage = index > 0 ? messages[index - 1] : null;
-    const isGrouped = prevMessage &&
-      isMessageFromCurrentUser(message) === isMessageFromCurrentUser(prevMessage) &&
-      new Date(message.createdAt).getTime() - new Date(prevMessage.createdAt).getTime() < 5 * 60 * 1000; // 5 minutes
-
-    if (isGrouped) {
-      groups[groups.length - 1].messages.push(message);
-    } else {
-      groups.push({
-        sender: message.sender,
-        isCurrentUser: isMessageFromCurrentUser(message),
-        messages: [message],
-      });
-    }
-    return groups;
-  }, []);
 
   if (isLoading) {
     return (
@@ -413,7 +216,7 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
             </Button>
 
             <Avatar className="h-10 w-10 border-2 border-primary-200">
-              <AvatarImage src={otherUser?.profilePicture as string} alt={otherUser?.name} />
+              <AvatarImage src={otherUser?.profilePicture} alt={otherUser?.name} />
               <AvatarFallback className="bg-primary-100 text-primary-700 font-medium">
                 {getInitials(otherUser?.name || "مستخدم")}
               </AvatarFallback>
@@ -440,15 +243,25 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
             </div>
           </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowChatMenu(!showChatMenu)}
-            className="hover:bg-primary-subtle"
-            aria-label="المزيد"
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:bg-primary-subtle"
+              aria-label="معلومات"
             >
-            <MoreVertical className="h-5 w-5" />
-          </Button>
+              <Info className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowChatMenu(!showChatMenu)}
+              className="hover:bg-primary-subtle"
+              aria-label="المزيد"
+            >
+              <MoreVertical className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -470,22 +283,26 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
           </div>
         ) : (
           messages.map((message, index) => {
-            const isCurrentUser = message.sender?.id === user?.id || message.sender === user?.id;
+            const isCurrentUser = message.isCurrentUser;
             const showAvatar = !isCurrentUser && (
               index === messages.length - 1 ||
-              messages[index + 1]?.sender?.id !== message.sender?.id
+              messages[index + 1]?.isCurrentUser !== isCurrentUser
             );
 
             return (
               <div
                 key={message.id || index}
-                className={`flex gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300 ${
+                className={cn(
+                  "flex gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300",
                   isCurrentUser ? "justify-end" : "justify-start"
-                }`}
+                )}
               >
                 {!isCurrentUser && (
-                  <Avatar className={`h-8 w-8 flex-shrink-0 ${!showAvatar && "invisible"}`}>
-                    <AvatarImage src={message.sender?.profilePicture as string} />
+                  <Avatar className={cn(
+                    "h-8 w-8 flex-shrink-0",
+                    !showAvatar && "invisible"
+                  )}>
+                    <AvatarImage src={message.sender?.profilePicture} />
                     <AvatarFallback className="bg-secondary-100 text-secondary-700 text-xs">
                       {getInitials(message.sender?.name || "م")}
                     </AvatarFallback>
@@ -493,34 +310,35 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
                 )}
 
                 <div
-                  className={`group relative max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm transition-all hover:shadow-md ${
+                  className={cn(
+                    "group relative max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm transition-all hover:shadow-md",
                     isCurrentUser
                       ? "bg-primary-500 text-white rounded-br-sm"
                       : "bg-card text-text rounded-bl-sm border border-border"
-                  }`}
+                  )}
                 >
                   <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                    {typeof message.content === 'string' ? message.content : message.content?.text || ""}
+                    {message.content?.text || message.content}
                   </p>
 
                   <div
-                    className={`mt-1 flex items-center gap-1 text-xs ${
+                    className={cn(
+                      "mt-1 flex items-center gap-1 text-xs",
                       isCurrentUser ? "text-primary-100" : "text-text-secondary"
-                    }`}
+                    )}
                   >
                     <span>{formatTime(message.createdAt)}</span>
-                    {isCurrentUser && (
-                      <CheckCheck className="h-3 w-3 text-primary-100" />
-                    )}
+                    {isCurrentUser && renderStatusIcon(getMessageStatus(message))}
                   </div>
 
                   {/* Message tail */}
                   <div
-                    className={`absolute bottom-0 h-4 w-4 ${
+                    className={cn(
+                      "absolute bottom-0 h-4 w-4",
                       isCurrentUser
                         ? "-right-1 bg-primary-500"
                         : "-left-1 bg-card border-l border-b border-border"
-                    }`}
+                    )}
                     style={{
                       clipPath: isCurrentUser
                         ? "polygon(0 0, 100% 0, 100% 100%)"
@@ -536,7 +354,7 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
         {isTyping && (
           <div className="flex gap-2 animate-in fade-in slide-in-from-bottom-2">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={otherUser?.profilePicture as string} />
+              <AvatarImage src={otherUser?.profilePicture} />
               <AvatarFallback className="bg-secondary-100 text-secondary-700 text-xs">
                 {getInitials(otherUser?.name || "م")}
               </AvatarFallback>
