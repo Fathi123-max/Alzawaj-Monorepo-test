@@ -135,27 +135,36 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const fetchMessages = useCallback(async (roomId: string) => {
-    console.log("[ChatProvider] Fetching messages for room:", roomId); // Debug log
+    console.log("[ChatProvider] Fetching messages for room:", roomId);
     try {
       const response = await chatApi.getMessages(roomId);
-      console.log("[ChatProvider] Messages API response:", response); // Debug log
+      console.log("[ChatProvider] Full API response:", JSON.stringify(response, null, 2));
+      console.log("[ChatProvider] response.success:", response.success);
+      console.log("[ChatProvider] response.data:", response.data);
+      
       if (response.success && response.data) {
-        // The response.data contains the actual messages array
         const messages = response.data.messages || response.data || [];
-        console.log("[ChatProvider] Setting messages:", messages); // Debug log
-        setMessages((prev) => ({
-          ...prev,
-          [roomId]: messages,
-        }));
+        console.log("[ChatProvider] Extracted messages:", messages);
+        console.log("[ChatProvider] Messages count:", messages.length);
+        console.log("[ChatProvider] First message:", messages[0]);
+        
+        setMessages((prev) => {
+          const newState = {
+            ...prev,
+            [roomId]: messages,
+          };
+          console.log("[ChatProvider] New messages state:", newState);
+          return newState;
+        });
       } else {
-        console.log("[ChatProvider] No messages data in response"); // Debug log
+        console.log("[ChatProvider] No messages data in response");
         setMessages((prev) => ({
           ...prev,
           [roomId]: [],
         }));
       }
     } catch (error: any) {
-      console.error("[ChatProvider] Error fetching messages:", error); // Debug log
+      console.error("[ChatProvider] Error fetching messages:", error);
       showToast.error(error.message || "خطأ في تحميل الرسائل");
       setMessages((prev) => ({
         ...prev,

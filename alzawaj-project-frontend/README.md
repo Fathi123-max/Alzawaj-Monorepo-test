@@ -189,7 +189,7 @@
 ### Prerequisites
 
 - Node.js 18+
-- npm 9+
+- pnpm 8+
 - Git
 
 ### Installation
@@ -204,7 +204,7 @@
 2. **Install dependencies**
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. **Set up environment variables**
@@ -217,7 +217,7 @@
 4. **Run development server**
 
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
 5. **Open in browser**
@@ -229,26 +229,26 @@
 
 ```bash
 # Development
-npm run dev              # Start development server
-npm run type-check       # TypeScript type checking
+pnpm run dev              # Start development server
+pnpm run type-check       # TypeScript type checking
 
 # Building
-npm run build           # Production build
-npm run start           # Start production server
-npm run analyze         # Bundle analysis
+pnpm run build           # Production build
+pnpm run start           # Start production server
+pnpm run analyze         # Bundle analysis
 
 # Code Quality
-npm run lint            # ESLint
-npm run lint:fix        # Fix ESLint issues
+pnpm run lint            # ESLint
+pnpm run lint:fix        # Fix ESLint issues
 
 # Testing
-npm run test            # Unit tests
-npm run test:watch      # Watch mode
-npm run test:coverage   # Coverage report
-npm run test:e2e        # End-to-end tests
+pnpm run test            # Unit tests
+pnpm run test:watch      # Watch mode
+pnpm run test:coverage   # Coverage report
+pnpm run test:e2e        # End-to-end tests
 
 # Documentation
-npm run storybook       # Component documentation
+pnpm run storybook       # Component documentation
 ```
 
 ## 📁 Project Structure
@@ -441,15 +441,15 @@ All components follow Islamic design principles with:
 ### Production Build
 
 ```bash
-npm run build
-npm run start
+pnpm run build
+pnpm run start
 ```
 
 ### Vercel Deployment
 
 ```bash
 # Install Vercel CLI
-npm i -g vercel
+pnpm add -g vercel
 
 # Deploy
 vercel --prod
@@ -495,7 +495,7 @@ Set the following in your deployment environment:
 
 ### Component Documentation
 
-- Storybook: `npm run storybook`
+- Storybook: `pnpm run storybook`
 - API Documentation: `/docs/api`
 - Design System: `/docs/design-system`
 

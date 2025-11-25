@@ -1,12 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { User, IUser as ModelIUser } from "../models/User";
-import { Profile, IProfile as ModelIProfile } from "../models/Profile";
-import { IUser, IProfile } from "../types";
+import { User, IUser } from "../models/User";
+import { Profile, IProfile } from "../models/Profile";
 import { asyncHandler, createAuthError } from "./errorMiddleware";
-// import logger from '../config/logger'; // Assuming logger will be converted
-
-// Interface declarations are now in types/index.ts
 
 interface JWTPayload {
   id: string;

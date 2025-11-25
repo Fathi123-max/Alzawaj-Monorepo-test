@@ -10,9 +10,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useRegistration } from "@/lib/hooks/useRegistration";
-import { Loader2 } from "lucide-react";
+import { Loader2, TestTube } from "lucide-react";
 import { TermsDialog } from "@/components/auth/terms-dialog";
 import { termsUtils } from "@/lib/utils/index";
+import { generateFakeRegistrationData } from "@/lib/utils/fakeDataGenerator";
 
 // Lazy load step components for code splitting
 const Step1Auth = lazy(
@@ -170,6 +171,12 @@ export function RegistrationWizard({
     router.push("/");
   };
 
+  const handleFillTestData = () => {
+    const fakeData = generateFakeRegistrationData(data.gender);
+    updateData(fakeData);
+    clearError();
+  };
+
   const handleTermsAccept = () => {
     setTermsAccepted(true);
     setShowTermsDialog(false);
@@ -246,6 +253,20 @@ export function RegistrationWizard({
 
         <CardFooter className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-2 px-4 sm:px-6 py-4">
           <div className="flex gap-2 w-full sm:w-auto order-2 sm:order-1">
+            {process.env.NODE_ENV === 'development' && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleFillTestData}
+                disabled={isSubmitting}
+                className="flex-1 sm:flex-none text-sm bg-yellow-50 hover:bg-yellow-100 border-yellow-300"
+                title="ملء بيانات تجريبية للاختبار"
+              >
+                <TestTube className="ml-2 h-4 w-4" />
+                بيانات تجريبية
+              </Button>
+            )}
+            
             <Button
               type="button"
               variant="outline"

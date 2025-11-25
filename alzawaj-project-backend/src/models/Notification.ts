@@ -192,7 +192,7 @@ notificationSchema.statics.createMarriageRequestNotification = function (
     user: data.receiver,
     type: "marriage_request",
     title: "طلب زواج جديد",
-    message: `لديك طلب زواج جديد من ${data.sender.profile.basicInfo.name}`,
+    message: `لديك طلب زواج جديد من ${data.sender.profile?.name || 'مستخدم'}`,
     data: {
       requestId: data.marriageRequest._id,
       profileId: data.sender._id,
@@ -211,7 +211,7 @@ notificationSchema.statics.createGuardianNotification = function (
     user: data.receiverId || data.receiver, // The female user who needs guardian approval
     type: "guardian_approval",
     title: "طلب موافقة ولي أمر",
-    message: `طلب زواج من ${data.senderProfile.basicInfo.name} يحتاج موافقة ولي الأمر`,
+    message: `طلب زواج من ${data.senderProfile?.name || 'مستخدم'} يحتاج موافقة ولي الأمر`,
     data: {
       requestId: data.marriageRequest._id,
       profileId: data.senderProfile._id,
@@ -231,7 +231,7 @@ notificationSchema.statics.createMarriageResponseNotification = function (
     user: data.receiver,
     type: "marriage_request",
     title: responseText,
-    message: `${data.sender.profile.basicInfo.name} ${responseText.toLowerCase()}`,
+    message: `${data.sender.profile?.name || 'مستخدم'} ${responseText.toLowerCase()}`,
     data: {
       requestId: data.marriageRequest._id,
       profileId: data.sender._id,

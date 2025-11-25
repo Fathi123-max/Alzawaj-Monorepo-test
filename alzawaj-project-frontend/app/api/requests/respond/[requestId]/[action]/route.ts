@@ -11,10 +11,10 @@ import { getStoredToken } from "@/lib/utils/auth.utils";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { requestId: string; action: string } },
+  { params }: { params: Promise<{ requestId: string; action: string }> },
 ) {
   try {
-    const { requestId, action } = params;
+    const { requestId, action } = await params;
     console.log(
       `📝 Respond to request endpoint called: ${action} for request ${requestId}`,
     );

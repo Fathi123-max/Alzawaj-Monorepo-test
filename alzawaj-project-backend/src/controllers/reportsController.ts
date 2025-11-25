@@ -21,7 +21,7 @@ export const submitReport = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const reporterId = req.user?.id;
+    const reporterId = req.user?._id;
     const {
       reportedUserId,
       reportedProfileId,
@@ -51,7 +51,7 @@ export const submitReport = async (
 
     // Create the report
     const report = await Report.createReport({
-      reporterId: new mongoose.Types.ObjectId(reporterId),
+      reporterId: reporterId as mongoose.Types.ObjectId,
       ...(reportedUserId && { reportedUserId: new mongoose.Types.ObjectId(reportedUserId) }),
       ...(reportedProfileId && { reportedProfileId: new mongoose.Types.ObjectId(reportedProfileId) }),
       ...(reportedMessageId && { reportedMessageId: new mongoose.Types.ObjectId(reportedMessageId) }),
@@ -138,7 +138,7 @@ export const getMyReports = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const reporterId = req.user?.id;
+    const reporterId = req.user?._id;
 
     if (!reporterId) {
       res.status(401).json(createErrorResponse("غير مصرح"));
@@ -146,7 +146,7 @@ export const getMyReports = async (
     }
 
     const reports = await Report.findByReporter(
-      new mongoose.Types.ObjectId(reporterId)
+      reporterId as mongoose.Types.ObjectId
     );
 
     res.json(

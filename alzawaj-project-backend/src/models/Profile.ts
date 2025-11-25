@@ -658,7 +658,7 @@ const profileSchema = new Schema<IProfile>(
       allowMessagesFrom: {
         type: String,
         enum: ["everyone", "matches-only", "none"],
-        default: "matches-only",
+        default: "everyone",
       },
       profileVisibility: {
         type: String,
@@ -845,41 +845,6 @@ profileSchema.index({
   sparse: true
 });
 
-// Text search index for name-based searches
-profileSchema.index({ 
-  "basicInfo.fullName": "text", 
-  "name": "text"
-}, { 
-  name: "search_text_index",
-  weights: {
-    "basicInfo.fullName": 10,
-    "name": 8
-  },
-  default_language: "arabic",
-  language_override: "arabic"
-});
-
-// Text index for search (only one text index per collection is allowed)
-profileSchema.index({ 
-  "location.country": "text", 
-  "location.city": "text", 
-  "location.state": "text", 
-  "professional.occupation": "text",
-  "basicInfo.fullName": "text",
-  "name": "text"
-}, { 
-  name: "search_text_index",
-  weights: {
-    "basicInfo.fullName": 10,
-    "name": 8,
-    "location.city": 5,
-    "location.country": 4,
-    "professional.occupation": 3,
-    "education.level": 2
-  },
-  default_language: "arabic", // Important for Arabic text search
-  language_override: "arabic"
-});
 
 // Pre-save hook to cache completion percentage
 profileSchema.pre('save', function(next) {
@@ -1052,6 +1017,7 @@ profileSchema.methods.canBeViewedBy = function (
 profileSchema.methods.getPublicView = function (
   this: IProfile,
   viewerProfile: IProfile,
+  context: 'search' | 'profile' | 'chat' = 'profile',
 ): any {
   const publicData: any = {
     id: this._id,
@@ -1063,7 +1029,7 @@ profileSchema.methods.getPublicView = function (
     religiousLevel: this.religiousLevel,
     maritalStatus: this.maritalStatus,
     profilePicture:
-      this.privacy?.showProfilePicture !== "none"
+      context === 'chat' && this.privacy?.showProfilePicture !== "none"
         ? this.profilePicture?.thumbnailUrl
         : null,
     bio: this.bio,
@@ -1194,7 +1160,7 @@ profileSchema.methods.canReceiveRequestFrom = async function (
   fromUserId: string,
 ): Promise<boolean> {
   // Check if the profile can receive marriage requests from the given user
-  if (!this.isComplete || !this.isApproved || this.isDeleted) {
+  if (!this.isApproved || this.isDeleted) {
     return false;
   }
 
@@ -1259,17 +1225,51 @@ profileSchema.methods.getMissingFields = function (this: IProfile): string[] {
 // Static method to create text index
 profileSchema.statics.createSearchIndex = async function () {
   try {
+    // First, drop the existing index if it exists
+    try {
+      await this.collection.dropIndex("search_text_index");
+      console.log("Existing search text index dropped successfully");
+    } catch (dropError: any) {
+      // Index might not exist, which is fine
+      if (dropError.code !== 27) { // 27 = IndexNotFound error code
+        console.log("No existing search text index to drop, continuing...");
+      }
+    }
+
+    // Also try to drop the old index name that might be in the database
+    try {
+      await this.collection.dropIndex("location.country_text_location.city_text_location.state_text");
+      console.log("Old search text index dropped successfully");
+    } catch (dropError: any) {
+      // Index might not exist, which is fine
+      if (dropError.code !== 27) { // 27 = IndexNotFound error code
+        console.log("No existing old search text index to drop, continuing...");
+      }
+    }
+
+    // Now create the new index with the proper fields and weights
     await this.collection.createIndex({
       "location.country": "text",
-      "location.city": "text", 
+      "location.city": "text",
       "location.state": "text",
       "professional.occupation": "text",
       "basicInfo.fullName": "text",
       "name": "text"
-    }, { name: "search_text_index" });
-    
+    }, {
+      name: "search_text_index",
+      weights: {
+        "basicInfo.fullName": 10,
+        "name": 8,
+        "location.city": 5,
+        "location.country": 4,
+        "professional.occupation": 3
+      },
+      default_language: "english",
+      language_override: "language"
+    });
+
     console.log("Search text index created successfully");
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating search text index:", error);
   }
 };

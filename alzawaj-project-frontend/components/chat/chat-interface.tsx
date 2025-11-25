@@ -52,12 +52,12 @@ export function ChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
   // Use mobile interface for smaller screens
   if (isMobile) {
     return (
-      <MobileChatInterface requestId={requestId} chatRoomId={chatRoomId} />
+      <MobileChatInterface requestId={requestId || undefined} chatRoomId={chatRoomId} />
     );
   }
 
   // Desktop interface for larger screens
-  return <DesktopChatInterface requestId={requestId} chatRoomId={chatRoomId} />;
+  return <DesktopChatInterface requestId={requestId || undefined} chatRoomId={chatRoomId} />;
 }
 
 
@@ -106,7 +106,7 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
                 setOtherUser({
                   id: participantUser._id || participantUser.id,
                   name: getUserFullName(participantUser),
-                  profilePicture: participantUser.profilePicture,
+                  profilePicture: (participantUser as any).profilePicture,
                 } as Profile);
               }
             }
@@ -119,11 +119,19 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
             // Set messages with sender info
             const loadedMessages = messagesResponse.data.messages.map(
               (msg: any) => {
+                // Ensure sender is handled correctly whether it's an ID or object
+                const sender = msg.sender || {};
+                const senderName = typeof sender === 'object' 
+                  ? getUserFullName(sender) 
+                  : "مستخدم";
+                  
                 return {
                   ...msg,
                   sender: {
-                    ...msg.sender,
-                    name: getUserFullName(msg.sender),
+                    ...(typeof sender === 'object' ? sender : {}),
+                    name: senderName,
+                    // Ensure ID is preserved if sender was just an ID string
+                    ...(typeof sender === 'string' ? { id: sender, _id: sender } : {})
                   },
                 };
               },
@@ -172,7 +180,11 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
     // Check populated sender object first (MongoDB populated relationship)
     // This is more reliable than senderId which might be undefined
     if (message.sender) {
-      const senderId = message.sender._id || message.sender.id;
+      // Handle both string ID and object cases
+      const senderId = typeof message.sender === 'string' 
+        ? message.sender 
+        : (message.sender._id || message.sender.id);
+        
       if (senderId && user?.id && senderId === user.id) {
         return true;
       }
@@ -208,10 +220,11 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
         content: messageContent,
       });
 
-      if (response.success && response.data?.message) {
+      if (response.success && response.data) {
         // Add the new message to the local state
+        const responseData = response.data as any;
         const newMsg = {
-          ...response.data.message,
+          ...responseData.message,
           isCurrentUser: true,
           sender: {
             id: user?.id,
@@ -228,7 +241,7 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
         showToast.success("تم إرسال الرسالة");
 
         // Check if rate limited
-        if (response.data.rateLimited) {
+        if (responseData.rateLimited) {
           setRateLimited(true);
         }
       }
@@ -421,7 +434,7 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
                   <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {otherUser?.profilePicture ? (
                       <img 
-                        src={typeof otherUser.profilePicture === 'string' ? otherUser.profilePicture : otherUser.profilePicture.url} 
+                        src={typeof otherUser.profilePicture === 'string' ? otherUser.profilePicture : (otherUser.profilePicture as any).url} 
                         alt={otherUser.name} 
                         className="w-full h-full object-cover"
                       />
@@ -453,8 +466,8 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
                     </div>
                     <div className="text-gray-400">•</div>
                     <div className="text-xs text-gray-500">
-                      {chatRoom && chatRoom.lastActivity
-                        ? `آخر نشاط: ${getRelativeTime(chatRoom.lastActivity)}`
+                      {chatRoom && (chatRoom as any).lastActivity
+                        ? `آخر نشاط: ${getRelativeTime((chatRoom as any).lastActivity)}`
                         : "منذ قليل"}
                     </div>
                   </div>
@@ -542,7 +555,7 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
 
                           {/* Message Bubbles */}
                           <div className="relative flex flex-col">
-                            {group.messages.map((message, msgIndex) => (
+                            {group.messages.map((message: ChatMessage, msgIndex: number) => (
                               <div
                                 key={message.id || msgIndex}
                                 className="relative mb-2 last:mb-0"
@@ -562,7 +575,7 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
                                   title={formatDateTime(message.createdAt)}
                                 >
                                   <p className="text-sm leading-relaxed arabic-optimized break-words">
-                                    {message.content?.text || message.content}
+                                    {typeof message.content === 'string' ? message.content : message.content?.text || ""}
                                   </p>
 
                                   {/* Hover tooltip for full timestamp */}
@@ -598,7 +611,7 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
                               </span>
                             )}
 
-                            {group.messages.map((message, msgIndex) => (
+                            {group.messages.map((message: ChatMessage, msgIndex: number) => (
                               <div
                                 key={message.id || msgIndex}
                                 className="relative mb-2 last:mb-0"
@@ -618,7 +631,7 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
                                   title={formatDateTime(message.createdAt)}
                                 >
                                   <p className="text-sm leading-relaxed arabic-optimized break-words">
-                                    {message.content?.text || message.content}
+                                    {typeof message.content === 'string' ? message.content : message.content?.text || ""}
                                   </p>
 
                                   {/* Hover tooltip for full timestamp */}

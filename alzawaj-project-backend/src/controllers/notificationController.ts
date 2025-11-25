@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import mongoose from "mongoose";
 import { Notification } from "../models/Notification";
 import {
   createSuccessResponse,
@@ -20,7 +21,7 @@ export const getNotifications = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { page = 1, limit = 20 } = req.query;
 
     // Calculate pagination
@@ -61,7 +62,7 @@ export const markAsRead = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { notificationId } = req.params;
 
     const notification = await Notification.findOne({
@@ -91,9 +92,9 @@ export const markAllAsRead = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
-    await Notification.markAllAsRead(userId);
+    await Notification.markAllAsRead(userId as mongoose.Types.ObjectId);
 
     res.json(createSuccessResponse("تم تحديد جميع الإشعارات كمقروءة"));
   } catch (error) {
@@ -110,7 +111,7 @@ export const getUnreadCount = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
     const count = await Notification.countDocuments({
       user: userId,
@@ -134,7 +135,7 @@ export const deleteNotification = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { notificationId } = req.params;
 
     const notification = await Notification.findOneAndDelete({

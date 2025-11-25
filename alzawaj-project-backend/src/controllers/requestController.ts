@@ -44,7 +44,7 @@ export const sendMarriageRequest = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const senderId = req.user?.id;
+    const senderId = req.user?._id;
     const { receiverId, message, contactInfo }: MarriageRequestData = req.body;
 
     if (!receiverId || !message) {
@@ -237,7 +237,7 @@ export const getReceivedRequests = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const {
       status,
       page = 1,
@@ -335,7 +335,7 @@ export const getSentRequests = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const {
       status,
       page = 1,
@@ -433,12 +433,19 @@ export const acceptRequest = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { requestId } = req.params;
     const { message } = req.body;
 
-    const marriageRequest =
-      await MarriageRequest.findById(requestId).populate("sender receiver");
+    const marriageRequest = await MarriageRequest.findById(requestId)
+      .populate({
+        path: "sender",
+        populate: { path: "profile" }
+      })
+      .populate({
+        path: "receiver",
+        populate: { path: "profile" }
+      });
 
     if (!marriageRequest) {
       res.status(404).json(createErrorResponse("طلب الزواج غير موجود"));
@@ -468,11 +475,13 @@ export const acceptRequest = async (
 
     // Create chat room for the couple
     const chatRoom = new ChatRoom({
-      participants: [marriageRequest.sender._id, marriageRequest.receiver._id],
+      participants: [
+        { user: marriageRequest.sender._id, role: "member", isActive: true },
+        { user: marriageRequest.receiver._id, role: "member", isActive: true }
+      ],
       marriageRequest: marriageRequest._id,
       type: "marriage_discussion",
       isActive: true,
-      createdBy: userId,
     });
 
     await chatRoom.save();
@@ -508,12 +517,19 @@ export const rejectRequest = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { requestId } = req.params;
     const { message, reason } = req.body;
 
-    const marriageRequest =
-      await MarriageRequest.findById(requestId).populate("sender receiver");
+    const marriageRequest = await MarriageRequest.findById(requestId)
+      .populate({
+        path: "sender",
+        populate: { path: "profile" }
+      })
+      .populate({
+        path: "receiver",
+        populate: { path: "profile" }
+      });
 
     if (!marriageRequest) {
       res.status(404).json(createErrorResponse("طلب الزواج غير موجود"));
@@ -569,7 +585,7 @@ export const cancelRequest = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { requestId } = req.params;
 
     const marriageRequest = await MarriageRequest.findById(requestId);
@@ -613,7 +629,7 @@ export const markAsRead = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { requestId } = req.params;
 
     const marriageRequest = await MarriageRequest.findById(requestId);
@@ -660,7 +676,7 @@ export const arrangeMeeting = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { requestId } = req.params;
     const meetingData: MeetingData = req.body;
 
@@ -757,7 +773,7 @@ export const confirmMeeting = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { requestId } = req.params;
     const { confirm } = req.body;
 
@@ -828,7 +844,7 @@ export const getRequestDetails = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { requestId } = req.params;
 
     const marriageRequest = await MarriageRequest.findById(requestId)
@@ -903,7 +919,7 @@ export const getRequestStats = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
     const [sent, received] = await Promise.all([
       MarriageRequest.aggregate([

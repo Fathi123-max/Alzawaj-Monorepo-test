@@ -2,7 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import { MarriageRequest } from "../models/MarriageRequest";
 import { Profile } from "../models/Profile";
 import { createErrorResponse } from "../utils/responseHelper";
-import { IUser, IProfile } from "../types";
+import { IUser } from "../models/User";
+import { IProfile } from "../types";
 
 // Extend Request interface for authentication
 interface AuthenticatedRequest extends Request {

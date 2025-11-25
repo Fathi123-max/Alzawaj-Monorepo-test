@@ -4,9 +4,6 @@ const nextConfig = {
   experimental: {
     // optimizeCss: true, // Disabled due to missing critters dependency
     scrollRestoration: true,
-    optimizeFonts: true,
-    // Turbopack configuration for Next.js 16
-    turbopack: {},
   },
 
   // Performance optimizations

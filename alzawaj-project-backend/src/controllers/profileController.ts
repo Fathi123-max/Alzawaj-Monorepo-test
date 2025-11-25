@@ -435,7 +435,7 @@ export const getMyProfile = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
     const profile = await Profile.findOne({ userId: userId }).populate(
       "userId",
@@ -462,7 +462,7 @@ export const updateProfile = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const updateData: ProfileUpdateData = req.body;
 
     // Validate update data
@@ -862,7 +862,7 @@ export const uploadProfilePicture = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const file = req.file;
 
     if (!file) {
@@ -961,7 +961,7 @@ export const uploadAdditionalPhotos = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const files = req.files as Express.Multer.File[];
 
     if (!files || files.length === 0) {
@@ -1050,7 +1050,7 @@ export const deleteAdditionalPhoto = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { photoUrl } = req.params;
 
     if (!photoUrl) {
@@ -1118,7 +1118,7 @@ export const deleteProfilePicture = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
     const profile = await Profile.findOne({ userId: userId });
     if (!profile) {
@@ -1163,7 +1163,7 @@ export const deletePhoto = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { fileId } = req.params; // Changed from photoUrl to fileId since we need the ImageKit file ID
 
     if (!fileId) {
@@ -1235,7 +1235,7 @@ export const getPublicProfile = async (
 ): Promise<void> => {
   try {
     const { profileId } = req.params;
-    const viewerId = req.user?.id;
+    const viewerId = req.user?._id;
 
     // Convert string to MongoDB ObjectId
     let userObjectId;
@@ -1281,7 +1281,7 @@ export const getPublicProfile = async (
     }
     
     // Hide location if privacy setting is disabled
-    if (profile.privacy?.showLocation === false && viewerId !== profile.userId.toString()) {
+    if (profile.privacy?.showLocation === false && viewerId?.toString() !== profile.userId.toString()) {
       if (profileData.basicInfo?.currentLocation) {
         profileData.basicInfo.currentLocation = undefined;
       }
@@ -1291,7 +1291,7 @@ export const getPublicProfile = async (
     }
     
     // Hide occupation if privacy setting is disabled
-    if (profile.privacy?.showOccupation === false && viewerId !== profile.userId.toString()) {
+    if (profile.privacy?.showOccupation === false && viewerId?.toString() !== profile.userId.toString()) {
       if (profileData.professional) {
         profileData.professional.occupation = undefined;
         profileData.professional.company = undefined;
@@ -1299,17 +1299,17 @@ export const getPublicProfile = async (
     }
     
     // Hide profile picture based on setting
-    if (profile.privacy?.showProfilePicture === 'none' && viewerId !== profile.userId.toString()) {
+    if (profile.privacy?.showProfilePicture === 'none' && viewerId?.toString() !== profile.userId.toString()) {
       profileData.profilePicture = undefined;
-    } else if (profile.privacy?.showProfilePicture === 'matches-only' && viewerId !== profile.userId.toString()) {
+    } else if (profile.privacy?.showProfilePicture === 'matches-only' && viewerId?.toString() !== profile.userId.toString()) {
       // TODO: Check if viewer is a match
       // For now, hide from non-matches
       profileData.profilePicture = undefined;
     }
 
     // Record profile view
-    if (viewerId && viewerId !== profile.userId.toString()) {
-      await profile.recordView(viewerId);
+    if (viewerId && viewerId.toString() !== profile.userId.toString()) {
+      await profile.recordView(viewerId.toString());
     }
 
     res.json(createSuccessResponse("تم جلب الملف الشخصي بنجاح", { profile: profileData }));
@@ -1327,7 +1327,7 @@ export const updatePrivacySettings = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { privacySettings } = req.body;
 
     const profile = await Profile.findOne({ userId: userId });
@@ -1410,7 +1410,7 @@ export const getProfileCompletion = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
     const profile = await Profile.findOne({ userId: userId });
     if (!profile) {
@@ -1438,7 +1438,7 @@ export const completeProfile = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
     const profile = await Profile.findOne({ userId: userId });
     if (!profile) {
@@ -1471,7 +1471,7 @@ export const getProfileStats = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
     const profile = await Profile.findOne({ userId: userId });
     if (!profile) {
@@ -1507,7 +1507,7 @@ export const blockUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { userIdToBlock } = req.body;
 
     if (!userIdToBlock) {
@@ -1556,7 +1556,7 @@ export const unblockUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { userIdToUnblock } = req.body;
 
     const profile = await Profile.findOne({ userId: userId });
@@ -1593,7 +1593,7 @@ export const getBlockedUsers = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
     const profile = await Profile.findOne({ userId: userId }).populate({
       path: "privacy.blockedUsers",
@@ -1628,7 +1628,7 @@ export const deleteProfile = async (
   session.startTransaction();
 
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { confirmPassword } = req.body;
 
     if (!confirmPassword) {
@@ -1718,6 +1718,7 @@ export const verifyProfile = async (
     profile.verification.isVerified = verificationStatus === "verified";
     if (verificationStatus === "verified") {
       profile.verification.verifiedAt = new Date();
+      profile.isApproved = true; // Approve profile when verified
     }
     profile.verification.verificationMethod = adminNotes;
 
@@ -1743,7 +1744,7 @@ export const getAllProfiles = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const currentUserId = req.user?.id;
+    const currentUserId = req.user?._id;
     const {
       page = 1,
       limit = 20,

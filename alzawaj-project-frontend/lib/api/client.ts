@@ -96,6 +96,8 @@ api.interceptors.request.use(
 // Response interceptor to handle common scenarios
 api.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
+    console.log('✅ ApiClient Response:', response.config.method?.toUpperCase(), response.config.url, 'Status:', response.status);
+    console.log('📦 Response data:', response.data);
     return response;
   },
   async (error) => {

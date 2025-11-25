@@ -1,5 +1,7 @@
 import { Document, ObjectId } from "mongoose";
 import { Request } from "express";
+import type { IUser } from "../models/User";
+import type { IProfile } from "../models/Profile";
 
 // ====================
 // UTILITY TYPES
@@ -97,181 +99,11 @@ export interface BaseDocument extends Document {
   updatedAt: Date;
 }
 
-// User related types
-export interface IUser extends BaseDocument {
-  email: string;
-  phone?: string; // Made optional
-  password: string;
-  firstname: string;
-  lastname: string;
-  isEmailVerified: boolean;
-  emailVerifiedAt?: Date;
-  emailVerificationToken?: string;
-  emailVerificationExpires?: Date;
-  passwordResetToken?: string;
-  passwordResetExpires?: Date;
-  refreshTokens: IRefreshToken[];
-  role: "user" | "admin" | "moderator";
-  status: "active" | "suspended" | "pending" | "blocked";
-  isActive: boolean;
-  lastLoginAt?: Date;
-  lastActiveAt: Date;
-  loginAttempts: number;
-  lockUntil?: Date;
-  deletedAt?: Date;
-  suspensionReason?: string;
-  suspendedBy?: ObjectId;
-  suspendedAt?: Date;
-  profile?: ObjectId;
-  generateAuthToken(): Promise<string>;
-  comparePassword(candidatePassword: string): Promise<boolean>;
-  generateAuthToken(): Promise<string>;
-  generateRefreshToken(): Promise<string>;
-  isLocked: boolean;
-  incLoginAttempts(): Promise<IUser>;
-}
+// User related types - Re-export from User model to avoid duplication
+export type { IUser };
 
-// Profile related types
-export interface IProfile extends BaseDocument {
-  user: ObjectId;
-  basicInfo?: {
-    fullName: string;
-    gender?: "m" | "f"; // Changed to match model
-    dateOfBirth: Date;
-    nationality: string;
-    currentLocation?: {
-      city: string;
-      country: string;
-      coordinates?: [number, number];
-    };
-    maritalStatus: "single" | "divorced" | "widowed";
-    hasChildren: boolean;
-    wantChildren: boolean;
-    age?: number; // Added age property
-  };
-  religiousInfo?: {
-    sect: "sunni" | "shia" | "other";
-    religiousnessLevel: "practicing" | "moderate" | "cultural";
-    prayerFrequency: "five_times" | "sometimes" | "rarely" | "never";
-    hijabWearing?: "always" | "sometimes" | "planning" | "no";
-    beardKeeping?: "always" | "sometimes" | "planning" | "no";
-    halal: boolean;
-    islamicEducation: string;
-  };
-  personalInfo?: {
-    height: number;
-    weight?: number;
-    bodyType: "slim" | "average" | "athletic" | "large";
-    ethnicity: string;
-    languages: string[];
-    education: string;
-    occupation: string;
-    income?: number;
-    personalityTraits: string[];
-    hobbies: string[];
-    aboutMe: string;
-    hasChildren?: boolean;
-    wantsChildren?: boolean;
-  };
-  familyInfo?: {
-    fatherOccupation?: string;
-    motherOccupation?: string;
-    siblings: number;
-    familyType: "nuclear" | "joint" | "extended";
-    familyValues: string;
-    parentalApproval: boolean;
-  };
-  partnerPreferences?: {
-    ageRange?: {
-      min?: number;
-      max?: number;
-    };
-    heightRange?: {
-      min: number;
-      max: number;
-    };
-    education?: string[];
-    occupation?: string[];
-    religiousnessLevel?: string[];
-    sect?: string[];
-    maritalStatusPreference?: string[];
-    location?: string[];
-    wantChildren?: boolean;
-    personalityTraits?: string[];
-    countries?: string[];
-    cities?: string[];
-    nationalities?: string[];
-    hasChildren?: boolean;
-    dealBreakers?: string[];
-  };
-  photos?: {
-    profilePhoto?: string;
-    gallery: string[];
-    isProfilePhotoVisible: boolean;
-    whoCanSeePhotos: "everyone" | "matches" | "paid_members" | "approved_only";
-  };
-  privacySettings?: {
-    profileVisibility: "public" | "members_only" | "matches_only";
-    showOnlineStatus: boolean;
-    showLastSeen: boolean;
-    whoCanContact: "everyone" | "matches_only" | "paid_members";
-    blockList: ObjectId[];
-  };
-  privacy?: {
-    blockedUsers?: ObjectId[];
-  };
-  verificationStatus?: {
-    isVerified: boolean;
-    documents: {
-      idVerification: boolean;
-      educationVerification: boolean;
-      incomeVerification: boolean;
-    };
-    verifiedBy?: ObjectId;
-    verifiedAt?: Date;
-  };
-  searchPreferences?: {
-    distanceRange: number;
-    showProfiles: "all" | "verified_only" | "premium_only";
-    sortBy: "latest" | "distance" | "compatibility" | "activity";
-  };
-  isComplete?: boolean;
-  isApproved?: boolean;
-  completionPercentage?: number;
-  profileViews?: ObjectId[];
-  profileLikes?: ObjectId[];
-  compatibility?: {
-    score: number;
-    factors: string[];
-  };
-  isPremium?: boolean;
-  premiumExpiry?: Date;
-  guardian?: {
-    name: string;
-    relationship: "father" | "mother" | "brother" | "uncle" | "other";
-    contact: string;
-    isActive: boolean;
-  };
-  savedSearches?: {
-    name: string;
-    criteria: any;
-    createdAt: Date;
-  }[];
-  searchCount?: number;
-  location?: {
-    country?: string;
-    city?: string;
-  };
-  education?: {
-    level?: string;
-    field?: string;
-  };
-  professional?: {
-    occupation?: string;
-  };
-  // Methods
-  canReceiveRequestFrom?(userId: string): Promise<boolean>;
-}
+// Profile related types - Re-export from Profile model to avoid duplication
+export type { IProfile };
 
 // Marriage Request types
 export interface IMarriageRequest extends BaseDocument {

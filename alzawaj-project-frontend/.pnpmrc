@@ -1,0 +1,13 @@
+# See https://pnpm.io/pnpm-cli for more information about pnpm
+
+# Always prefer using pnpm for consistency
+prefer-workspace-packages = true
+
+# Use strict peer dependencies
+strict-peer-dependencies = false
+
+# Enable link-workspace-packages by default
+link-workspace-packages = true
+
+# Enable save-workspace-protocol by default
+save-workspace-protocol = true

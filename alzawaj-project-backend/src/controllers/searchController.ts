@@ -110,7 +110,7 @@ export const searchProfiles = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const {
       ageMin,
       ageMax,
@@ -550,9 +550,24 @@ export const searchProfiles = async (
       }
     }
 
+    // Hide profile pictures in search results (only visible in chat)
+    const sanitizedProfiles = profilesWithScores.map(item => {
+      const profileObj = item.profile.toObject ? item.profile.toObject() : item.profile;
+      if (profileObj.profilePicture) {
+        delete profileObj.profilePicture;
+      }
+      if (profileObj.photos) {
+        delete profileObj.photos;
+      }
+      return {
+        ...item,
+        profile: profileObj
+      };
+    });
+
     res.json(
       createSuccessResponse("تم البحث بنجاح", {
-        profiles: profilesWithScores,
+        profiles: sanitizedProfiles,
         pagination,
         searchCriteria: {
           ageRange: ageMin || ageMax ? { min: ageMin, max: ageMax } : null,
@@ -582,7 +597,7 @@ export const getRecommendations = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { limit = 10 } = req.query;
 
     // Get user's profile and preferences
@@ -705,9 +720,24 @@ export const getRecommendations = async (
       }
     }
 
+    // Hide profile pictures in recommendations (only visible in chat)
+    const sanitizedRecommendations = profilesWithScores.map(item => {
+      const profileObj = item.profile.toObject ? item.profile.toObject() : item.profile;
+      if (profileObj.profilePicture) {
+        delete profileObj.profilePicture;
+      }
+      if (profileObj.photos) {
+        delete profileObj.photos;
+      }
+      return {
+        ...item,
+        profile: profileObj
+      };
+    });
+
     res.json(
       createSuccessResponse("تم جلب التوصيات بنجاح", {
-        recommendations: profilesWithScores,
+        recommendations: sanitizedRecommendations,
         basedOn: {
           userPreferences: preferences,
           profileCompleteness: userProfile.completionPercentage,
@@ -728,7 +758,7 @@ export const quickSearch = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { q, limit = 10, fuzzy = true } = req.query as QuickSearchQuery;
 
     if (!q || typeof q !== "string" || q.trim().length < 2) {
@@ -886,18 +916,28 @@ export const quickSearch = async (
       profiles = fuzzyProfiles.slice(0, Number(limit));
     }
 
-    const results = profiles.map((profile) => ({
-      profile,
-      matchedFields: [
-        profile.basicInfo?.fullName
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase())
-          ? "name"
-          : profile.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    const results = profiles.map((profile) => {
+      const profileObj = profile.toObject();
+      // Hide profile picture in search results (only visible in chat)
+      if (profileObj.profilePicture) {
+        delete profileObj.profilePicture;
+      }
+      if (profileObj.photos) {
+        delete profileObj.photos;
+      }
+      
+      return {
+        profile: profileObj,
+        matchedFields: [
+          profile.basicInfo?.fullName
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase())
             ? "name"
-            : null,
-        profile.location?.country
-          ?.toLowerCase()
+            : profile.name?.toLowerCase().includes(searchTerm.toLowerCase())
+              ? "name"
+              : null,
+          profile.location?.country
+            ?.toLowerCase()
           .includes(searchTerm.toLowerCase())
           ? "country"
           : null,
@@ -915,7 +955,8 @@ export const quickSearch = async (
           ? "profession"
           : null,
       ].filter(Boolean),
-    }));
+    };
+    });
 
     res.json(
       createSuccessResponse("تم البحث السريع بنجاح", {
@@ -992,7 +1033,7 @@ export const getSearchFilters = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
     // Get user profile to determine opposite gender
     const userProfile = await Profile.findOne({ userId: userId });
@@ -1093,7 +1134,7 @@ export const saveSearchCriteria = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { name, criteria }: SearchCriteria = req.body;
 
     if (!name || !criteria) {
@@ -1156,7 +1197,7 @@ export const getSavedSearches = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
     const userProfile = await Profile.findOne({ userId: userId }).select(
       "savedSearches"
@@ -1186,7 +1227,7 @@ export const deleteSavedSearch = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { searchName } = req.params;
 
     const userProfile = await Profile.findOne({ userId: userId });
@@ -1225,7 +1266,7 @@ export const getSearchStats = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
     // Get user profile
     const userProfile = await Profile.findOne({ userId: userId });

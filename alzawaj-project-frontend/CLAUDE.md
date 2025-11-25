@@ -7,39 +7,39 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Development
 
 ```bash
-npm run dev              # Start development server on http://localhost:3000
-npm run type-check       # Run TypeScript type checking
+pnpm run dev              # Start development server on http://localhost:3000
+pnpm run type-check       # Run TypeScript type checking
 ```
 
 ### Building & Deployment
 
 ```bash
-npm run build           # Production build with Prettier formatting
-npm run start           # Start production server
-npm run analyze         # Analyze bundle size (set ANALYZE=true)
+pnpm run build           # Production build with Prettier formatting
+pnpm run start           # Start production server
+pnpm run analyze         # Analyze bundle size (set ANALYZE=true)
 ```
 
 ### Code Quality
 
 ```bash
-npm run lint            # ESLint checking
-npm run lint:fix        # Fix ESLint issues automatically
+pnpm run lint            # ESLint checking
+pnpm run lint:fix        # Fix ESLint issues automatically
 ```
 
 ### Testing
 
 ```bash
-npm run test            # Run unit tests with Jest
-npm run test:watch      # Watch mode for development
-npm run test:coverage   # Generate coverage report
-npm run test:e2e        # Run end-to-end tests with Playwright
+pnpm run test            # Run unit tests with Jest
+pnpm run test:watch      # Watch mode for development
+pnpm run test:coverage   # Generate coverage report
+pnpm run test:e2e        # Run end-to-end tests with Playwright
 ```
 
 ### Documentation
 
 ```bash
-npm run storybook       # Start Storybook on http://localhost:6006
-npm run build-storybook # Build Storybook for deployment
+pnpm run storybook       # Start Storybook on http://localhost:6006
+pnpm run build-storybook # Build Storybook for deployment
 ```
 
 ### Pre-commit Hooks
@@ -432,12 +432,12 @@ Built on Radix UI primitives with shadcn-style:
 
 ### Development Workflow
 
-1. **Install dependencies**: `npm install`
+1. **Install dependencies**: `pnpm install`
 2. **Setup environment**: Copy `.env.local.example` to `.env.local`
-3. **Start dev server**: `npm run dev`
-4. **Run tests**: `npm run test`
+3. **Start dev server**: `pnpm run dev`
+4. **Run tests**: `pnpm run test`
 5. **Lint & format**: Runs automatically on commit via Husky
-6. **Build**: `npm run build` (includes Prettier formatting)
+6. **Build**: `pnpm run build` (includes Prettier formatting)
 
 ### Backend Integration
 

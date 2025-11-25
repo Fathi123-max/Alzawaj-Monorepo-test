@@ -20,6 +20,7 @@ const user = getUserFromLocalStorage();
 interface PublicProfileViewProps {
   userId: string;
   isDialog?: boolean;
+  showPhotos?: boolean;
   onRequestClick?: () => void;
   onProfileNameLoad?: (name: string) => void;
 }
@@ -27,6 +28,7 @@ interface PublicProfileViewProps {
 export function PublicProfileView({
   userId,
   isDialog = false,
+  showPhotos = false,
   onRequestClick,
   onProfileNameLoad,
 }: PublicProfileViewProps) {
@@ -186,20 +188,6 @@ export function PublicProfileView({
         </div>
       )}
 
-      {/* Report button for dialog mode */}
-      {isDialog && (
-        <div className="flex justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleReport}
-            className="flex items-center gap-2 text-red-600 hover:text-red-700"
-          >
-            <Flag className="h-4 w-4" />
-            إبلاغ
-          </Button>
-        </div>
-      )}
       {/* Profile Header */}
       <Card
         className={`border-l-4 ${isMaleApiProfile(profile) ? "border-l-primary bg-gradient-to-r from-primary-subtle to-white" : "border-l-pink-500 bg-gradient-to-r from-pink-50 to-white"}`}
@@ -212,12 +200,14 @@ export function PublicProfileView({
                 onClick={() => setShowFullImage(true)}
               >
                 <Image
-                  src={typeof profile.profilePicture === 'string' 
-                    ? profile.profilePicture 
-                    : profile.profilePicture?.url || profile.profilePicture?.fileUrl || '/logo.png'}
+                  src={showPhotos 
+                    ? (typeof profile.profilePicture === 'string' 
+                      ? profile.profilePicture 
+                      : profile.profilePicture?.url || profile.profilePicture?.fileUrl || '/logo.png')
+                    : '/logo.png'}
                   alt={profile.name}
                   fill
-                  className="object-cover"
+                  className={showPhotos ? "object-cover" : "object-contain p-2"}
                   unoptimized
                 />
               </div>
@@ -267,16 +257,18 @@ export function PublicProfileView({
               </div>
             </div>
             <div className="flex flex-col items-end gap-2">
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleSendRequestClick}
-                  className={`flex items-center gap-2 ${isMaleApiProfile(profile) ? "bg-primary hover:bg-primary-hover" : "bg-pink-600 hover:bg-pink-700"}`}
-                  disabled={!user}
-                >
-                  <Heart className="h-4 w-4" />
-                  طلب تعارف
-                </Button>
-              </div>
+              {!isDialog && (
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleSendRequestClick}
+                    className={`flex items-center gap-2 ${isMaleApiProfile(profile) ? "bg-primary hover:bg-primary-hover" : "bg-pink-600 hover:bg-pink-700"}`}
+                    disabled={!user}
+                  >
+                    <Heart className="h-4 w-4" />
+                    طلب تعارف
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
@@ -638,49 +630,51 @@ export function PublicProfileView({
         </Card>
       )}
       {/* Action Buttons */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              onClick={handleSendRequestClick}
-              size="lg"
-              className="flex items-center gap-2"
-              disabled={!user}
-            >
-              <Heart className="h-5 w-5" />
-              إرسال طلب تعارف
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="flex items-center gap-2"
-              onClick={handleBookmarkToggle}
-              disabled={!user || savingBookmark}
-            >
-              <Bookmark className={`h-5 w-5 ${isSaved ? "fill-blue-500 text-blue-500" : ""}`} />
-              {isSaved ? "محفوظ" : "حفظ الملف"}
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="flex items-center gap-2"
-              disabled={true}
-              title="يجب قبول طلبات الزواج من الطرفين أولاً"
-            >
-              <MessageCircle className="h-5 w-5" />
-              إرسال رسالة
-            </Button>
-          </div>
-          {!user && (
-            <p className="text-center text-sm text-gray-500 mt-4">
-              يجب تسجيل الدخول لإرسال طلبات الزواج والرسائل
-            </p>
-          )}
-        </CardContent>
-      </Card>
+      {!isDialog && (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                onClick={handleSendRequestClick}
+                size="lg"
+                className="flex items-center gap-2"
+                disabled={!user}
+              >
+                <Heart className="h-5 w-5" />
+                إرسال طلب تعارف
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="flex items-center gap-2"
+                onClick={handleBookmarkToggle}
+                disabled={!user || savingBookmark}
+              >
+                <Bookmark className={`h-5 w-5 ${isSaved ? "fill-blue-500 text-blue-500" : ""}`} />
+                {isSaved ? "محفوظ" : "حفظ الملف"}
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="flex items-center gap-2"
+                disabled={true}
+                title="يجب قبول طلبات الزواج من الطرفين أولاً"
+              >
+                <MessageCircle className="h-5 w-5" />
+                إرسال رسالة
+              </Button>
+            </div>
+            {!user && (
+              <p className="text-center text-sm text-gray-500 mt-4">
+                يجب تسجيل الدخول لإرسال طلبات الزواج والرسائل
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Full-size image modal */}
-      {showFullImage && (
+      {showFullImage && showPhotos && (
         <div 
           className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
           onClick={() => setShowFullImage(false)}

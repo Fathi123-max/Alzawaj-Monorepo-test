@@ -45,7 +45,7 @@ export const quickSearch = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { q, limit = 10, fuzzy = true } = req.query as QuickSearchQuery;
 
     if (!q || typeof q !== "string" || q.trim().length < 2) {

@@ -174,13 +174,19 @@ export function ProfileCard({
           <div className="flex items-start space-x-4 space-x-reverse">
             {/* Avatar */}
             <Avatar className="w-16 h-16 flex-shrink-0 border-2 border-gray-100">
-              {getProfileImage() && (
+              {getProfileImage() ? (
                 <AvatarImage
                   src={getProfileImage()!}
                   alt={`${profile.firstname} ${profile.lastname}`}
                   className="object-cover"
                   referrerPolicy="no-referrer"
                   crossOrigin="anonymous"
+                />
+              ) : (
+                <AvatarImage
+                  src="/logo.png"
+                  alt="Logo"
+                  className="object-contain p-2"
                 />
               )}
               <AvatarFallback

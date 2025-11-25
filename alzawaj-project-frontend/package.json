@@ -65,6 +65,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.1.0",
     "@next/bundle-analyzer": "^15.0.0",
     "@playwright/test": "^1.48.0",
     "@storybook/addon-a11y": "^8.4.0",
@@ -122,6 +123,7 @@
   "license": "PROPRIETARY",
   "engines": {
     "node": ">=18.0.0",
-    "npm": ">=9.0.0"
-  }
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.8"
 }

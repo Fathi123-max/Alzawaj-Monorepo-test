@@ -1,28 +1,60 @@
 import type { Metadata } from "next";
-import { Noto_Kufi_Arabic, Amiri } from "next/font/google";
+import localFont from "next/font/local";
 import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/toaster";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "@/global.css";
 
-// Optimized font loading for Arabic text
-const notoKufiArabic = Noto_Kufi_Arabic({
-  subsets: ["arabic", "latin"],
+// Optimized local font loading for Arabic text
+const notoKufiArabic = localFont({
+  src: [
+    {
+      path: "../public/fonts/Noto_Kufi_Arabic/static/NotoKufiArabic-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/Noto_Kufi_Arabic/static/NotoKufiArabic-Medium.ttf",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/Noto_Kufi_Arabic/static/NotoKufiArabic-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
   variable: "--font-noto-kufi-arabic",
-  weight: ["300", "400", "500", "600", "700"],
   display: "swap",
-  preload: true,
   fallback: ["system-ui", "-apple-system", "sans-serif"],
 });
 
-const amiri = Amiri({
-  subsets: ["arabic", "latin"],
-  weight: ["400", "700"],
+const amiri = localFont({
+  src: [
+    {
+      path: "../public/fonts/Amiri/Amiri-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/Amiri/Amiri-Italic.ttf",
+      weight: "400",
+      style: "italic",
+    },
+    {
+      path: "../public/fonts/Amiri/Amiri-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/Amiri/Amiri-BoldItalic.ttf",
+      weight: "700",
+      style: "italic",
+    },
+  ],
   variable: "--font-amiri",
   display: "swap",
-  preload: true,
-  style: ["normal", "italic"],
   fallback: ["Times New Roman", "serif"],
 });
 
@@ -233,14 +265,6 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        {/* Font Preloading for Better Performance */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-
         {/* Preload Critical Local Fonts */}
         <link
           rel="preload"

@@ -1574,7 +1574,7 @@ export function ProfileView() {
                 {profile.profilePicture?.url ? (
                   <img src={profile.profilePicture.url} alt={profile.name} className="h-full w-full object-cover" />
                 ) : (
-                  <User className="h-10 w-10 text-white" />
+                  <img src="/logo.png" alt="Logo" className="h-full w-full object-contain p-2" />
                 )}
               </div>
               <label htmlFor="photo-upload" className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-1.5 cursor-pointer hover:bg-primary-600 transition-colors">

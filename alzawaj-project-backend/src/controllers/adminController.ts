@@ -93,7 +93,7 @@ export const userAction = async (
     const result = await AdminService.performUserAction(
       userId,
       action,
-      req.user?.id || "",
+      req.user?._id?.toString() || "",
       reason
     );
 
@@ -182,7 +182,7 @@ export const approveMarriageRequest = async (
     }
 
     request.status = "accepted";
-    request.moderatedBy = req.user?.id || "";
+    request.moderatedBy = req.user?._id as mongoose.Types.ObjectId;
     request.moderatedAt = new Date();
     await request.save();
 
@@ -223,7 +223,7 @@ export const rejectMarriageRequest = async (
     }
 
     request.status = "rejected";
-    request.moderatedBy = req.user?.id || "";
+    request.moderatedBy = req.user?._id as mongoose.Types.ObjectId;
     request.moderatedAt = new Date();
     request.rejectionReason = reason;
     await request.save();
@@ -293,7 +293,7 @@ export const approveMessage = async (
 
     message.status = "approved";
     message.approvedAt = new Date();
-    message.approvedBy = req.user?.id;
+    message.approvedBy = req.user?._id as mongoose.Types.ObjectId;
     await message.save();
 
     res.json(createSuccessResponse("تم الموافقة على الرسالة"));
@@ -323,7 +323,7 @@ export const rejectMessage = async (
     message.status = "rejected";
     message.rejectionReason = reason;
     message.rejectedAt = new Date();
-    message.rejectedBy = req.user?.id;
+    message.rejectedBy = req.user?._id as mongoose.Types.ObjectId;
     await message.save();
 
     res.json(createSuccessResponse("تم رفض الرسالة"));
@@ -395,19 +395,19 @@ export const reportAction = async (
 
     switch (action) {
       case "assign":
-        report.assignedTo = req.user?.id;
+        report.assignedTo = req.user?._id as mongoose.Types.ObjectId;
         report.assignedAt = new Date();
         report.status = "investigating";
         break;
       case "resolve":
         report.status = "resolved";
-        report.resolvedBy = req.user?.id;
+        report.resolvedBy = req.user?._id as mongoose.Types.ObjectId;
         report.resolvedAt = new Date();
         report.resolutionNotes = notes;
         break;
       case "dismiss":
         report.status = "dismissed";
-        report.resolvedBy = req.user?.id;
+        report.resolvedBy = req.user?._id as mongoose.Types.ObjectId;
         report.resolvedAt = new Date();
         report.resolutionNotes = notes;
         break;
@@ -453,7 +453,7 @@ export const updateAdminSettings = async (
 
     const settings = await AdminService.updateSettings(
       updateData,
-      req.user?.id || ""
+      req.user?._id?.toString() || ""
     );
 
     res.json(createSuccessResponse("تم تحديث إعدادات الإدارة بنجاح", { settings }));
@@ -640,7 +640,7 @@ export const archiveChatRoom = async (
       return;
     }
 
-    const userId = req.user?.id || "";
+    const userId = req.user?._id || "";
 
     // Add to archivedBy if not already there
     if (!chatRoom.archivedBy.includes(userId as any)) {
@@ -800,7 +800,7 @@ export const createAdminChatWithUser = async (
 ): Promise<void> => {
   try {
     const { userId } = req.params;
-    const adminId = req.user?.id;
+    const adminId = req.user?._id;
 
     // Check if user exists
     const user = await User.findById(userId);
@@ -834,7 +834,7 @@ export const createAdminChatWithUser = async (
 
     // Create new chat room
     const chatRoom = await ChatRoom.createDirectChat(
-      new mongoose.Types.ObjectId(adminId),
+      adminId as mongoose.Types.ObjectId,
       new mongoose.Types.ObjectId(userId)
     );
 
@@ -880,7 +880,7 @@ export const getAdminChatMessages = async (
     // Check if user is admin or participant
     const isAdmin = req.user?.role === "admin" || req.user?.role === "moderator";
     const isParticipant = chatRoom.participants.some(
-      (p) => p.user._id.toString() === req.user?.id
+      (p) => p.user._id.toString() === req.user?._id
     );
 
     if (!isAdmin && !isParticipant) {
@@ -935,7 +935,7 @@ export const sendAdminMessage = async (
   try {
     const { chatRoomId } = req.params;
     const { content } = req.body;
-    const adminId = req.user?.id;
+    const adminId = req.user?._id;
 
     // Check if user is admin or moderator
     if (req.user?.role !== "admin" && req.user?.role !== "moderator") {
@@ -968,7 +968,7 @@ export const sendAdminMessage = async (
     );
 
     if (!isParticipant) {
-      await chatRoom.addParticipant(new mongoose.Types.ObjectId(adminId), "admin");
+      await chatRoom.addParticipant(adminId as mongoose.Types.ObjectId, "admin");
     }
 
     // Create message

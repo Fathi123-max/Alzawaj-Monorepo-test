@@ -207,7 +207,13 @@ export function ChatWindow({ chatRoom }: ChatWindowProps) {
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  console.log('[ChatWindow] chatRoom.id:', chatRoom.id);
+  console.log('[ChatWindow] All messages keys:', Object.keys(messages));
+  console.log('[ChatWindow] Messages for this room:', messages[chatRoom.id]);
+  
   const roomMessages = messages[chatRoom.id] || [];
+  
+  console.log('[ChatWindow] roomMessages length:', roomMessages.length);
 
   useEffect(() => {
     const loadMessages = async () => {
@@ -368,16 +374,19 @@ export function ChatWindow({ chatRoom }: ChatWindowProps) {
                     new Date(roomMessages[index - 1].createdAt).toDateString();
 
                 // Fix: Check both senderId and populated sender object
-                const isCurrentUser =
-                  message.senderId === user?.id ||
-                  (message.sender &&
-                    (message.sender.id || message.sender._id) === user?.id);
+                // Handle case where sender might be just an ID string or an object
+                const senderId = 
+                  message.senderId || 
+                  (typeof message.sender === 'string' ? message.sender : 
+                    (message.sender?.id || (message.sender as any)?._id));
+                
+                const isCurrentUser = senderId === user?.id;
 
                 // Debug logging (remove in production)
                 if (typeof window !== "undefined" && index < 3) {
                   console.log(`Message ${index}:`, {
-                    senderId: message.senderId,
-                    sender: message.sender?._id || message.sender?.id,
+                    messageId: message.id || (message as any)._id,
+                    senderId,
                     userId: user?.id,
                     isCurrentUser,
                     senderName,
@@ -385,7 +394,7 @@ export function ChatWindow({ chatRoom }: ChatWindowProps) {
                 }
 
                 return (
-                  <div key={message.id}>
+                  <div key={message.id || (message as any)._id || index}>
                     {showDateSeparator && (
                       <div className="flex items-center justify-center my-4">
                         <div className="bg-gray-200 px-3 py-1 rounded-full">

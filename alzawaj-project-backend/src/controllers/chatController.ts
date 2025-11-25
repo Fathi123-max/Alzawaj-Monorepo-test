@@ -26,7 +26,9 @@ export const getChatRooms = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id instanceof mongoose.Types.ObjectId 
+      ? req.user._id 
+      : new mongoose.Types.ObjectId(req.user?._id as string);
 
     // Find chat rooms where user is a participant
     const chatRooms = await ChatRoom.find({
@@ -58,13 +60,17 @@ export const getChatRooms = async (
 
         // Get the other participant's profile
         const otherParticipant = chatRoom.participants.find(
-          (p) => p.user.toString() !== userId
+          (p) => {
+            const participantId = (p.user as any)._id || p.user;
+            return participantId.toString() !== userId.toString();
+          }
         );
         
         let otherParticipantProfile = null;
         if (otherParticipant) {
+          const participantUserId = (otherParticipant.user as any)._id || otherParticipant.user;
           otherParticipantProfile = await Profile.findOne({
-            userId: otherParticipant.user,
+            userId: participantUserId,
           }).select("basicInfo name profilePicture");
         }
 
@@ -93,8 +99,17 @@ export const getChatRoomById = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    console.log('🏠 [getChatRoomById] Request received');
+    console.log('  User ID (raw):', req.user?._id);
+    console.log('  User ID type:', typeof req.user?._id);
+    console.log('  Chat Room ID:', req.params.chatRoomId);
+    
+    const userId = req.user?._id instanceof mongoose.Types.ObjectId 
+      ? req.user._id 
+      : new mongoose.Types.ObjectId(req.user?._id as string);
     const { chatRoomId } = req.params;
+
+    console.log('  User ID (ObjectId):', userId);
 
     const chatRoom = await ChatRoom.findOne({
       _id: chatRoomId,
@@ -118,13 +133,14 @@ export const getChatRoomById = async (
       return;
     }
 
-    // Get profile pictures for participants
+    // Get profile pictures for participants (with full access in chat context)
     const chatRoomObj = chatRoom.toObject();
     for (let i = 0; i < chatRoomObj.participants.length; i++) {
       const participant = chatRoomObj.participants[i];
       if (participant && participant.user && typeof participant.user === 'object') {
         const profile = await Profile.findOne({ userId: (participant.user as any)._id }).select('profilePicture');
         if (profile && profile.profilePicture) {
+          // In chat context, always show full profile picture
           (participant.user as any).profilePicture = profile.profilePicture;
         }
       }
@@ -145,7 +161,7 @@ export const getOrCreateChatRoomByRequest = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { requestId } = req.params;
 
     if (!userId) {
@@ -162,8 +178,8 @@ export const getOrCreateChatRoomByRequest = async (
 
     // Check if user is a participant in this request
     if (
-      marriageRequest.sender.toString() !== userId &&
-      marriageRequest.receiver.toString() !== userId
+      marriageRequest.sender.toString() !== userId?.toString() &&
+      marriageRequest.receiver.toString() !== userId?.toString()
     ) {
       res.status(403).json(createErrorResponse("غير مصرح لك بالوصول إلى هذا الطلب"));
       return;
@@ -210,9 +226,19 @@ export const getChatMessages = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    console.log('📨 [getChatMessages] Request received');
+    console.log('  User ID (raw):', req.user?._id);
+    console.log('  User ID type:', typeof req.user?._id);
+    console.log('  Chat Room ID:', req.params.chatRoomId);
+    
+    const userId = req.user?._id instanceof mongoose.Types.ObjectId 
+      ? req.user._id 
+      : new mongoose.Types.ObjectId(req.user?._id as string);
     const { chatRoomId } = req.params;
     const { page = 1, limit = 50 } = req.query;
+
+    console.log('  User ID (ObjectId):', userId);
+    console.log('  Page:', page, 'Limit:', limit);
 
     // Check if user is participant in chat room
     const chatRoom = await ChatRoom.findOne({
@@ -220,6 +246,14 @@ export const getChatMessages = async (
       "participants.user": userId,
       isActive: true,
     });
+    
+    console.log('  Chat room found:', !!chatRoom);
+    if (chatRoom) {
+      console.log('  Participants:', chatRoom.participants.map(p => ({
+        user: p.user.toString(),
+        isActive: p.isActive
+      })));
+    }
 
     if (!chatRoom) {
       res
@@ -230,7 +264,7 @@ export const getChatMessages = async (
 
     // Update last seen timestamp
     const participantIndex = chatRoom.participants.findIndex(
-      (p) => p.user.toString() === userId
+      (p) => p.user.toString() === userId?.toString()
     );
     if (chatRoom && participantIndex !== -1 && chatRoom.participants[participantIndex]) {
       chatRoom.participants[participantIndex].lastSeen = new Date();
@@ -244,6 +278,8 @@ export const getChatMessages = async (
       isDeleted: false,
     });
 
+    console.log('  Total messages in DB:', totalMessages);
+
     // Get messages
     const messages = await Message.find({
       chatRoom: chatRoomId,
@@ -253,6 +289,9 @@ export const getChatMessages = async (
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(Number(limit));
+
+    console.log('  Messages fetched:', messages.length);
+    console.log('  Message IDs:', messages.map(m => m._id));
 
     // Mark messages as read
     await Message.updateMany(
@@ -274,6 +313,10 @@ export const getChatMessages = async (
 
     const totalPages = Math.ceil(totalMessages / Number(limit));
 
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
     res.json(
       createSuccessResponse("تم جلب الرسائل بنجاح", {
         messages: messages.reverse(), // Reverse to show oldest first
@@ -299,8 +342,18 @@ export const sendMessage = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    console.log('💬 [sendMessage] Request received');
+    console.log('  User ID (raw):', req.user?._id);
+    console.log('  User ID type:', typeof req.user?._id);
+    console.log('  Chat Room ID:', req.body.chatRoomId);
+    console.log('  Content:', req.body.content?.substring(0, 50));
+    
+    const userId = req.user?._id instanceof mongoose.Types.ObjectId 
+      ? req.user._id 
+      : new mongoose.Types.ObjectId(req.user?._id as string);
     const { chatRoomId, content } = req.body;
+
+    console.log('  User ID (ObjectId):', userId);
 
     // Check if user is participant in chat room
     const chatRoom = await ChatRoom.findOne({
@@ -308,6 +361,14 @@ export const sendMessage = async (
       "participants.user": userId,
       isActive: true,
     });
+    
+    console.log('  Chat room found:', !!chatRoom);
+    if (chatRoom) {
+      console.log('  Participants:', chatRoom.participants.map(p => ({
+        user: p.user.toString(),
+        isActive: p.isActive
+      })));
+    }
 
     if (!chatRoom) {
       res
@@ -318,7 +379,7 @@ export const sendMessage = async (
 
     // Get recipient's profile to check privacy settings
     const recipientId = chatRoom.participants.find(
-      (p) => p.user.toString() !== userId
+      (p) => p.user.toString() !== userId?.toString()
     )?.user;
     
     if (recipientId) {
@@ -389,7 +450,7 @@ export const sendMessage = async (
     if (io) {
       // Emit to all participants except sender
       chatRoom.participants.forEach((participant) => {
-        if (participant.user.toString() !== userId) {
+        if (participant.user.toString() !== userId?.toString()) {
           io.to(participant.user.toString()).emit("new_message", {
             messageId: message._id,
             chatRoomId: chatRoom._id,
@@ -420,7 +481,7 @@ export const getChatLimits = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
     // Get current time
     const now = new Date();
@@ -473,7 +534,7 @@ export const markAsRead = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { chatRoomId } = req.params;
 
     // Check if user is participant in chat room
@@ -494,7 +555,7 @@ export const markAsRead = async (
     if (userId) {
       await Message.markChatAsRead(
         new mongoose.Types.ObjectId(chatRoomId), 
-        new mongoose.Types.ObjectId(userId)
+        userId as mongoose.Types.ObjectId
       );
     }
 
@@ -513,7 +574,7 @@ export const archiveChat = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { chatRoomId } = req.params;
 
     const chatRoom = await ChatRoom.findOne({
@@ -530,7 +591,7 @@ export const archiveChat = async (
     }
 
     // Archive chat room for user
-    await chatRoom.archive(userId);
+    await chatRoom.archive(userId as mongoose.Types.ObjectId);
 
     res.json(createSuccessResponse("تم أرشفة غرفة الدردشة"));
   } catch (error) {
@@ -547,7 +608,7 @@ export const unarchiveChat = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { chatRoomId } = req.params;
 
     const chatRoom = await ChatRoom.findOne({
@@ -565,7 +626,7 @@ export const unarchiveChat = async (
 
     // Remove from archived list
     chatRoom.archivedBy = chatRoom.archivedBy.filter(
-      (id) => id.toString() !== userId
+      (id) => id.toString() !== userId?.toString()
     );
     await chatRoom.save();
 
@@ -584,7 +645,7 @@ export const deleteChat = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const { chatRoomId } = req.params;
 
     const chatRoom = await ChatRoom.findOne({
@@ -601,8 +662,8 @@ export const deleteChat = async (
     }
 
     // Add user to deleted list
-    if (!chatRoom.deletedBy.includes(userId)) {
-      chatRoom.deletedBy.push(userId);
+    if (!chatRoom.deletedBy.includes(userId as mongoose.Types.ObjectId)) {
+      chatRoom.deletedBy.push(userId as mongoose.Types.ObjectId);
     }
 
     // If all participants have deleted, mark as inactive

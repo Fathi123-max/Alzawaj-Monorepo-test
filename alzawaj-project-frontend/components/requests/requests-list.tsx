@@ -47,7 +47,7 @@ function RequestCard({ request, type, onUpdate }: RequestCardProps) {
     setIsLoading(true);
     try {
       const responseMessage =
-        status === "accepted" ? "مهتم بهذا الطلب" : "غير مناسب";
+        status === "accepted" ? "أنا مهتم بهذا الطلب وأرغب في التواصل" : "عذراً، هذا الطلب غير مناسب لي";
 
       const response = await requestsApiService.respondToRequest({
         requestId: request.id,

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { createErrorResponse } from "../utils/responseHelper";
-import { IUser } from "../types";
+import { IUser } from "../models/User";
 
 // Extend Request interface for authentication
 interface AuthenticatedRequest extends Request {

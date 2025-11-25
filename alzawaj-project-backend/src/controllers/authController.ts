@@ -2,15 +2,14 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { Request, Response, NextFunction } from "express";
 import { validationResult } from "express-validator";
-import { User } from "../models/User";
-import { Profile } from "../models/Profile";
+import { User, IUser } from "../models/User";
+import { Profile, IProfile } from "../models/Profile";
 import {
   createSuccessResponse,
   createErrorResponse,
 } from "../utils/responseHelper";
 import emailService from "../services/emailService";
 import smsService from "../services/smsService";
-import { IUser } from "../types";
 
 // Extend Request interface for authentication
 interface AuthenticatedRequest extends Request {
@@ -158,7 +157,7 @@ export const register = async (
     const lastname = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
 
     // Create user
-    const user = new User({
+    const newUser = new User({
       email,
       password,
       phone,
@@ -170,11 +169,11 @@ export const register = async (
       isPhoneVerified: false,
     });
 
-    await user.save();
+    await newUser.save();
 
     // Create profile with all submitted initial data
-    const profile = new Profile({
-      userId: user._id,
+    const newProfile = new Profile({
+      userId: newUser._id,
       name: basicInfo.name,
       age: basicInfo.age,
       gender: gender,
@@ -218,7 +217,7 @@ export const register = async (
       },
     });
 
-    await profile.save();
+    await newProfile.save();
 
     // Upload profile picture if provided
     if (req.file) {
@@ -238,7 +237,7 @@ export const register = async (
         console.log("📸 ImageKit config loaded, uploading...");
         const uploadResult = await imagekit.upload({
           file: req.file.buffer.toString('base64'),
-          fileName: `profile-${user._id}-${Date.now()}`,
+          fileName: `profile-${newUser._id}-${Date.now()}`,
           folder: "profile-pictures",
           useUniqueFileName: true,
         });
@@ -249,15 +248,15 @@ export const register = async (
           transformation: [{ width: "300", height: "300", crop: "fit" }],
         });
 
-        profile.profilePicture = {
+        newProfile.profilePicture = {
           url: uploadResult.url,
           thumbnailUrl: thumbnailUrl,
           uploadedAt: new Date(),
           fileId: uploadResult.fileId,
         };
 
-        if (!profile.photos) profile.photos = [];
-        profile.photos.push({
+        if (!newProfile.photos) newProfile.photos = [];
+        newProfile.photos.push({
           url: uploadResult.url,
           thumbnailUrl: thumbnailUrl,
           uploadedAt: new Date(),
@@ -266,7 +265,7 @@ export const register = async (
           fileId: uploadResult.fileId,
         });
 
-        await profile.save();
+        await newProfile.save();
         console.log("✅ Profile picture uploaded successfully during registration");
       } catch (uploadError) {
         console.error("❌ Failed to upload profile picture during registration:", uploadError);
@@ -277,33 +276,26 @@ export const register = async (
     }
 
     // Update user with profile reference
-    user.profile = profile._id as any;
-    await user.save();
+    newUser.profile = newProfile._id as any;
+    await newUser.save();
 
-    // Generate verification tokens
-    const emailToken = user.generateEmailVerificationToken();
-    const phoneOTP = user.generatePhoneVerificationOTP();
+    // Generate email verification token (phone verification removed, but email verification remains)
+    const emailToken = newUser.generateEmailVerificationToken();
+    await newUser.save();
 
-    await user.save();
-
-    // Create verification link with token and send email
+    // Create verification link with token and send email (async to improve performance)
     try {
       const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
       const verificationLink = `${frontendUrl}/auth/verify-email?token=${emailToken}&mode=verifyEmail`;
-      await emailService.sendEmailVerificationLink(
+      emailService.sendEmailVerificationLink(
         email,
         basicInfo.name,
         verificationLink,
-      );
+      ).catch((error) => {
+        console.error("Failed to send verification email:", error);
+      });
     } catch (emailError) {
-      console.error("Failed to send verification email:", emailError);
-    }
-
-    // Send verification SMS
-    try {
-      await smsService.sendPhoneVerificationOTP(phone, phoneOTP);
-    } catch (smsError) {
-      console.error("Failed to send verification SMS:", smsError);
+      console.error("Error preparing verification email:", emailError);
     }
 
     res.status(201).json(
@@ -311,16 +303,16 @@ export const register = async (
         "تم التسجيل بنجاح. يرجى تأكيد بريدك الإلكتروني من الرسالة التي أرسلناها",
         {
           user: {
-            id: user._id,
-            email: user.email,
-            phone: user.phone,
-            isEmailVerified: user.isEmailVerified,
-            isPhoneVerified: user.isPhoneVerified,
-            status: user.status,
+            id: newUser._id,
+            email: newUser.email,
+            phone: newUser.phone,
+            isEmailVerified: newUser.isEmailVerified,
+            isPhoneVerified: newUser.isPhoneVerified,
+            status: newUser.status,
           },
           profile: {
-            id: profile._id,
-            completionPercentage: profile.completionPercentage,
+            id: newProfile._id,
+            completionPercentage: newProfile.completionPercentage,
           },
         },
       ),
@@ -589,7 +581,7 @@ export const logout = async (
 ): Promise<void> => {
   try {
     const { refreshToken } = req.body;
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
     if (userId && refreshToken) {
       const user = await User.findById(userId);
@@ -617,7 +609,7 @@ export const logoutAll = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
     if (userId) {
       const user = await User.findById(userId);
@@ -643,7 +635,7 @@ export const sendEmailVerification = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const user = await User.findById(userId).populate("profile");
 
     if (!user) {
@@ -729,7 +721,7 @@ export const sendPhoneVerification = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     const user = await User.findById(userId);
 
     if (!user) {
@@ -767,7 +759,7 @@ export const verifyPhone = async (
 ): Promise<void> => {
   try {
     const { otp } = req.body;
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
     if (!otp) {
       res.status(400).json(createErrorResponse("رمز التحقق مطلوب"));
@@ -1000,7 +992,7 @@ export const changePassword = async (
 ): Promise<void> => {
   try {
     const { currentPassword, newPassword } = req.body;
-    const userId = req.user?.id;
+    const userId = req.user?._id;
 
     if (!currentPassword || !newPassword) {
       res
@@ -1069,7 +1061,7 @@ export const getMe = async (
 ): Promise<void> => {
   try {
     console.log("getMe called, user from request:", req.user);
-    const userId = req.user?.id;
+    const userId = req.user?._id;
     console.log("getMe - User ID:", userId);
 
     const user = await User.findById(userId)

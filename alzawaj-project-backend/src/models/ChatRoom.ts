@@ -9,7 +9,7 @@ export interface IChatRoom extends Document {
     role: "member" | "admin";
   }[];
   name?: string;
-  type: "direct" | "group" | "guardian";
+  type: "direct" | "group" | "guardian" | "marriage_discussion";
   marriageRequest?: mongoose.Types.ObjectId;
   lastMessage?: {
     content?: string;
@@ -97,7 +97,7 @@ const chatRoomSchema = new Schema<IChatRoom>(
 
     type: {
       type: String,
-      enum: ["direct", "group", "guardian"],
+      enum: ["direct", "group", "guardian", "marriage_discussion"],
       default: "direct",
       index: true,
     },

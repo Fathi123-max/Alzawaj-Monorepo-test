@@ -14,7 +14,9 @@ console.log("[PROXY] Configuration:", {
 
 // Helper function to get the backend URL for the given path
 function getBackendUrl(path: string[]): string {
-  const pathString = path.join("/");
+  // Remove the initial 'api' segment if it exists (to avoid double-api in URL)
+  const filteredPath = path[0] === 'api' ? path.slice(1) : path;
+  const pathString = filteredPath.join("/");
   return `${BACKEND_URL}/${pathString}`;
 }
 
