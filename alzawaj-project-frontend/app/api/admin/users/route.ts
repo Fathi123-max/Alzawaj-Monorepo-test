@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
       process.env["NEXT_PUBLIC_BACKEND_API_URL"] ||
       process.env["NEXT_PUBLIC_API_BASE_URL"] ||
       "https://alzawaj-backend-staging.onrender.com/api";
-    
+
     // Build query string
     const queryParams = new URLSearchParams({
       page: page.toString(),
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     });
     if (search) queryParams.append("search", search);
     if (status) queryParams.append("status", status);
-    
+
     const apiUrl = `${backendUrl}/admin/users?${queryParams.toString()}`;
 
     // Extract token from header for backend call

@@ -603,17 +603,20 @@ const useRegistration = (): UseRegistrationResult => {
 
       // Convert to FormData for file upload support
       const formData = new FormData();
-      
+
       // Add profile picture if exists
       if (state.profilePicture) {
         formData.append("profilePicture", state.profilePicture);
       }
-      
+
       // Add all other fields as JSON string
       Object.keys(backendData).forEach((key) => {
         const value = (backendData as any)[key];
         if (value !== undefined) {
-          formData.append(key, typeof value === 'object' ? JSON.stringify(value) : value);
+          formData.append(
+            key,
+            typeof value === "object" ? JSON.stringify(value) : value,
+          );
         }
       });
 
@@ -627,13 +630,22 @@ const useRegistration = (): UseRegistrationResult => {
         if (state.profilePicture) {
           const reader = new FileReader();
           reader.onloadend = () => {
-            localStorage.setItem("pending_profile_photo", reader.result as string);
-            localStorage.setItem("pending_profile_photo_name", state.profilePicture!.name);
+            localStorage.setItem(
+              "pending_profile_photo",
+              reader.result as string,
+            );
+            localStorage.setItem(
+              "pending_profile_photo_name",
+              state.profilePicture!.name,
+            );
           };
           reader.readAsDataURL(state.profilePicture);
         }
-        
-        showToast.success(response.message || "تم إنشاء الحساب بنجاح. يرجى التحقق من بريدك الإلكتروني للتأكيد");
+
+        showToast.success(
+          response.message ||
+            "تم إنشاء الحساب بنجاح. يرجى التحقق من بريدك الإلكتروني للتأكيد",
+        );
       } else {
         throw new Error(response.message || "فشل في إنشاء الحساب");
       }

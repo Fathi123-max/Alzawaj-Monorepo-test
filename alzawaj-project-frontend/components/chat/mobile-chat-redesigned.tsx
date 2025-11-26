@@ -34,7 +34,10 @@ interface ChatMessage extends Message {
   isCurrentUser?: boolean;
 }
 
-export function MobileChatRedesigned({ requestId, chatRoomId }: MobileChatInterfaceProps) {
+export function MobileChatRedesigned({
+  requestId,
+  chatRoomId,
+}: MobileChatInterfaceProps) {
   const router = useRouter();
   const { user } = useAuth();
   const { isConnected, fetchChatRooms } = useChat();
@@ -58,17 +61,20 @@ export function MobileChatRedesigned({ requestId, chatRoomId }: MobileChatInterf
           const chatRoomResponse = await chatApi.getChatRoomById(chatRoomId);
           if (chatRoomResponse.success && chatRoomResponse.data) {
             setChatRoom(chatRoomResponse.data);
-            
+
             const otherParticipant = chatRoomResponse.data.participants.find(
               (p: any) => {
-                const userId = typeof p === 'string' ? p : (p.user?._id || p.user?.id || p.user);
+                const userId =
+                  typeof p === "string"
+                    ? p
+                    : p.user?._id || p.user?.id || p.user;
                 return userId !== user?.id;
-              }
+              },
             );
-            
-            if (otherParticipant && typeof otherParticipant !== 'string') {
+
+            if (otherParticipant && typeof otherParticipant !== "string") {
               const participantUser = otherParticipant.user;
-              if (typeof participantUser !== 'string') {
+              if (typeof participantUser !== "string") {
                 setOtherUser({
                   id: participantUser._id || participantUser.id,
                   name: getUserFullName(participantUser),
@@ -80,11 +86,17 @@ export function MobileChatRedesigned({ requestId, chatRoomId }: MobileChatInterf
 
           const messagesResponse = await chatApi.getMessages(chatRoomId, 1, 50);
           if (messagesResponse.success && messagesResponse.data) {
-            const loadedMessages = messagesResponse.data.messages.map((msg: any) => ({
-              ...msg,
-              sender: typeof msg.sender === 'object' ? msg.sender : { id: msg.sender },
-              isCurrentUser: msg.sender?.id === user?.id || msg.sender === user?.id,
-            }));
+            const loadedMessages = messagesResponse.data.messages.map(
+              (msg: any) => ({
+                ...msg,
+                sender:
+                  typeof msg.sender === "object"
+                    ? msg.sender
+                    : { id: msg.sender },
+                isCurrentUser:
+                  msg.sender?.id === user?.id || msg.sender === user?.id,
+              }),
+            );
             setMessages(loadedMessages);
             await fetchChatRooms();
           }
@@ -109,7 +121,7 @@ export function MobileChatRedesigned({ requestId, chatRoomId }: MobileChatInterf
 
     const messageContent = newMessage.trim();
     setIsSending(true);
-    
+
     try {
       const response = await chatApi.sendMessage({
         type: "text",
@@ -151,7 +163,7 @@ export function MobileChatRedesigned({ requestId, chatRoomId }: MobileChatInterf
 
   const getMessageStatus = (message: ChatMessage) => {
     if (!message.isCurrentUser) return null;
-    
+
     const messageTime = new Date(message.createdAt).getTime();
     const now = new Date().getTime();
     const diffMinutes = (now - messageTime) / (1000 * 60);
@@ -203,7 +215,10 @@ export function MobileChatRedesigned({ requestId, chatRoomId }: MobileChatInterf
           </Button>
 
           <Avatar className="h-9 w-9 border-2 border-primary-200">
-            <AvatarImage src={otherUser?.profilePicture} alt={otherUser?.name} />
+            <AvatarImage
+              src={otherUser?.profilePicture}
+              alt={otherUser?.name}
+            />
             <AvatarFallback className="bg-primary-100 text-primary-700 text-sm font-medium">
               {getInitials(otherUser?.name || "مستخدم")}
             </AvatarFallback>
@@ -260,24 +275,26 @@ export function MobileChatRedesigned({ requestId, chatRoomId }: MobileChatInterf
         ) : (
           messages.map((message, index) => {
             const isCurrentUser = message.isCurrentUser;
-            const showAvatar = !isCurrentUser && (
-              index === messages.length - 1 ||
-              messages[index + 1]?.isCurrentUser !== isCurrentUser
-            );
+            const showAvatar =
+              !isCurrentUser &&
+              (index === messages.length - 1 ||
+                messages[index + 1]?.isCurrentUser !== isCurrentUser);
 
             return (
               <div
                 key={message.id || index}
                 className={cn(
                   "flex gap-2 animate-in fade-in slide-in-from-bottom-1 duration-200",
-                  isCurrentUser ? "justify-end" : "justify-start"
+                  isCurrentUser ? "justify-end" : "justify-start",
                 )}
               >
                 {!isCurrentUser && (
-                  <Avatar className={cn(
-                    "h-7 w-7 flex-shrink-0",
-                    !showAvatar && "invisible"
-                  )}>
+                  <Avatar
+                    className={cn(
+                      "h-7 w-7 flex-shrink-0",
+                      !showAvatar && "invisible",
+                    )}
+                  >
                     <AvatarImage src={message.sender?.profilePicture} />
                     <AvatarFallback className="bg-secondary-100 text-secondary-700 text-xs">
                       {getInitials(message.sender?.name || "م")}
@@ -290,7 +307,7 @@ export function MobileChatRedesigned({ requestId, chatRoomId }: MobileChatInterf
                     "relative max-w-[75%] rounded-2xl px-3 py-2 shadow-sm",
                     isCurrentUser
                       ? "bg-primary-500 text-white rounded-br-sm"
-                      : "bg-card text-text rounded-bl-sm border border-border"
+                      : "bg-card text-text rounded-bl-sm border border-border",
                   )}
                 >
                   <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
@@ -300,11 +317,14 @@ export function MobileChatRedesigned({ requestId, chatRoomId }: MobileChatInterf
                   <div
                     className={cn(
                       "mt-1 flex items-center gap-1 text-xs",
-                      isCurrentUser ? "text-primary-100" : "text-text-secondary"
+                      isCurrentUser
+                        ? "text-primary-100"
+                        : "text-text-secondary",
                     )}
                   >
                     <span>{formatTime(message.createdAt)}</span>
-                    {isCurrentUser && renderStatusIcon(getMessageStatus(message))}
+                    {isCurrentUser &&
+                      renderStatusIcon(getMessageStatus(message))}
                   </div>
 
                   {/* Message tail */}
@@ -313,7 +333,7 @@ export function MobileChatRedesigned({ requestId, chatRoomId }: MobileChatInterf
                       "absolute bottom-0 h-3 w-3",
                       isCurrentUser
                         ? "-right-0.5 bg-primary-500"
-                        : "-left-0.5 bg-card border-l border-b border-border"
+                        : "-left-0.5 bg-card border-l border-b border-border",
                     )}
                     style={{
                       clipPath: isCurrentUser

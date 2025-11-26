@@ -74,9 +74,12 @@ export function UsersManagement() {
 
   // Debounced search effect
   useEffect(() => {
-    console.log('[UsersManagement] Search input changed:', searchInput);
+    console.log("[UsersManagement] Search input changed:", searchInput);
     const timer = setTimeout(() => {
-      console.log('[UsersManagement] Applying search after debounce:', searchInput);
+      console.log(
+        "[UsersManagement] Applying search after debounce:",
+        searchInput,
+      );
       setSearchParams((prev) => ({
         ...prev,
         search: searchInput.trim() || undefined,
@@ -88,25 +91,36 @@ export function UsersManagement() {
   }, [searchInput]);
 
   useEffect(() => {
-    console.log('[UsersManagement] Search params changed:', searchParams);
+    console.log("[UsersManagement] Search params changed:", searchParams);
     loadUsers();
   }, [searchParams]);
 
   const loadUsers = async () => {
-    console.log('[UsersManagement] Loading users with params:', searchParams);
+    console.log("[UsersManagement] Loading users with params:", searchParams);
     setLoading(true);
     try {
       const response = await adminApiService.getUsers(
         searchParams.page,
         searchParams.limit,
-        searchParams.search && searchParams.search.trim() ? searchParams.search.trim() : undefined,
-        searchParams.status && searchParams.status !== 'all' ? searchParams.status : undefined,
+        searchParams.search && searchParams.search.trim()
+          ? searchParams.search.trim()
+          : undefined,
+        searchParams.status && searchParams.status !== "all"
+          ? searchParams.status
+          : undefined,
       );
-      console.log('[UsersManagement] API response:', response);
+      console.log("[UsersManagement] API response:", response);
 
       if (response.success && response.data) {
-        console.log('[UsersManagement] Users loaded:', response.data.items?.length, 'users');
-        console.log('[UsersManagement] Pagination data:', response.data.pagination);
+        console.log(
+          "[UsersManagement] Users loaded:",
+          response.data.items?.length,
+          "users",
+        );
+        console.log(
+          "[UsersManagement] Pagination data:",
+          response.data.pagination,
+        );
         setUsersData(response);
       } else {
         throw new Error("Failed to load users");
@@ -387,13 +401,16 @@ export function UsersManagement() {
                                 <Eye className="w-4 h-4" />
                               </Button>
                             </SheetTrigger>
-                            <SheetContent side="left" className="w-full sm:max-w-2xl overflow-y-auto">
+                            <SheetContent
+                              side="left"
+                              className="w-full sm:max-w-2xl overflow-y-auto"
+                            >
                               <SheetHeader>
                                 <SheetTitle>تفاصيل المستخدم</SheetTitle>
                               </SheetHeader>
                               {selectedUser && selectedUser.profile && (
                                 <div className="mt-6">
-                                  <PublicProfileView 
+                                  <PublicProfileView
                                     userId={selectedUser.id || selectedUser._id}
                                     isDialog={true}
                                     showPhotos={true}
@@ -403,8 +420,16 @@ export function UsersManagement() {
                                       <Button
                                         variant="destructive"
                                         className="w-full"
-                                        onClick={() => handleUserAction(selectedUser.id || selectedUser._id, "suspend")}
-                                        disabled={actionLoading === (selectedUser.id || selectedUser._id)}
+                                        onClick={() =>
+                                          handleUserAction(
+                                            selectedUser.id || selectedUser._id,
+                                            "suspend",
+                                          )
+                                        }
+                                        disabled={
+                                          actionLoading ===
+                                          (selectedUser.id || selectedUser._id)
+                                        }
                                       >
                                         <Ban className="w-4 h-4 ml-2" />
                                         إيقاف المستخدم
@@ -413,19 +438,36 @@ export function UsersManagement() {
                                       <Button
                                         variant="default"
                                         className="w-full"
-                                        onClick={() => handleUserAction(selectedUser.id || selectedUser._id, "activate")}
-                                        disabled={actionLoading === (selectedUser.id || selectedUser._id)}
+                                        onClick={() =>
+                                          handleUserAction(
+                                            selectedUser.id || selectedUser._id,
+                                            "activate",
+                                          )
+                                        }
+                                        disabled={
+                                          actionLoading ===
+                                          (selectedUser.id || selectedUser._id)
+                                        }
                                       >
                                         <UserCheck className="w-4 h-4 ml-2" />
                                         تفعيل المستخدم
                                       </Button>
                                     )}
-                                    {!selectedUser.profile?.verification?.isVerified && (
+                                    {!selectedUser.profile?.verification
+                                      ?.isVerified && (
                                       <Button
                                         variant="outline"
                                         className="w-full"
-                                        onClick={() => handleUserAction(selectedUser.id || selectedUser._id, "verify")}
-                                        disabled={actionLoading === (selectedUser.id || selectedUser._id)}
+                                        onClick={() =>
+                                          handleUserAction(
+                                            selectedUser.id || selectedUser._id,
+                                            "verify",
+                                          )
+                                        }
+                                        disabled={
+                                          actionLoading ===
+                                          (selectedUser.id || selectedUser._id)
+                                        }
                                       >
                                         <Shield className="w-4 h-4 ml-2" />
                                         توثيق الحساب
@@ -434,7 +476,9 @@ export function UsersManagement() {
                                     <Button
                                       variant="default"
                                       className="w-full bg-purple-600 hover:bg-purple-700"
-                                      onClick={() => handleStartChat(selectedUser)}
+                                      onClick={() =>
+                                        handleStartChat(selectedUser)
+                                      }
                                     >
                                       <MessageCircle className="w-4 h-4 ml-2" />
                                       مراسلة المستخدم
@@ -558,245 +602,463 @@ export function UsersManagement() {
 
                             <div className="space-y-3 max-h-[60vh] overflow-y-auto">
                               <div>
-                                <label className="text-sm font-medium text-gray-700">الاسم الكامل:</label>
-                                <p className="text-sm text-gray-900">{selectedUser.fullName || `${selectedUser.firstname} ${selectedUser.lastname}`}</p>
+                                <label className="text-sm font-medium text-gray-700">
+                                  الاسم الكامل:
+                                </label>
+                                <p className="text-sm text-gray-900">
+                                  {selectedUser.fullName ||
+                                    `${selectedUser.firstname} ${selectedUser.lastname}`}
+                                </p>
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-gray-700">الاسم الأول:</label>
-                                <p className="text-sm text-gray-900">{selectedUser.firstname}</p>
+                                <label className="text-sm font-medium text-gray-700">
+                                  الاسم الأول:
+                                </label>
+                                <p className="text-sm text-gray-900">
+                                  {selectedUser.firstname}
+                                </p>
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-gray-700">الاسم الأخير:</label>
-                                <p className="text-sm text-gray-900">{selectedUser.lastname}</p>
+                                <label className="text-sm font-medium text-gray-700">
+                                  الاسم الأخير:
+                                </label>
+                                <p className="text-sm text-gray-900">
+                                  {selectedUser.lastname}
+                                </p>
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-gray-700">البريد الإلكتروني:</label>
-                                <p className="text-sm text-gray-900">{selectedUser.email}</p>
+                                <label className="text-sm font-medium text-gray-700">
+                                  البريد الإلكتروني:
+                                </label>
+                                <p className="text-sm text-gray-900">
+                                  {selectedUser.email}
+                                </p>
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-gray-700">رقم الهاتف:</label>
-                                <p className="text-sm text-gray-900">{selectedUser.phone}</p>
+                                <label className="text-sm font-medium text-gray-700">
+                                  رقم الهاتف:
+                                </label>
+                                <p className="text-sm text-gray-900">
+                                  {selectedUser.phone}
+                                </p>
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-gray-700">الحالة:</label>
-                                <div className="mt-1">{getStatusBadge(selectedUser.status)}</div>
+                                <label className="text-sm font-medium text-gray-700">
+                                  الحالة:
+                                </label>
+                                <div className="mt-1">
+                                  {getStatusBadge(selectedUser.status)}
+                                </div>
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-gray-700">الدور:</label>
-                                <div className="mt-1">{getRoleBadge(selectedUser.role)}</div>
+                                <label className="text-sm font-medium text-gray-700">
+                                  الدور:
+                                </label>
+                                <div className="mt-1">
+                                  {getRoleBadge(selectedUser.role)}
+                                </div>
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-gray-700">حالة التحقق:</label>
+                                <label className="text-sm font-medium text-gray-700">
+                                  حالة التحقق:
+                                </label>
                                 <div className="flex gap-1 mt-1">
                                   {selectedUser.isEmailVerified && (
-                                    <Badge className="bg-green-100 text-green-800">إيميل موثق</Badge>
+                                    <Badge className="bg-green-100 text-green-800">
+                                      إيميل موثق
+                                    </Badge>
                                   )}
                                   {selectedUser.isPhoneVerified && (
-                                    <Badge className="bg-blue-100 text-blue-800">هاتف موثق</Badge>
+                                    <Badge className="bg-blue-100 text-blue-800">
+                                      هاتف موثق
+                                    </Badge>
                                   )}
                                 </div>
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-gray-700">نشط:</label>
-                                <p className="text-sm text-gray-900">{selectedUser.isActive ? "نعم" : "لا"}</p>
+                                <label className="text-sm font-medium text-gray-700">
+                                  نشط:
+                                </label>
+                                <p className="text-sm text-gray-900">
+                                  {selectedUser.isActive ? "نعم" : "لا"}
+                                </p>
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-gray-700">مقفل:</label>
-                                <p className="text-sm text-gray-900">{selectedUser.isLocked ? "نعم" : "لا"}</p>
+                                <label className="text-sm font-medium text-gray-700">
+                                  مقفل:
+                                </label>
+                                <p className="text-sm text-gray-900">
+                                  {selectedUser.isLocked ? "نعم" : "لا"}
+                                </p>
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-gray-700">آخر نشاط:</label>
-                                <p className="text-sm text-gray-900">{new Date(selectedUser.lastActiveAt).toLocaleString("ar-SA")}</p>
+                                <label className="text-sm font-medium text-gray-700">
+                                  آخر نشاط:
+                                </label>
+                                <p className="text-sm text-gray-900">
+                                  {new Date(
+                                    selectedUser.lastActiveAt,
+                                  ).toLocaleString("ar-SA")}
+                                </p>
                               </div>
                               {selectedUser.lastLoginAt && (
                                 <div>
-                                  <label className="text-sm font-medium text-gray-700">آخر تسجيل دخول:</label>
-                                  <p className="text-sm text-gray-900">{new Date(selectedUser.lastLoginAt).toLocaleString("ar-SA")}</p>
+                                  <label className="text-sm font-medium text-gray-700">
+                                    آخر تسجيل دخول:
+                                  </label>
+                                  <p className="text-sm text-gray-900">
+                                    {new Date(
+                                      selectedUser.lastLoginAt,
+                                    ).toLocaleString("ar-SA")}
+                                  </p>
                                 </div>
                               )}
                               <div>
-                                <label className="text-sm font-medium text-gray-700">تاريخ الإنشاء:</label>
-                                <p className="text-sm text-gray-900">{new Date(selectedUser.createdAt).toLocaleString("ar-SA")}</p>
+                                <label className="text-sm font-medium text-gray-700">
+                                  تاريخ الإنشاء:
+                                </label>
+                                <p className="text-sm text-gray-900">
+                                  {new Date(
+                                    selectedUser.createdAt,
+                                  ).toLocaleString("ar-SA")}
+                                </p>
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-gray-700">تاريخ التحديث:</label>
-                                <p className="text-sm text-gray-900">{new Date(selectedUser.updatedAt).toLocaleString("ar-SA")}</p>
+                                <label className="text-sm font-medium text-gray-700">
+                                  تاريخ التحديث:
+                                </label>
+                                <p className="text-sm text-gray-900">
+                                  {new Date(
+                                    selectedUser.updatedAt,
+                                  ).toLocaleString("ar-SA")}
+                                </p>
                               </div>
                               {selectedUser.suspendedAt && (
                                 <div>
-                                  <label className="text-sm font-medium text-gray-700">تاريخ الإيقاف:</label>
-                                  <p className="text-sm text-gray-900">{new Date(selectedUser.suspendedAt).toLocaleString("ar-SA")}</p>
+                                  <label className="text-sm font-medium text-gray-700">
+                                    تاريخ الإيقاف:
+                                  </label>
+                                  <p className="text-sm text-gray-900">
+                                    {new Date(
+                                      selectedUser.suspendedAt,
+                                    ).toLocaleString("ar-SA")}
+                                  </p>
                                 </div>
                               )}
                               {selectedUser.suspendedBy && (
                                 <div>
-                                  <label className="text-sm font-medium text-gray-700">تم الإيقاف بواسطة:</label>
-                                  <p className="text-sm text-gray-900">{selectedUser.suspendedBy}</p>
+                                  <label className="text-sm font-medium text-gray-700">
+                                    تم الإيقاف بواسطة:
+                                  </label>
+                                  <p className="text-sm text-gray-900">
+                                    {selectedUser.suspendedBy}
+                                  </p>
                                 </div>
                               )}
                               {selectedUser.suspensionReason && (
                                 <div>
-                                  <label className="text-sm font-medium text-gray-700">سبب الإيقاف:</label>
-                                  <p className="text-sm text-gray-900">{selectedUser.suspensionReason}</p>
+                                  <label className="text-sm font-medium text-gray-700">
+                                    سبب الإيقاف:
+                                  </label>
+                                  <p className="text-sm text-gray-900">
+                                    {selectedUser.suspensionReason}
+                                  </p>
                                 </div>
                               )}
-                              {selectedUser.profile && typeof selectedUser.profile === 'string' && (
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700">معرف الملف الشخصي:</label>
-                                  <p className="text-sm text-gray-900">{selectedUser.profile}</p>
-                                </div>
-                              )}
-                              <div>
-                                <label className="text-sm font-medium text-gray-700">معرف المستخدم:</label>
-                                <p className="text-sm text-gray-900 break-all">{selectedUser.id || selectedUser._id}</p>
-                              </div>
-                              
-                              {/* Profile Details Section */}
-                              {selectedUser.profile && typeof selectedUser.profile === 'object' && (
-                                <>
-                                  <div className="pt-4 border-t">
-                                    <h4 className="font-semibold text-gray-900 mb-3">معلومات الملف الشخصي</h4>
+                              {selectedUser.profile &&
+                                typeof selectedUser.profile === "string" && (
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-700">
+                                      معرف الملف الشخصي:
+                                    </label>
+                                    <p className="text-sm text-gray-900">
+                                      {selectedUser.profile}
+                                    </p>
                                   </div>
-                                  {selectedUser.profile.age && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">العمر:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.age} سنة</p>
+                                )}
+                              <div>
+                                <label className="text-sm font-medium text-gray-700">
+                                  معرف المستخدم:
+                                </label>
+                                <p className="text-sm text-gray-900 break-all">
+                                  {selectedUser.id || selectedUser._id}
+                                </p>
+                              </div>
+
+                              {/* Profile Details Section */}
+                              {selectedUser.profile &&
+                                typeof selectedUser.profile === "object" && (
+                                  <>
+                                    <div className="pt-4 border-t">
+                                      <h4 className="font-semibold text-gray-900 mb-3">
+                                        معلومات الملف الشخصي
+                                      </h4>
                                     </div>
-                                  )}
-                                  {selectedUser.profile.gender && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">الجنس:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.gender === 'm' ? 'ذكر' : 'أنثى'}</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.country && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">البلد:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.country}</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.city && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">المدينة:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.city}</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.nationality && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">الجنسية:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.nationality}</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.maritalStatus && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">الحالة الاجتماعية:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.maritalStatus}</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.education && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">التعليم:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.education}</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.occupation && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">المهنة:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.occupation}</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.height && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">الطول:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.height} سم</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.weight && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">الوزن:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.weight} كجم</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.religiousLevel && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">المستوى الديني:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.religiousLevel}</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.financialStatus && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">الحالة المالية:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.financialStatus}</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.housingStatus && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">حالة السكن:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.housingStatus}</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.hasChildren !== undefined && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">لديه أطفال:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.hasChildren === 'yes' ? 'نعم' : 'لا'}</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.childrenCount && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">عدد الأطفال:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.childrenCount}</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.personalityDescription && typeof selectedUser.profile.personalityDescription === 'string' && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">وصف الشخصية:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.personalityDescription}</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.aboutMe && typeof selectedUser.profile.aboutMe === 'string' && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">عني:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.aboutMe}</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.interests && Array.isArray(selectedUser.profile.interests) && selectedUser.profile.interests.length > 0 && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">الاهتمامات:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.interests.join(', ')}</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.smokingStatus && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">التدخين:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.smokingStatus}</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.hasBeard !== undefined && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">لديه لحية:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.hasBeard ? 'نعم' : 'لا'}</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.monthlyIncome && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">الدخل الشهري:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.monthlyIncome}</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.isComplete !== undefined && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">الملف مكتمل:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.isComplete ? 'نعم' : 'لا'}</p>
-                                    </div>
-                                  )}
-                                  {selectedUser.profile.completionPercentage !== undefined && (
-                                    <div>
-                                      <label className="text-sm font-medium text-gray-700">نسبة الاكتمال:</label>
-                                      <p className="text-sm text-gray-900">{selectedUser.profile.completionPercentage}%</p>
-                                    </div>
-                                  )}
-                                </>
-                              )}
+                                    {selectedUser.profile.age && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          العمر:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {selectedUser.profile.age} سنة
+                                        </p>
+                                      </div>
+                                    )}
+                                    {selectedUser.profile.gender && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          الجنس:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {selectedUser.profile.gender === "m"
+                                            ? "ذكر"
+                                            : "أنثى"}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {selectedUser.profile.country && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          البلد:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {selectedUser.profile.country}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {selectedUser.profile.city && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          المدينة:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {selectedUser.profile.city}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {selectedUser.profile.nationality && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          الجنسية:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {selectedUser.profile.nationality}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {selectedUser.profile.maritalStatus && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          الحالة الاجتماعية:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {selectedUser.profile.maritalStatus}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {selectedUser.profile.education && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          التعليم:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {selectedUser.profile.education}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {selectedUser.profile.occupation && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          المهنة:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {selectedUser.profile.occupation}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {selectedUser.profile.height && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          الطول:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {selectedUser.profile.height} سم
+                                        </p>
+                                      </div>
+                                    )}
+                                    {selectedUser.profile.weight && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          الوزن:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {selectedUser.profile.weight} كجم
+                                        </p>
+                                      </div>
+                                    )}
+                                    {selectedUser.profile.religiousLevel && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          المستوى الديني:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {selectedUser.profile.religiousLevel}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {selectedUser.profile.financialStatus && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          الحالة المالية:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {selectedUser.profile.financialStatus}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {selectedUser.profile.housingStatus && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          حالة السكن:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {selectedUser.profile.housingStatus}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {selectedUser.profile.hasChildren !==
+                                      undefined && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          لديه أطفال:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {selectedUser.profile.hasChildren ===
+                                          "yes"
+                                            ? "نعم"
+                                            : "لا"}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {selectedUser.profile.childrenCount && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          عدد الأطفال:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {selectedUser.profile.childrenCount}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {selectedUser.profile
+                                      .personalityDescription &&
+                                      typeof selectedUser.profile
+                                        .personalityDescription ===
+                                        "string" && (
+                                        <div>
+                                          <label className="text-sm font-medium text-gray-700">
+                                            وصف الشخصية:
+                                          </label>
+                                          <p className="text-sm text-gray-900">
+                                            {
+                                              selectedUser.profile
+                                                .personalityDescription
+                                            }
+                                          </p>
+                                        </div>
+                                      )}
+                                    {selectedUser.profile.aboutMe &&
+                                      typeof selectedUser.profile.aboutMe ===
+                                        "string" && (
+                                        <div>
+                                          <label className="text-sm font-medium text-gray-700">
+                                            عني:
+                                          </label>
+                                          <p className="text-sm text-gray-900">
+                                            {selectedUser.profile.aboutMe}
+                                          </p>
+                                        </div>
+                                      )}
+                                    {selectedUser.profile.interests &&
+                                      Array.isArray(
+                                        selectedUser.profile.interests,
+                                      ) &&
+                                      selectedUser.profile.interests.length >
+                                        0 && (
+                                        <div>
+                                          <label className="text-sm font-medium text-gray-700">
+                                            الاهتمامات:
+                                          </label>
+                                          <p className="text-sm text-gray-900">
+                                            {selectedUser.profile.interests.join(
+                                              ", ",
+                                            )}
+                                          </p>
+                                        </div>
+                                      )}
+                                    {selectedUser.profile.smokingStatus && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          التدخين:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {selectedUser.profile.smokingStatus}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {selectedUser.profile.hasBeard !==
+                                      undefined && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          لديه لحية:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {selectedUser.profile.hasBeard
+                                            ? "نعم"
+                                            : "لا"}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {selectedUser.profile.monthlyIncome && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          الدخل الشهري:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {selectedUser.profile.monthlyIncome}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {selectedUser.profile.isComplete !==
+                                      undefined && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          الملف مكتمل:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {selectedUser.profile.isComplete
+                                            ? "نعم"
+                                            : "لا"}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {selectedUser.profile
+                                      .completionPercentage !== undefined && (
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700">
+                                          نسبة الاكتمال:
+                                        </label>
+                                        <p className="text-sm text-gray-900">
+                                          {
+                                            selectedUser.profile
+                                              .completionPercentage
+                                          }
+                                          %
+                                        </p>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
                             </div>
 
                             <div className="pt-4 space-y-2">
@@ -837,7 +1099,8 @@ export function UsersManagement() {
                                   تفعيل المستخدم
                                 </Button>
                               )}
-                              {!selectedUser.profile?.verification?.isVerified && (
+                              {!selectedUser.profile?.verification
+                                ?.isVerified && (
                                 <Button
                                   variant="outline"
                                   className="w-full"
@@ -906,50 +1169,65 @@ export function UsersManagement() {
       )}
 
       {/* Pagination Controls */}
-      {usersData?.data?.pagination && usersData.data.pagination.totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-6">
-          <Button
-            onClick={() => handlePageChange(1)}
-            disabled={usersData.data.pagination.page === 1}
-            variant="outline"
-            size="sm"
-          >
-            الأولى
-          </Button>
-          <Button
-            onClick={() => handlePageChange(usersData.data.pagination.page - 1)}
-            disabled={usersData.data.pagination.page === 1}
-            variant="outline"
-            size="sm"
-          >
-            السابق
-          </Button>
-          <span className="px-4 py-2 text-sm">
-            صفحة {usersData.data.pagination.page} من {usersData.data.pagination.totalPages}
-          </span>
-          <Button
-            onClick={() => handlePageChange(usersData.data.pagination.page + 1)}
-            disabled={usersData.data.pagination.page >= usersData.data.pagination.totalPages}
-            variant="outline"
-            size="sm"
-          >
-            التالي
-          </Button>
-          <Button
-            onClick={() => handlePageChange(usersData.data.pagination.totalPages)}
-            disabled={usersData.data.pagination.page >= usersData.data.pagination.totalPages}
-            variant="outline"
-            size="sm"
-          >
-            الأخيرة
-          </Button>
-        </div>
-      )}
+      {usersData?.data?.pagination &&
+        usersData.data.pagination.totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-6">
+            <Button
+              onClick={() => handlePageChange(1)}
+              disabled={usersData.data.pagination.page === 1}
+              variant="outline"
+              size="sm"
+            >
+              الأولى
+            </Button>
+            <Button
+              onClick={() =>
+                handlePageChange(usersData.data.pagination.page - 1)
+              }
+              disabled={usersData.data.pagination.page === 1}
+              variant="outline"
+              size="sm"
+            >
+              السابق
+            </Button>
+            <span className="px-4 py-2 text-sm">
+              صفحة {usersData.data.pagination.page} من{" "}
+              {usersData.data.pagination.totalPages}
+            </span>
+            <Button
+              onClick={() =>
+                handlePageChange(usersData.data.pagination.page + 1)
+              }
+              disabled={
+                usersData.data.pagination.page >=
+                usersData.data.pagination.totalPages
+              }
+              variant="outline"
+              size="sm"
+            >
+              التالي
+            </Button>
+            <Button
+              onClick={() =>
+                handlePageChange(usersData.data.pagination.totalPages)
+              }
+              disabled={
+                usersData.data.pagination.page >=
+                usersData.data.pagination.totalPages
+              }
+              variant="outline"
+              size="sm"
+            >
+              الأخيرة
+            </Button>
+          </div>
+        )}
 
       {/* Total Count */}
       {usersData?.data?.pagination && usersData.data.pagination.total > 0 && (
         <div className="text-center text-sm text-gray-600 mt-4">
-          عرض {displayedUsers?.length || 0} من {usersData.data.pagination.total} مستخدم
+          عرض {displayedUsers?.length || 0} من {usersData.data.pagination.total}{" "}
+          مستخدم
         </div>
       )}
 

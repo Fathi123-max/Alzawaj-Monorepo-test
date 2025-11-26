@@ -138,16 +138,19 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     console.log("[ChatProvider] Fetching messages for room:", roomId);
     try {
       const response = await chatApi.getMessages(roomId);
-      console.log("[ChatProvider] Full API response:", JSON.stringify(response, null, 2));
+      console.log(
+        "[ChatProvider] Full API response:",
+        JSON.stringify(response, null, 2),
+      );
       console.log("[ChatProvider] response.success:", response.success);
       console.log("[ChatProvider] response.data:", response.data);
-      
+
       if (response.success && response.data) {
         const messages = response.data.messages || response.data || [];
         console.log("[ChatProvider] Extracted messages:", messages);
         console.log("[ChatProvider] Messages count:", messages.length);
         console.log("[ChatProvider] First message:", messages[0]);
-        
+
         setMessages((prev) => {
           const newState = {
             ...prev,
@@ -181,7 +184,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        console.log("[ChatProvider] Sending message:", content, "to room:", activeRoom.id); // Debug log
+        console.log(
+          "[ChatProvider] Sending message:",
+          content,
+          "to room:",
+          activeRoom.id,
+        ); // Debug log
         // Send message via API
         const response = await chatApi.sendMessage({
           type: "text",

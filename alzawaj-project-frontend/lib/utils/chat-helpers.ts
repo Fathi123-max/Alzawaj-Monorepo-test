@@ -6,32 +6,32 @@
  */
 export function getUserFullName(user: any): string {
   if (!user) return "مستخدم";
-  
+
   // Try firstname + lastname
   if (user.firstname && user.lastname) {
     return `${user.firstname} ${user.lastname}`.trim();
   }
-  
+
   // Try fullName field
   if (user.fullName) {
     return user.fullName;
   }
-  
+
   // Try name field
   if (user.name) {
     return user.name;
   }
-  
+
   // Try just firstname
   if (user.firstname) {
     return user.firstname;
   }
-  
+
   // Try just lastname
   if (user.lastname) {
     return user.lastname;
   }
-  
+
   return "مستخدم";
 }
 

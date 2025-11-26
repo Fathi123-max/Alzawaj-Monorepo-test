@@ -51,10 +51,11 @@ function MessageBubble({
 
     // Check if message is read by recipient (more than just sender)
     const isRead = message.readBy && message.readBy.length > 1;
-    const readInfo = isRead && message.readBy.length > 1 
-      ? `قُرئت في ${formatTime(message.readBy[message.readBy.length - 1]?.readAt)}`
-      : "";
-    
+    const readInfo =
+      isRead && message.readBy.length > 1
+        ? `قُرئت في ${formatTime(message.readBy[message.readBy.length - 1]?.readAt)}`
+        : "";
+
     if (isRead) {
       return (
         <span className="text-xs text-blue-400 cursor-help" title={readInfo}>
@@ -62,16 +63,32 @@ function MessageBubble({
         </span>
       );
     }
-    
+
     switch (message.status) {
       case "pending":
-        return <span className="text-xs opacity-50" title="قيد الإرسال">🕐</span>;
+        return (
+          <span className="text-xs opacity-50" title="قيد الإرسال">
+            🕐
+          </span>
+        );
       case "approved":
-        return <span className="text-xs opacity-70" title="تم الإرسال">✓</span>;
+        return (
+          <span className="text-xs opacity-70" title="تم الإرسال">
+            ✓
+          </span>
+        );
       case "rejected":
-        return <span className="text-xs text-red-400" title="مرفوضة">✕</span>;
+        return (
+          <span className="text-xs text-red-400" title="مرفوضة">
+            ✕
+          </span>
+        );
       case "flagged":
-        return <span className="text-xs text-yellow-500" title="مُبلغ عنها">⚠</span>;
+        return (
+          <span className="text-xs text-yellow-500" title="مُبلغ عنها">
+            ⚠
+          </span>
+        );
       default:
         return <span className="text-xs opacity-70">✓</span>;
     }
@@ -89,7 +106,10 @@ function MessageBubble({
             </span>
             <div className="flex items-center gap-1">
               {message.isEdited && (
-                <span className="text-[9px] text-gray-400" title={`معدلة في ${formatTime(message.editedAt || message.updatedAt)}`}>
+                <span
+                  className="text-[9px] text-gray-400"
+                  title={`معدلة في ${formatTime(message.editedAt || message.updatedAt)}`}
+                >
                   معدلة
                 </span>
               )}
@@ -109,21 +129,23 @@ function MessageBubble({
                   <span className="opacity-80">رد على رسالة</span>
                 </div>
               )}
-              
+
               {/* Rejection Warning */}
               {message.status === "rejected" && message.rejectionReason && (
                 <div className="bg-red-500/30 rounded-lg px-2 py-1 mb-2 text-xs border-r-2 border-red-300">
-                  <span className="font-semibold">مرفوضة:</span> {message.rejectionReason}
+                  <span className="font-semibold">مرفوضة:</span>{" "}
+                  {message.rejectionReason}
                 </div>
               )}
-              
+
               {/* Flagged Content Warning */}
-              {message.islamicCompliance && !message.islamicCompliance.isAppropriate && (
-                <div className="bg-yellow-500/30 rounded-lg px-2 py-1 mb-2 text-xs border-r-2 border-yellow-300">
-                  <span className="opacity-90">⚠️ محتوى مشكوك فيه</span>
-                </div>
-              )}
-              
+              {message.islamicCompliance &&
+                !message.islamicCompliance.isAppropriate && (
+                  <div className="bg-yellow-500/30 rounded-lg px-2 py-1 mb-2 text-xs border-r-2 border-yellow-300">
+                    <span className="opacity-90">⚠️ محتوى مشكوك فيه</span>
+                  </div>
+                )}
+
               {/* Message Text */}
               {message.isDeleted ? (
                 <p className="text-sm italic opacity-70">تم حذف هذه الرسالة</p>
@@ -132,26 +154,28 @@ function MessageBubble({
                   {message.content?.text || ""}
                 </p>
               )}
-              
+
               {/* Media Attachment */}
               {message.content?.media && !message.isDeleted && (
                 <div className="mt-2">
                   {message.content.media.type === "image" && (
-                    <img 
-                      src={message.content.media.url} 
+                    <img
+                      src={message.content.media.url}
                       alt={message.content.media.filename}
                       className="rounded-lg max-w-full max-h-64 object-cover"
                     />
                   )}
                   {message.content.media.type === "document" && (
-                    <a 
-                      href={message.content.media.url} 
-                      target="_blank" 
+                    <a
+                      href={message.content.media.url}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 bg-white/20 rounded-lg px-3 py-2 hover:bg-white/30"
                     >
                       <span>📄</span>
-                      <span className="text-xs truncate">{message.content.media.filename}</span>
+                      <span className="text-xs truncate">
+                        {message.content.media.filename}
+                      </span>
                     </a>
                   )}
                 </div>
@@ -196,81 +220,122 @@ function MessageBubble({
                 <span className="text-gray-600">رد على رسالة</span>
               </div>
             )}
-            
+
             {/* Pending Moderation */}
             {message.status === "pending" && (
               <div className="bg-yellow-50 rounded-lg px-2 py-1 mb-2 text-xs border-r-2 border-yellow-400">
                 <span className="text-yellow-700">⏳ قيد المراجعة</span>
               </div>
             )}
-            
+
             {/* Flagged Content Warning */}
-            {message.islamicCompliance && !message.islamicCompliance.isAppropriate && (
-              <div className="bg-yellow-50 rounded-lg px-2 py-1 mb-2 text-xs border-r-2 border-yellow-400">
-                <span className="text-yellow-700">⚠️ محتوى مشكوك فيه</span>
-              </div>
-            )}
-            
+            {message.islamicCompliance &&
+              !message.islamicCompliance.isAppropriate && (
+                <div className="bg-yellow-50 rounded-lg px-2 py-1 mb-2 text-xs border-r-2 border-yellow-400">
+                  <span className="text-yellow-700">⚠️ محتوى مشكوك فيه</span>
+                </div>
+              )}
+
             {/* Guardian Info Message */}
-            {message.content?.messageType === "guardian-info" && !message.isDeleted ? (
+            {message.content?.messageType === "guardian-info" &&
+            !message.isDeleted ? (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-blue-600">🛡️</span>
-                  <h4 className="font-semibold text-blue-900 text-sm">معلومات الولي</h4>
+                  <h4 className="font-semibold text-blue-900 text-sm">
+                    معلومات الولي
+                  </h4>
                 </div>
                 {(() => {
                   try {
-                    const guardianData = JSON.parse(message.content.text || "{}");
+                    const guardianData = JSON.parse(
+                      message.content.text || "{}",
+                    );
                     return (
                       <div className="space-y-1.5 text-xs">
-                        <p><strong className="text-gray-700">الاسم:</strong> <span className="text-gray-900">{guardianData.name}</span></p>
-                        <p><strong className="text-gray-700">الهاتف:</strong> <span className="text-gray-900 dir-ltr inline-block">{guardianData.phone}</span></p>
-                        {guardianData.email && <p><strong className="text-gray-700">البريد:</strong> <span className="text-gray-900">{guardianData.email}</span></p>}
-                        <p><strong className="text-gray-700">الصلة:</strong> <span className="text-gray-900">
-                          {guardianData.relationship === "father" ? "الأب" :
-                           guardianData.relationship === "brother" ? "الأخ" :
-                           guardianData.relationship === "uncle" ? "العم" : "آخر"}
-                        </span></p>
-                        {guardianData.notes && <p><strong className="text-gray-700">ملاحظات:</strong> <span className="text-gray-900">{guardianData.notes}</span></p>}
+                        <p>
+                          <strong className="text-gray-700">الاسم:</strong>{" "}
+                          <span className="text-gray-900">
+                            {guardianData.name}
+                          </span>
+                        </p>
+                        <p>
+                          <strong className="text-gray-700">الهاتف:</strong>{" "}
+                          <span className="text-gray-900 dir-ltr inline-block">
+                            {guardianData.phone}
+                          </span>
+                        </p>
+                        {guardianData.email && (
+                          <p>
+                            <strong className="text-gray-700">البريد:</strong>{" "}
+                            <span className="text-gray-900">
+                              {guardianData.email}
+                            </span>
+                          </p>
+                        )}
+                        <p>
+                          <strong className="text-gray-700">الصلة:</strong>{" "}
+                          <span className="text-gray-900">
+                            {guardianData.relationship === "father"
+                              ? "الأب"
+                              : guardianData.relationship === "brother"
+                                ? "الأخ"
+                                : guardianData.relationship === "uncle"
+                                  ? "العم"
+                                  : "آخر"}
+                          </span>
+                        </p>
+                        {guardianData.notes && (
+                          <p>
+                            <strong className="text-gray-700">ملاحظات:</strong>{" "}
+                            <span className="text-gray-900">
+                              {guardianData.notes}
+                            </span>
+                          </p>
+                        )}
                       </div>
                     );
                   } catch {
-                    return <p className="text-xs text-gray-600">معلومات الولي</p>;
+                    return (
+                      <p className="text-xs text-gray-600">معلومات الولي</p>
+                    );
                   }
                 })()}
               </div>
+            ) : /* Message Text */
+            message.isDeleted ? (
+              <p className="text-sm italic text-gray-400">تم حذف هذه الرسالة</p>
             ) : (
-              /* Message Text */
-              message.isDeleted ? (
-                <p className="text-sm italic text-gray-400">تم حذف هذه الرسالة</p>
-              ) : (
-                <p className="text-sm leading-relaxed arabic-optimized break-words">
-                  {message.content?.text || ""}
-                </p>
-              )
+              <p className="text-sm leading-relaxed arabic-optimized break-words">
+                {message.content?.text || ""}
+              </p>
             )}
-            
+
             {/* Media Attachment */}
             {message.content?.media && !message.isDeleted && (
               <div className="mt-2">
                 {message.content.media.type === "image" && (
-                  <img 
-                    src={message.content.media.url} 
+                  <img
+                    src={message.content.media.url}
                     alt={message.content.media.filename}
                     className="rounded-lg max-w-full max-h-64 object-cover cursor-pointer hover:opacity-90"
-                    onClick={() => window.open(message.content.media?.url, '_blank')}
+                    onClick={() =>
+                      window.open(message.content.media?.url, "_blank")
+                    }
                   />
                 )}
                 {message.content.media.type === "document" && (
-                  <a 
-                    href={message.content.media.url} 
-                    target="_blank" 
+                  <a
+                    href={message.content.media.url}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2 hover:bg-gray-200"
                   >
                     <span>📄</span>
                     <div className="flex-1 min-w-0">
-                      <span className="text-xs truncate block">{message.content.media.filename}</span>
+                      <span className="text-xs truncate block">
+                        {message.content.media.filename}
+                      </span>
                       <span className="text-[10px] text-gray-500">
                         {(message.content.media.size / 1024).toFixed(1)} KB
                       </span>
@@ -279,11 +344,11 @@ function MessageBubble({
                 )}
               </div>
             )}
-            
+
             {/* Edited Indicator */}
             {message.isEdited && (
-              <span 
-                className="text-[9px] text-gray-400 mt-1 block cursor-help" 
+              <span
+                className="text-[9px] text-gray-400 mt-1 block cursor-help"
                 title={`معدلة في ${formatTime(message.editedAt || message.updatedAt)}`}
               >
                 معدلة
@@ -385,17 +450,18 @@ export function ChatWindow({ chatRoom }: ChatWindowProps) {
   const [sendingGuardianInfo, setSendingGuardianInfo] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  console.log('[ChatWindow] chatRoom.id:', chatRoom.id);
-  console.log('[ChatWindow] All messages keys:', Object.keys(messages));
-  console.log('[ChatWindow] Messages for this room:', messages[chatRoom.id]);
-  
+  console.log("[ChatWindow] chatRoom.id:", chatRoom.id);
+  console.log("[ChatWindow] All messages keys:", Object.keys(messages));
+  console.log("[ChatWindow] Messages for this room:", messages[chatRoom.id]);
+
   const roomMessages = messages[chatRoom.id] || [];
-  
-  console.log('[ChatWindow] roomMessages length:', roomMessages.length);
+
+  console.log("[ChatWindow] roomMessages length:", roomMessages.length);
 
   // Check if guardian info already sent
   const guardianInfoSent = roomMessages.some(
-    (msg) => msg.content?.messageType === "guardian-info" && msg.senderId === user?.id
+    (msg) =>
+      msg.content?.messageType === "guardian-info" && msg.senderId === user?.id,
   );
 
   useEffect(() => {
@@ -572,11 +638,12 @@ export function ChatWindow({ chatRoom }: ChatWindowProps) {
 
                 // Fix: Check both senderId and populated sender object
                 // Handle case where sender might be just an ID string or an object
-                const senderId = 
-                  message.senderId || 
-                  (typeof message.sender === 'string' ? message.sender : 
-                    (message.sender?.id || (message.sender as any)?._id));
-                
+                const senderId =
+                  message.senderId ||
+                  (typeof message.sender === "string"
+                    ? message.sender
+                    : message.sender?.id || (message.sender as any)?._id);
+
                 const isCurrentUser = senderId === user?.id;
 
                 // Debug logging (remove in production)
@@ -650,7 +717,9 @@ export function ChatWindow({ chatRoom }: ChatWindowProps) {
             >
               <span>🛡️</span>
               <span className="text-sm">
-                {sendingGuardianInfo ? "جاري الإرسال..." : "إرسال معلومات الولي"}
+                {sendingGuardianInfo
+                  ? "جاري الإرسال..."
+                  : "إرسال معلومات الولي"}
               </span>
             </Button>
           </div>

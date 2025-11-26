@@ -211,9 +211,7 @@ export function ChatOverviewPanel() {
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 لا توجد محادثات
               </h3>
-              <p className="text-gray-500">
-                لا توجد محادثات نشطة حالياً
-              </p>
+              <p className="text-gray-500">لا توجد محادثات نشطة حالياً</p>
             </div>
           ) : (
             <div className="overflow-x-auto">

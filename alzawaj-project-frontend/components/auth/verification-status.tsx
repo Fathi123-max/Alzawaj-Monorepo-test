@@ -4,9 +4,10 @@ import { verificationApi } from "@/lib/api/verification";
 import { Button } from "@/components/ui/button";
 
 export function VerificationStatusBanner({ email }: { email: string }) {
-  const [status, setStatus] = useState<{ verified: boolean; verifiedAt?: string }>(
-    { verified: false },
-  );
+  const [status, setStatus] = useState<{
+    verified: boolean;
+    verifiedAt?: string;
+  }>({ verified: false });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | undefined>();
 
@@ -15,7 +16,10 @@ export function VerificationStatusBanner({ email }: { email: string }) {
     setLoading(true);
     try {
       const res = await verificationApi.status(email);
-      setStatus({ verified: !!res.data?.verified, verifiedAt: res.data?.verifiedAt });
+      setStatus({
+        verified: !!res.data?.verified,
+        verifiedAt: res.data?.verifiedAt,
+      });
     } catch {
       setMessage("تعذر جلب حالة التحقق حالياً");
     } finally {
@@ -46,7 +50,10 @@ export function VerificationStatusBanner({ email }: { email: string }) {
   if (status.verified) {
     return (
       <div className="rounded-md border border-green-300 bg-green-50 p-4 text-green-700">
-        بريدك الإلكتروني مؤكد {status.verifiedAt ? `منذ ${new Date(status.verifiedAt).toLocaleString()}` : ""}
+        بريدك الإلكتروني مؤكد{" "}
+        {status.verifiedAt
+          ? `منذ ${new Date(status.verifiedAt).toLocaleString()}`
+          : ""}
       </div>
     );
   }
@@ -56,12 +63,15 @@ export function VerificationStatusBanner({ email }: { email: string }) {
       <div className="flex items-center justify-between">
         <span>لم يتم تأكيد بريدك الإلكتروني بعد. يرجى التحقق من بريدك.</span>
         <div className="flex gap-2">
-          <Button variant="outline" disabled={loading} onClick={resend}>إرسال رابط التأكيد</Button>
-          <Button variant="ghost" disabled={loading} onClick={load}>تحديث الحالة</Button>
+          <Button variant="outline" disabled={loading} onClick={resend}>
+            إرسال رابط التأكيد
+          </Button>
+          <Button variant="ghost" disabled={loading} onClick={load}>
+            تحديث الحالة
+          </Button>
         </div>
       </div>
       {message && <div className="mt-2 text-sm">{message}</div>}
     </div>
   );
 }
-

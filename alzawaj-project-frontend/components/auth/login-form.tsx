@@ -78,8 +78,13 @@ export function LoginForm({
     } catch (error: any) {
       console.error("Login error:", error);
       // Specific handling for pending account error
-      if (error?.message?.includes("الحساب غير مفعل") || error?.message?.includes("Account is not active")) {
-        showToast.error("الحساب في انتظار تأكيد البريد الإلكتروني. يرجى التحقق من بريدك الإلكتروني");
+      if (
+        error?.message?.includes("الحساب غير مفعل") ||
+        error?.message?.includes("Account is not active")
+      ) {
+        showToast.error(
+          "الحساب في انتظار تأكيد البريد الإلكتروني. يرجى التحقق من بريدك الإلكتروني",
+        );
       }
     }
   };

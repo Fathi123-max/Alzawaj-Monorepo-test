@@ -30,17 +30,18 @@ function ChatRoomItem({
   // Get the other participant's name
   const getOtherParticipantName = () => {
     const otherParticipant = room.participants.find((p: any) => {
-      const userId = typeof p === 'string' ? p : (p.user?._id || p.user?.id || p.user);
+      const userId =
+        typeof p === "string" ? p : p.user?._id || p.user?.id || p.user;
       return userId !== currentUserId;
     });
 
     if (!otherParticipant) return "مستخدم";
-    
-    if (typeof otherParticipant === 'string') return "مستخدم";
-    
+
+    if (typeof otherParticipant === "string") return "مستخدم";
+
     const user = otherParticipant.user;
-    if (typeof user === 'string') return "مستخدم";
-    
+    if (typeof user === "string") return "مستخدم";
+
     return getUserFullName(user);
   };
 

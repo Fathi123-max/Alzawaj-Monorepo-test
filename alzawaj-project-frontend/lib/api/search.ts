@@ -32,6 +32,17 @@ export interface SearchFilters {
   wearHijab?: boolean;
   wearNiqab?: boolean;
   verified?: boolean;
+
+  // New filters
+  nationality?: string;
+  appearance?: string;
+  skinColor?: string;
+  bodyType?: string;
+  smokingStatus?: string;
+  financialSituation?: string;
+  housingOwnership?: string;
+  clothingStyle?: string;
+  workAfterMarriage?: string;
 }
 
 export interface SearchResponse {

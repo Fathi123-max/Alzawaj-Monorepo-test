@@ -67,7 +67,7 @@ export function AdminChatModal({
       setMessages([]);
       setPage(1);
       setHasMore(true);
-      
+
       // Set the current chat room from props
       if (chatRoom) {
         setCurrentChatRoom(chatRoom);
@@ -113,7 +113,10 @@ export function AdminChatModal({
       if (response.success && response.data) {
         if (reset) {
           setMessages(response.data.messages || []);
-          console.log("[AdminChatModal] Setting messages:", response.data.messages); // Debug log
+          console.log(
+            "[AdminChatModal] Setting messages:",
+            response.data.messages,
+          ); // Debug log
         } else {
           const newMessages = response.data.messages || [];
           setMessages((prev) => [...prev, ...newMessages]);
@@ -121,7 +124,9 @@ export function AdminChatModal({
         setHasMore(pageNum < (response.data.pagination?.totalPages || 1));
         setPage(pageNum);
       } else {
-        console.log("[AdminChatModal] No messages in response or response not successful"); // Debug log
+        console.log(
+          "[AdminChatModal] No messages in response or response not successful",
+        ); // Debug log
         throw new Error("Failed to load messages");
       }
     } catch (error: any) {

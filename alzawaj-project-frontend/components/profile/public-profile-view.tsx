@@ -49,7 +49,7 @@ export function PublicProfileView({
     hideMarriageRequest,
     showPhotos,
     shouldShowButton: !hideActions && !hideMarriageRequest,
-    shouldShowPhotos: showPhotos
+    shouldShowPhotos: showPhotos,
   });
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export function PublicProfileView({
     setSavingBookmark(true);
     try {
       const { bookmarkApi } = await import("@/lib/api/bookmark");
-      
+
       if (isSaved) {
         await bookmarkApi.remove(userId);
         setIsSaved(false);
@@ -98,7 +98,7 @@ export function PublicProfileView({
           personalityDescription: profileData.personalityDescription,
           familyPlans: profileData.familyPlans,
           relocationPlans: profileData.relocationPlans,
-          marriageTimeline: profileData.marriageTimeline
+          marriageTimeline: profileData.marriageTimeline,
         });
         // Call the callback to pass the profile name to parent component
         if (onProfileNameLoad) {
@@ -214,16 +214,20 @@ export function PublicProfileView({
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-4 space-x-reverse">
-              <div 
+              <div
                 className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-lg cursor-pointer hover:opacity-90 transition-opacity"
                 onClick={() => setShowFullImage(true)}
               >
                 <Image
-                  src={showPhotos 
-                    ? (typeof profile.profilePicture === 'string' 
-                      ? profile.profilePicture 
-                      : profile.profilePicture?.url || profile.profilePicture?.fileUrl || '/logo.png')
-                    : '/logo.png'}
+                  src={
+                    showPhotos
+                      ? typeof profile.profilePicture === "string"
+                        ? profile.profilePicture
+                        : profile.profilePicture?.url ||
+                          profile.profilePicture?.fileUrl ||
+                          "/logo.png"
+                      : "/logo.png"
+                  }
                   alt={profile.name}
                   fill
                   className={showPhotos ? "object-cover" : "object-contain p-2"}
@@ -338,33 +342,53 @@ export function PublicProfileView({
           <CardContent className="space-y-4">
             {profile.height && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">الطول</label>
-                <p className="mt-1 text-sm text-gray-900">{profile.height} سم</p>
+                <label className="block text-sm font-medium text-gray-700">
+                  الطول
+                </label>
+                <p className="mt-1 text-sm text-gray-900">
+                  {profile.height} سم
+                </p>
               </div>
             )}
             {profile.weight && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">الوزن</label>
-                <p className="mt-1 text-sm text-gray-900">{profile.weight} كجم</p>
+                <label className="block text-sm font-medium text-gray-700">
+                  الوزن
+                </label>
+                <p className="mt-1 text-sm text-gray-900">
+                  {profile.weight} كجم
+                </p>
               </div>
             )}
             {profile.bodyType && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">البنية</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  البنية
+                </label>
                 <p className="mt-1 text-sm text-gray-900">
-                  {profile.bodyType === "slim" ? "نحيف" : 
-                   profile.bodyType === "average" ? "متوسط" :
-                   profile.bodyType === "athletic" ? "رياضي" : "ممتلئ"}
+                  {profile.bodyType === "slim"
+                    ? "نحيف"
+                    : profile.bodyType === "average"
+                      ? "متوسط"
+                      : profile.bodyType === "athletic"
+                        ? "رياضي"
+                        : "ممتلئ"}
                 </p>
               </div>
             )}
             {profile.skinColor && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">لون البشرة</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  لون البشرة
+                </label>
                 <p className="mt-1 text-sm text-gray-900">
-                  {profile.skinColor === "fair" ? "فاتح" :
-                   profile.skinColor === "medium" ? "متوسط" :
-                   profile.skinColor === "olive" ? "حنطي" : "داكن"}
+                  {profile.skinColor === "fair"
+                    ? "فاتح"
+                    : profile.skinColor === "medium"
+                      ? "متوسط"
+                      : profile.skinColor === "olive"
+                        ? "حنطي"
+                        : "داكن"}
                 </p>
               </div>
             )}
@@ -439,38 +463,59 @@ export function PublicProfileView({
           <CardContent className="space-y-4">
             {profile.areParentsAlive && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">حالة الوالدين</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  حالة الوالدين
+                </label>
                 <p className="mt-1 text-sm text-gray-900">
-                  {profile.areParentsAlive === "both" ? "كلاهما على قيد الحياة" :
-                   profile.areParentsAlive === "father" ? "الأب فقط" :
-                   profile.areParentsAlive === "mother" ? "الأم فقط" : "كلاهما متوفى"}
+                  {profile.areParentsAlive === "both"
+                    ? "كلاهما على قيد الحياة"
+                    : profile.areParentsAlive === "father"
+                      ? "الأب فقط"
+                      : profile.areParentsAlive === "mother"
+                        ? "الأم فقط"
+                        : "كلاهما متوفى"}
                 </p>
               </div>
             )}
             {profile.parentRelationship && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">العلاقة مع الوالدين</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  العلاقة مع الوالدين
+                </label>
                 <p className="mt-1 text-sm text-gray-900">
-                  {profile.parentRelationship === "excellent" ? "ممتازة" :
-                   profile.parentRelationship === "good" ? "جيدة" :
-                   profile.parentRelationship === "average" ? "متوسطة" : "ضعيفة"}
+                  {profile.parentRelationship === "excellent"
+                    ? "ممتازة"
+                    : profile.parentRelationship === "good"
+                      ? "جيدة"
+                      : profile.parentRelationship === "average"
+                        ? "متوسطة"
+                        : "ضعيفة"}
                 </p>
               </div>
             )}
             {profile.hasChildren && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">لديه أطفال</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  لديه أطفال
+                </label>
                 <p className="mt-1 text-sm text-gray-900">
-                  {profile.hasChildren === "yes" ? `نعم${profile.childrenCount ? ` (${profile.childrenCount})` : ""}` : "لا"}
+                  {profile.hasChildren === "yes"
+                    ? `نعم${profile.childrenCount ? ` (${profile.childrenCount})` : ""}`
+                    : "لا"}
                 </p>
               </div>
             )}
             {profile.wantsChildren && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">يريد أطفال</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  يريد أطفال
+                </label>
                 <p className="mt-1 text-sm text-gray-900">
-                  {profile.wantsChildren === "yes" ? "نعم" :
-                   profile.wantsChildren === "no" ? "لا" : "ربما"}
+                  {profile.wantsChildren === "yes"
+                    ? "نعم"
+                    : profile.wantsChildren === "no"
+                      ? "لا"
+                      : "ربما"}
                 </p>
               </div>
             )}
@@ -485,11 +530,17 @@ export function PublicProfileView({
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">التدخين</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  التدخين
+                </label>
                 <p className="mt-1 text-sm text-gray-900">
-                  {profile.smokingStatus === "never" ? "لا يدخن" :
-                   profile.smokingStatus === "quit" ? "أقلع عن التدخين" :
-                   profile.smokingStatus === "occasionally" ? "أحياناً" : "بانتظام"}
+                  {profile.smokingStatus === "never"
+                    ? "لا يدخن"
+                    : profile.smokingStatus === "quit"
+                      ? "أقلع عن التدخين"
+                      : profile.smokingStatus === "occasionally"
+                        ? "أحياناً"
+                        : "بانتظام"}
                 </p>
               </div>
             </CardContent>
@@ -506,7 +557,9 @@ export function PublicProfileView({
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {profile.interests.map((interest, index) => (
-                <Badge key={index} variant="secondary">{interest}</Badge>
+                <Badge key={index} variant="secondary">
+                  {interest}
+                </Badge>
               ))}
             </div>
           </CardContent>
@@ -514,41 +567,66 @@ export function PublicProfileView({
       )}
 
       {/* Life Goals & Vision */}
-      {(profile.marriageGoals || profile.personalityDescription || profile.familyPlans || 
-        profile.relocationPlans || profile.marriageTimeline) && (
+      {(profile.marriageGoals ||
+        profile.personalityDescription ||
+        profile.familyPlans ||
+        profile.relocationPlans ||
+        profile.marriageTimeline) && (
         <Card>
           <CardHeader>
-            <h3 className="text-xl font-semibold">الأهداف والرؤية المستقبلية</h3>
+            <h3 className="text-xl font-semibold">
+              الأهداف والرؤية المستقبلية
+            </h3>
           </CardHeader>
           <CardContent className="space-y-4">
             {profile.marriageGoals && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">أهداف الزواج</label>
-                <p className="text-sm text-gray-900 whitespace-pre-wrap">{profile.marriageGoals}</p>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  أهداف الزواج
+                </label>
+                <p className="text-sm text-gray-900 whitespace-pre-wrap">
+                  {profile.marriageGoals}
+                </p>
               </div>
             )}
             {profile.personalityDescription && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">وصف الشخصية</label>
-                <p className="text-sm text-gray-900 whitespace-pre-wrap">{profile.personalityDescription}</p>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  وصف الشخصية
+                </label>
+                <p className="text-sm text-gray-900 whitespace-pre-wrap">
+                  {profile.personalityDescription}
+                </p>
               </div>
             )}
             {profile.familyPlans && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">خطط العائلة</label>
-                <p className="text-sm text-gray-900 whitespace-pre-wrap">{profile.familyPlans}</p>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  خطط العائلة
+                </label>
+                <p className="text-sm text-gray-900 whitespace-pre-wrap">
+                  {profile.familyPlans}
+                </p>
               </div>
             )}
             {profile.relocationPlans && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">خطط الانتقال</label>
-                <p className="text-sm text-gray-900 whitespace-pre-wrap">{profile.relocationPlans}</p>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  خطط الانتقال
+                </label>
+                <p className="text-sm text-gray-900 whitespace-pre-wrap">
+                  {profile.relocationPlans}
+                </p>
               </div>
             )}
             {profile.marriageTimeline && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">توقيت الزواج</label>
-                <p className="text-sm text-gray-900 whitespace-pre-wrap">{profile.marriageTimeline}</p>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  توقيت الزواج
+                </label>
+                <p className="text-sm text-gray-900 whitespace-pre-wrap">
+                  {profile.marriageTimeline}
+                </p>
               </div>
             )}
           </CardContent>
@@ -838,7 +916,9 @@ export function PublicProfileView({
                   onClick={handleBookmarkToggle}
                   disabled={!user || savingBookmark}
                 >
-                  <Bookmark className={`h-5 w-5 ${isSaved ? "fill-blue-500 text-blue-500" : ""}`} />
+                  <Bookmark
+                    className={`h-5 w-5 ${isSaved ? "fill-blue-500 text-blue-500" : ""}`}
+                  />
                   {isSaved ? "محفوظ" : "حفظ الملف"}
                 </Button>
               )}
@@ -866,15 +946,19 @@ export function PublicProfileView({
 
       {/* Full-size image modal */}
       {showFullImage && showPhotos && (
-        <div 
+        <div
           className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
           onClick={() => setShowFullImage(false)}
         >
           <div className="relative max-w-4xl max-h-[90vh] w-full h-full">
             <Image
-              src={typeof profile.profilePicture === 'string' 
-                ? profile.profilePicture 
-                : profile.profilePicture?.url || profile.profilePicture?.fileUrl || '/logo.png'}
+              src={
+                typeof profile.profilePicture === "string"
+                  ? profile.profilePicture
+                  : profile.profilePicture?.url ||
+                    profile.profilePicture?.fileUrl ||
+                    "/logo.png"
+              }
               alt={profile.name}
               fill
               className="object-contain"

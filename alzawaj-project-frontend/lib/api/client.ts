@@ -27,12 +27,12 @@ api.interceptors.request.use(
       console.log("🔍 ApiClient Interceptor: Checking for token...");
       console.log(
         "🔑 ApiClient Interceptor: Token found:",
-        token ? "***present***" : "missing"
+        token ? "***present***" : "missing",
       );
       console.log("🌐 ApiClient Interceptor: Making request to:", config.url);
       console.log(
         "🌐 ApiClient Interceptor: Full URL:",
-        `${config.baseURL}${config.url}`
+        `${config.baseURL}${config.url}`,
       );
 
       if (token) {
@@ -44,7 +44,7 @@ api.interceptors.request.use(
           const parts = token.split(".");
           if (parts.length === 3 && parts[1]) {
             const payload = JSON.parse(
-              atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"))
+              atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
             );
             console.log("👤 Token userId:", payload.userId);
             console.log("👑 Token role:", payload.role);
@@ -56,19 +56,19 @@ api.interceptors.request.use(
         }
       } else {
         console.warn(
-          "❌ ApiClient Interceptor: No auth token found in localStorage"
+          "❌ ApiClient Interceptor: No auth token found in localStorage",
         );
       }
     } else {
       console.warn(
-        "⚠️ ApiClient Interceptor: Window is undefined, cannot access localStorage"
+        "⚠️ ApiClient Interceptor: Window is undefined, cannot access localStorage",
       );
     }
 
     // Add CSRF token for state-changing requests
     if (
       ["post", "put", "patch", "delete"].includes(
-        config.method?.toLowerCase() || ""
+        config.method?.toLowerCase() || "",
       )
     ) {
       // In a real app, you'd get this from a meta tag or cookie
@@ -84,20 +84,26 @@ api.interceptors.request.use(
       "🚀 ApiClient Request:",
       config.method?.toUpperCase(),
       config.url,
-      config.params || config.data || ""
+      config.params || config.data || "",
     );
     return config;
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor to handle common scenarios
 api.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
-    console.log('✅ ApiClient Response:', response.config.method?.toUpperCase(), response.config.url, 'Status:', response.status);
-    console.log('📦 Response data:', response.data);
+    console.log(
+      "✅ ApiClient Response:",
+      response.config.method?.toUpperCase(),
+      response.config.url,
+      "Status:",
+      response.status,
+    );
+    console.log("📦 Response data:", response.data);
     return response;
   },
   async (error) => {
@@ -121,7 +127,7 @@ api.interceptors.response.use(
               headers: {
                 "Content-Type": "application/json",
               },
-            }
+            },
           );
 
           console.log("✅ Token refresh response:", response.data);
@@ -141,7 +147,7 @@ api.interceptors.response.use(
           if (tokens.refreshToken) {
             localStorage.setItem(
               STORAGE_KEYS.REFRESH_TOKEN,
-              tokens.refreshToken
+              tokens.refreshToken,
             );
           }
 
@@ -155,7 +161,7 @@ api.interceptors.response.use(
         // Refresh failed - check for specific error types
         console.warn(
           "❌ Token refresh failed:",
-          refreshError?.response?.data || refreshError
+          refreshError?.response?.data || refreshError,
         );
 
         if (
@@ -173,7 +179,7 @@ api.interceptors.response.use(
         }
 
         console.log(
-          "Authentication issue detected. Redirecting to login page..."
+          "Authentication issue detected. Redirecting to login page...",
         );
 
         // Clear all auth data
@@ -185,7 +191,7 @@ api.interceptors.response.use(
         if (typeof window !== "undefined") {
           // Show toast notification before redirect
           showToast.error(
-            "انتهت صلاحية الجلسة، سيتم إعادة توجيهك لتسجيل الدخول"
+            "انتهت صلاحية الجلسة، سيتم إعادة توجيهك لتسجيل الدخول",
           );
           // Redirect after a short delay to allow toast to show
           setTimeout(() => {
@@ -211,7 +217,7 @@ api.interceptors.response.use(
       data: error.response?.data,
       original: error,
     });
-  }
+  },
 );
 
 // Helper function to get error message based on status code
@@ -242,7 +248,7 @@ function getAuthHeaders(): Record<string, string> {
     const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
     console.log(
       "getAuthHeaders: Token check:",
-      token ? "***present***" : "missing"
+      token ? "***present***" : "missing",
     );
 
     if (token) {
@@ -250,12 +256,12 @@ function getAuthHeaders(): Record<string, string> {
       console.log("getAuthHeaders: Authorization header added");
     } else {
       console.warn(
-        "getAuthHeaders: No token found, authorization header not added"
+        "getAuthHeaders: No token found, authorization header not added",
       );
     }
   } else {
     console.warn(
-      "getAuthHeaders: Window undefined, cannot access localStorage"
+      "getAuthHeaders: Window undefined, cannot access localStorage",
     );
   }
 
@@ -266,7 +272,7 @@ function getAuthHeaders(): Record<string, string> {
 export class ApiClient {
   static async get<T = any>(
     url: string,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<ApiResponse<T>> {
     const headers = { ...getAuthHeaders(), ...config?.headers };
     const response = await api.get<ApiResponse<T>>(url, { ...config, headers });
@@ -276,7 +282,7 @@ export class ApiClient {
   static async post<T = any>(
     url: string,
     data?: any,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<ApiResponse<T>> {
     console.log("ApiClient.post: Making request to:", url);
     console.log("ApiClient.post: Request data:", data);
@@ -292,7 +298,7 @@ export class ApiClient {
   static async put<T = any>(
     url: string,
     data?: any,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<ApiResponse<T>> {
     const headers = { ...getAuthHeaders(), ...config?.headers };
     const response = await api.put<ApiResponse<T>>(url, data, {
@@ -305,7 +311,7 @@ export class ApiClient {
   static async patch<T = any>(
     url: string,
     data?: any,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<ApiResponse<T>> {
     const headers = { ...getAuthHeaders(), ...config?.headers };
     const response = await api.patch<ApiResponse<T>>(url, data, {
@@ -317,7 +323,7 @@ export class ApiClient {
 
   static async delete<T = any>(
     url: string,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<ApiResponse<T>> {
     const headers = { ...getAuthHeaders(), ...config?.headers };
     const response = await api.delete<ApiResponse<T>>(url, {
@@ -330,7 +336,7 @@ export class ApiClient {
   static async uploadFile<T = any>(
     url: string,
     file: File,
-    onUploadProgress?: (progressEvent: any) => void
+    onUploadProgress?: (progressEvent: any) => void,
   ): Promise<ApiResponse<T>> {
     const formData = new FormData();
     formData.append("file", file);

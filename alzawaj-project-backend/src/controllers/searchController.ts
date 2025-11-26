@@ -11,6 +11,14 @@ import {
   ALLOWED_EDUCATION_LEVELS,
   ALLOWED_MARITAL_STATUS,
   ALLOWED_RELIGIOUS_LEVELS,
+  ALLOWED_APPEARANCE,
+  ALLOWED_SKIN_COLOR,
+  ALLOWED_BODY_TYPE,
+  ALLOWED_SMOKING_STATUS,
+  ALLOWED_FINANCIAL_SITUATION,
+  ALLOWED_HOUSING_OWNERSHIP,
+  ALLOWED_CLOTHING_STYLES,
+  ALLOWED_WORK_AFTER_MARRIAGE,
 } from "../utils/constants";
 
 // Extend Request interface for authentication
@@ -42,6 +50,16 @@ interface SearchQuery {
   limit?: number;
   sortBy?: string;
   fuzzy?: boolean;
+  // New filters
+  nationality?: string;
+  appearance?: string;
+  skinColor?: string;
+  bodyType?: string;
+  smokingStatus?: string;
+  financialSituation?: string;
+  housingOwnership?: string;
+  clothingStyle?: string;
+  workAfterMarriage?: string;
 }
 
 interface QuickSearchQuery {
@@ -135,6 +153,16 @@ export const searchProfiles = async (
       limit = 20,
       sortBy = "compatibility",
       fuzzy = true,
+      // New filters
+      nationality,
+      appearance,
+      skinColor,
+      bodyType,
+      smokingStatus,
+      financialSituation,
+      housingOwnership,
+      clothingStyle,
+      workAfterMarriage,
     }: SearchQuery = req.query as any;
 
     // Validate filter values
@@ -161,6 +189,47 @@ export const searchProfiles = async (
     
     if (profession && typeof profession === 'string' && profession.length > 100) {
       res.status(400).json(createErrorResponse('المهنة طويلة جداً'));
+      return;
+    }
+
+    // Validate new enum filters
+    if (appearance && typeof appearance === 'string' && !ALLOWED_APPEARANCE.includes(appearance.toLowerCase())) {
+      res.status(400).json(createErrorResponse('المظهر غير صحيح'));
+      return;
+    }
+
+    if (skinColor && typeof skinColor === 'string' && !ALLOWED_SKIN_COLOR.includes(skinColor.toLowerCase())) {
+      res.status(400).json(createErrorResponse('لون البشرة غير صحيح'));
+      return;
+    }
+
+    if (bodyType && typeof bodyType === 'string' && !ALLOWED_BODY_TYPE.includes(bodyType.toLowerCase())) {
+      res.status(400).json(createErrorResponse('البنية الجسدية غير صحيحة'));
+      return;
+    }
+
+    if (smokingStatus && typeof smokingStatus === 'string' && !ALLOWED_SMOKING_STATUS.includes(smokingStatus.toLowerCase())) {
+      res.status(400).json(createErrorResponse('حالة التدخين غير صحيحة'));
+      return;
+    }
+
+    if (financialSituation && typeof financialSituation === 'string' && !ALLOWED_FINANCIAL_SITUATION.includes(financialSituation.toLowerCase())) {
+      res.status(400).json(createErrorResponse('الوضع المالي غير صحيح'));
+      return;
+    }
+
+    if (housingOwnership && typeof housingOwnership === 'string' && !ALLOWED_HOUSING_OWNERSHIP.includes(housingOwnership.toLowerCase())) {
+      res.status(400).json(createErrorResponse('ملكية السكن غير صحيحة'));
+      return;
+    }
+
+    if (clothingStyle && typeof clothingStyle === 'string' && !ALLOWED_CLOTHING_STYLES.includes(clothingStyle.toLowerCase())) {
+      res.status(400).json(createErrorResponse('نمط اللباس غير صحيح'));
+      return;
+    }
+
+    if (workAfterMarriage && typeof workAfterMarriage === 'string' && !ALLOWED_WORK_AFTER_MARRIAGE.includes(workAfterMarriage.toLowerCase())) {
+      res.status(400).json(createErrorResponse('العمل بعد الزواج غير صحيح'));
       return;
     }
 
@@ -326,6 +395,43 @@ export const searchProfiles = async (
     if (wantsChildren !== undefined) {
       searchQuery["wantsChildren"] =
         wantsChildren === true || (wantsChildren as any) === "true" ? "yes" : "no";
+    }
+
+    // New filters
+    if (nationality) {
+      searchQuery["nationality"] = { $regex: nationality, $options: "i" };
+    }
+
+    if (appearance) {
+      searchQuery["appearance"] = appearance;
+    }
+
+    if (skinColor) {
+      searchQuery["skinColor"] = skinColor;
+    }
+
+    if (bodyType) {
+      searchQuery["bodyType"] = bodyType;
+    }
+
+    if (smokingStatus) {
+      searchQuery["smokingStatus"] = smokingStatus;
+    }
+
+    if (financialSituation) {
+      searchQuery["financialSituation"] = financialSituation;
+    }
+
+    if (housingOwnership) {
+      searchQuery["housingOwnership"] = housingOwnership;
+    }
+
+    if (clothingStyle) {
+      searchQuery["clothingStyle"] = clothingStyle;
+    }
+
+    if (workAfterMarriage) {
+      searchQuery["workAfterMarriage"] = workAfterMarriage;
     }
 
     // Check blocked users

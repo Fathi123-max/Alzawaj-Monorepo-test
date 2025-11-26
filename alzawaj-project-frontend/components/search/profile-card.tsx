@@ -122,17 +122,24 @@ export function ProfileCard({
   };
 
   const getProfileImage = () => {
-    const privacy = (profile as any).privacy || (profile as any).privacySettings;
-    if (!privacy?.showProfilePicture || privacy.showProfilePicture === 'everyone') {
+    const privacy =
+      (profile as any).privacy || (profile as any).privacySettings;
+    if (
+      !privacy?.showProfilePicture ||
+      privacy.showProfilePicture === "everyone"
+    ) {
       return profile.profilePicture;
     }
-    
-    if (privacy.showProfilePicture === 'none') return null;
-    
-    if (privacy.showProfilePicture === 'matches-only' && !(profile as any).isMatched) {
+
+    if (privacy.showProfilePicture === "none") return null;
+
+    if (
+      privacy.showProfilePicture === "matches-only" &&
+      !(profile as any).isMatched
+    ) {
       return null;
     }
-    
+
     return profile.profilePicture;
   };
 

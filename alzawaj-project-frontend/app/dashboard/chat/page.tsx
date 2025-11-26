@@ -19,7 +19,6 @@ function ChatPageContent() {
           requestId={requestId || undefined}
           chatRoomId={chatRoomId}
         />
-     
       </div>
     );
   }

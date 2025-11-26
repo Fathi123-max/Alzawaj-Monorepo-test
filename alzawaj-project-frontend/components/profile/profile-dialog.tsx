@@ -171,13 +171,18 @@ export function ProfileDialog({
           className="h-full"
         >
           <div className="flex items-center justify-between p-4 border-b">
-            <TabsList className={`grid w-auto ${hideMarriageRequest ? 'grid-cols-1' : 'grid-cols-2'}`}>
+            <TabsList
+              className={`grid w-auto ${hideMarriageRequest ? "grid-cols-1" : "grid-cols-2"}`}
+            >
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <MessageCircle className="h-4 w-4" />
                 الملف الشخصي
               </TabsTrigger>
               {!hideMarriageRequest && (
-                <TabsTrigger value="request" className="flex items-center gap-2">
+                <TabsTrigger
+                  value="request"
+                  className="flex items-center gap-2"
+                >
                   <Heart className="h-4 w-4" />
                   إرسال طلب تعارف
                 </TabsTrigger>
@@ -207,135 +212,135 @@ export function ProfileDialog({
               className="m-0 h-[calc(95vh-60px)] overflow-y-auto"
             >
               <div className="p-6 space-y-6">
-              <div className="text-center border-b pb-4">
-                <h2 className="text-xl font-bold">إرسال طلب تعارف</h2>
-                <p className="text-gray-600">إلى: {profileName}</p>
-              </div>
-
-              {/* Error Messages */}
-              {errors.length > 0 && (
-                <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                  <ul className="list-disc list-inside text-sm text-red-600 space-y-1">
-                    {errors.map((error, index) => (
-                      <li key={index}>{error}</li>
-                    ))}
-                  </ul>
+                <div className="text-center border-b pb-4">
+                  <h2 className="text-xl font-bold">إرسال طلب تعارف</h2>
+                  <p className="text-gray-600">إلى: {profileName}</p>
                 </div>
-              )}
 
-              {/* Message Field */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">
-                  رسالة التعارف (مطلوبة)
-                </Label>
-                <textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="w-full border border-input rounded-lg p-4 text-sm min-h-[150px] resize-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200"
-                  placeholder="السلام عليكم ورحمة الله وبركاته، أتطلع للتعرف عليكم لغرض الزواج الحلال..."
-                  maxLength={1000}
-                />
-                <div className="text-xs text-gray-500">
-                  {message.length}/1000 حرف (الحد الأدنى: 50 حرف)
-                </div>
-              </div>
+                {/* Error Messages */}
+                {errors.length > 0 && (
+                  <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                    <ul className="list-disc list-inside text-sm text-red-600 space-y-1">
+                      {errors.map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
-              {/* Contact Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-sm font-medium">
-                    رقم الهاتف
+                {/* Message Field */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">
+                    رسالة التعارف (مطلوبة)
                   </Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+966xxxxxxxxx"
-                    className="h-11"
+                  <textarea
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    className="w-full border border-input rounded-lg p-4 text-sm min-h-[150px] resize-none focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200"
+                    placeholder="السلام عليكم ورحمة الله وبركاته، أتطلع للتعرف عليكم لغرض الزواج الحلال..."
+                    maxLength={1000}
                   />
+                  <div className="text-xs text-gray-500">
+                    {message.length}/1000 حرف (الحد الأدنى: 50 حرف)
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">
-                    البريد الإلكتروني
+
+                {/* Contact Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-sm font-medium">
+                      رقم الهاتف
+                    </Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+966xxxxxxxxx"
+                      className="h-11"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-sm font-medium">
+                      البريد الإلكتروني
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="example@email.com"
+                      className="h-11"
+                    />
+                  </div>
+                </div>
+
+                {/* Preferred Contact Method */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">
+                    طريقة التواصل المفضلة
                   </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="example@email.com"
-                    className="h-11"
-                  />
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="contact-method"
+                        value="phone"
+                        checked={preferredContactMethod === "phone"}
+                        onChange={() => setPreferredContactMethod("phone")}
+                        className="w-4 h-4 text-primary"
+                      />
+                      <span className="text-sm">هاتف</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="contact-method"
+                        value="email"
+                        checked={preferredContactMethod === "email"}
+                        onChange={() => setPreferredContactMethod("email")}
+                        className="w-4 h-4 text-primary"
+                      />
+                      <span className="text-sm">بريد إلكتروني</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="contact-method"
+                        value="both"
+                        checked={preferredContactMethod === "both"}
+                        onChange={() => setPreferredContactMethod("both")}
+                        className="w-4 h-4 text-primary"
+                      />
+                      <span className="text-sm">كلاهما</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+                  <Button
+                    onClick={() => setCurrentTab("profile")}
+                    variant="outline"
+                    className="flex-1"
+                    disabled={isLoading}
+                  >
+                    العودة للملف الشخصي
+                  </Button>
+                  <Button
+                    onClick={handleSendRequest}
+                    className="flex-1"
+                    disabled={
+                      isLoading ||
+                      !message.trim() ||
+                      (!phone.trim() && !email.trim())
+                    }
+                  >
+                    {isLoading ? "جاري الإرسال..." : "إرسال الطلب"}
+                  </Button>
                 </div>
               </div>
-
-              {/* Preferred Contact Method */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">
-                  طريقة التواصل المفضلة
-                </Label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="contact-method"
-                      value="phone"
-                      checked={preferredContactMethod === "phone"}
-                      onChange={() => setPreferredContactMethod("phone")}
-                      className="w-4 h-4 text-primary"
-                    />
-                    <span className="text-sm">هاتف</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="contact-method"
-                      value="email"
-                      checked={preferredContactMethod === "email"}
-                      onChange={() => setPreferredContactMethod("email")}
-                      className="w-4 h-4 text-primary"
-                    />
-                    <span className="text-sm">بريد إلكتروني</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="contact-method"
-                      value="both"
-                      checked={preferredContactMethod === "both"}
-                      onChange={() => setPreferredContactMethod("both")}
-                      className="w-4 h-4 text-primary"
-                    />
-                    <span className="text-sm">كلاهما</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-                <Button
-                  onClick={() => setCurrentTab("profile")}
-                  variant="outline"
-                  className="flex-1"
-                  disabled={isLoading}
-                >
-                  العودة للملف الشخصي
-                </Button>
-                <Button
-                  onClick={handleSendRequest}
-                  className="flex-1"
-                  disabled={
-                    isLoading ||
-                    !message.trim() ||
-                    (!phone.trim() && !email.trim())
-                  }
-                >
-                  {isLoading ? "جاري الإرسال..." : "إرسال الطلب"}
-                </Button>
-              </div>
-            </div>
-          </TabsContent>
+            </TabsContent>
           )}
         </Tabs>
       </DialogContent>

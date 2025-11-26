@@ -417,12 +417,20 @@ class AdminApiService {
     search?: string,
     status?: string,
   ): Promise<PaginatedResponse<AdminUser>> {
-    const searchParam = search && search.trim() ? `&search=${encodeURIComponent(search.trim())}` : '';
-    const statusParam = status ? `&status=${encodeURIComponent(status)}` : '';
+    const searchParam =
+      search && search.trim()
+        ? `&search=${encodeURIComponent(search.trim())}`
+        : "";
+    const statusParam = status ? `&status=${encodeURIComponent(status)}` : "";
     const url = `/users?page=${page}&limit=${limit}${searchParam}${statusParam}`;
-    console.log('[AdminAPI] getUsers called with:', { page, limit, search, status });
-    console.log('[AdminAPI] Request URL:', url);
-    
+    console.log("[AdminAPI] getUsers called with:", {
+      page,
+      limit,
+      search,
+      status,
+    });
+    console.log("[AdminAPI] Request URL:", url);
+
     const response = await this.request<{
       success: boolean;
       data: {
@@ -441,10 +449,13 @@ class AdminApiService {
       message?: string;
     }>(url);
 
-    console.log('[AdminAPI] getUsers response:', response);
-    console.log('[AdminAPI] response.data:', response.data);
-    console.log('[AdminAPI] response.data.users:', response.data?.users);
-    console.log('[AdminAPI] response.data.pagination:', response.data?.pagination);
+    console.log("[AdminAPI] getUsers response:", response);
+    console.log("[AdminAPI] response.data:", response.data);
+    console.log("[AdminAPI] response.data.users:", response.data?.users);
+    console.log(
+      "[AdminAPI] response.data.pagination:",
+      response.data?.pagination,
+    );
 
     // Transform the response to match our PaginatedResponse interface
     // Handle both structures: with pagination object or flattened
@@ -763,7 +774,11 @@ class AdminApiService {
       pagination: any;
     }>
   > {
-    console.log("[AdminApiService] getChatMessages called with:", { chatRoomId, page, limit }); // Debug log
+    console.log("[AdminApiService] getChatMessages called with:", {
+      chatRoomId,
+      page,
+      limit,
+    }); // Debug log
     const response = await this.request<{
       success: boolean;
       data: {

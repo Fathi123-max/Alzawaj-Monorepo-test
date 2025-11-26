@@ -20,7 +20,12 @@ interface RequestCardProps {
   onViewProfile?: (userId: string) => void;
 }
 
-function RequestCard({ request, type, onUpdate, onViewProfile }: RequestCardProps) {
+function RequestCard({
+  request,
+  type,
+  onUpdate,
+  onViewProfile,
+}: RequestCardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -49,7 +54,9 @@ function RequestCard({ request, type, onUpdate, onViewProfile }: RequestCardProp
     setIsLoading(true);
     try {
       const responseMessage =
-        status === "accepted" ? "أنا مهتم بهذا الطلب وأرغب في التواصل" : "عذراً، هذا الطلب غير مناسب لي";
+        status === "accepted"
+          ? "أنا مهتم بهذا الطلب وأرغب في التواصل"
+          : "عذراً، هذا الطلب غير مناسب لي";
 
       const response = await requestsApiService.respondToRequest({
         requestId: request.id,
@@ -120,7 +127,8 @@ function RequestCard({ request, type, onUpdate, onViewProfile }: RequestCardProp
               variant="ghost"
               size="sm"
               onClick={() => {
-                const userId = type === "received" ? request.sender.id : request.receiver.id;
+                const userId =
+                  type === "received" ? request.sender.id : request.receiver.id;
                 onViewProfile?.(userId);
               }}
               className="text-primary hover:text-primary hover:bg-primary/10 transition-colors"

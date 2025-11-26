@@ -38,7 +38,6 @@ export default function NewStep1Auth({
     updateData({ [field]: value });
   };
 
-
   return (
     <div className="space-y-4">
       {/* firstname and lastname */}
@@ -66,7 +65,7 @@ export default function NewStep1Auth({
       </div>
       {/* Email and Phone */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input
+        <Input
           label="البريد الإلكتروني"
           type="email"
           value={data.email || ""}

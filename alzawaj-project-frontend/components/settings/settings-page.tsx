@@ -65,10 +65,10 @@ export function SettingsPage() {
       console.log("Settings Page - Saving privacy settings:", privacySettings);
       const response = await updatePrivacySettings(privacySettings);
       console.log("Settings Page - Save response:", response);
-      
+
       // Wait a moment for the database to update
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       // Reload profile to get updated values
       const updatedProfile = await getProfile();
       if (updatedProfile) {

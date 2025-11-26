@@ -23,13 +23,17 @@ const convertToDisplayProfile = (apiProfile: any): MockProfile => {
   const religiousInfo = apiProfile.religiousInfo || {};
   const locationInfo = apiProfile.location || {};
 
-  const fullName = basicInfo.fullName || `${apiProfile.firstname || ""} ${apiProfile.lastname || ""}`.trim() || "غير محدد";
+  const fullName =
+    basicInfo.fullName ||
+    `${apiProfile.firstname || ""} ${apiProfile.lastname || ""}`.trim() ||
+    "غير محدد";
   const nameParts = fullName.split(" ").filter((p: string) => p.length > 0);
   const firstName = nameParts[0] || "غير";
   const lastName = nameParts.slice(1).join(" ") || "محدد";
 
   const genderValue = apiProfile.gender || basicInfo.gender;
-  const gender = genderValue === "f" || genderValue === "female" ? "female" : "male";
+  const gender =
+    genderValue === "f" || genderValue === "female" ? "female" : "male";
 
   return {
     id: apiProfile._id || apiProfile.id || "",
@@ -38,11 +42,14 @@ const convertToDisplayProfile = (apiProfile: any): MockProfile => {
     age: apiProfile.age || basicInfo.age || 0,
     gender: gender as "male" | "female",
     location: `${locationInfo.city || "غير محدد"}, ${locationInfo.country || "غير محدد"}`,
-    education: professional.educationLevel || apiProfile.education || "غير محدد",
+    education:
+      professional.educationLevel || apiProfile.education || "غير محدد",
     occupation: professional.occupation || apiProfile.occupation || "غير محدد",
     bio: personalInfo.about || apiProfile.bio || "لا توجد معلومات إضافية",
     profilePicture: apiProfile.profilePicture || "/logo.png",
-    verified: Boolean(apiProfile.verification?.isVerified || apiProfile.isApproved || false),
+    verified: Boolean(
+      apiProfile.verification?.isVerified || apiProfile.isApproved || false,
+    ),
     isOnline: Boolean(apiProfile.isOnline || false),
     lastActive: apiProfile.lastActive || "منذ ساعة",
     profileCompletion: apiProfile.completionPercentage || 50,
@@ -52,7 +59,8 @@ const convertToDisplayProfile = (apiProfile: any): MockProfile => {
     wearNiqab: Boolean(apiProfile.wearNiqab || false),
     height: personalInfo.height || apiProfile.height || 0,
     religiousLevel: religiousInfo.religiousLevel || "غير محدد",
-    maritalStatus: basicInfo.maritalStatus || apiProfile.maritalStatus || "غير محدد",
+    maritalStatus:
+      basicInfo.maritalStatus || apiProfile.maritalStatus || "غير محدد",
     country: locationInfo.country || "غير محدد",
     city: locationInfo.city || "غير محدد",
     nationality: basicInfo.nationality || "غير محدد",
@@ -76,7 +84,9 @@ export default function BookmarksPage() {
     setLoading(true);
     try {
       const response = await bookmarkApi.getAll(page, 12);
-      const convertedProfiles = (response.bookmarks || []).map(convertToDisplayProfile);
+      const convertedProfiles = (response.bookmarks || []).map(
+        convertToDisplayProfile,
+      );
       setBookmarks(convertedProfiles);
       setPagination(response.pagination);
     } catch (error: any) {
@@ -137,7 +147,7 @@ export default function BookmarksPage() {
             {bookmarks.map((profile) => (
               <ProfileCard
                 key={profile.id}
-                profile={{...profile, isSaved: true}}
+                profile={{ ...profile, isSaved: true }}
                 onSave={handleSaveProfile}
                 onSendRequest={handleSendRequest}
                 currentUserGender={user?.gender || "male"}
@@ -180,10 +190,10 @@ export default function BookmarksPage() {
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               لا توجد ملفات محفوظة
             </h3>
-            <p className="text-gray-600 mb-4">
-              لم تقم بحفظ أي ملفات شخصية بعد
-            </p>
-            <Button onClick={() => (window.location.href = "/dashboard/search")}>
+            <p className="text-gray-600 mb-4">لم تقم بحفظ أي ملفات شخصية بعد</p>
+            <Button
+              onClick={() => (window.location.href = "/dashboard/search")}
+            >
               ابحث عن شريك الحياة
             </Button>
           </CardContent>

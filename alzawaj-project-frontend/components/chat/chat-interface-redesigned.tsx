@@ -43,7 +43,10 @@ interface ChatMessage extends Message {
   isCurrentUser?: boolean;
 }
 
-export function ChatInterfaceRedesigned({ requestId, chatRoomId }: ChatInterfaceProps) {
+export function ChatInterfaceRedesigned({
+  requestId,
+  chatRoomId,
+}: ChatInterfaceProps) {
   const router = useRouter();
   const { user } = useAuth();
   const { isConnected, fetchChatRooms } = useChat();
@@ -70,17 +73,20 @@ export function ChatInterfaceRedesigned({ requestId, chatRoomId }: ChatInterface
           const chatRoomResponse = await chatApi.getChatRoomById(chatRoomId);
           if (chatRoomResponse.success && chatRoomResponse.data) {
             setChatRoom(chatRoomResponse.data);
-            
+
             const otherParticipant = chatRoomResponse.data.participants.find(
               (p: any) => {
-                const userId = typeof p === 'string' ? p : (p.user?._id || p.user?.id || p.user);
+                const userId =
+                  typeof p === "string"
+                    ? p
+                    : p.user?._id || p.user?.id || p.user;
                 return userId !== user?.id;
-              }
+              },
             );
-            
-            if (otherParticipant && typeof otherParticipant !== 'string') {
+
+            if (otherParticipant && typeof otherParticipant !== "string") {
               const participantUser = otherParticipant.user;
-              if (typeof participantUser !== 'string') {
+              if (typeof participantUser !== "string") {
                 setOtherUser({
                   id: participantUser._id || participantUser.id,
                   name: getUserFullName(participantUser),
@@ -92,11 +98,17 @@ export function ChatInterfaceRedesigned({ requestId, chatRoomId }: ChatInterface
 
           const messagesResponse = await chatApi.getMessages(chatRoomId, 1, 50);
           if (messagesResponse.success && messagesResponse.data) {
-            const loadedMessages = messagesResponse.data.messages.map((msg: any) => ({
-              ...msg,
-              sender: typeof msg.sender === 'object' ? msg.sender : { id: msg.sender },
-              isCurrentUser: msg.sender?.id === user?.id || msg.sender === user?.id,
-            }));
+            const loadedMessages = messagesResponse.data.messages.map(
+              (msg: any) => ({
+                ...msg,
+                sender:
+                  typeof msg.sender === "object"
+                    ? msg.sender
+                    : { id: msg.sender },
+                isCurrentUser:
+                  msg.sender?.id === user?.id || msg.sender === user?.id,
+              }),
+            );
             setMessages(loadedMessages);
             await fetchChatRooms();
           }
@@ -121,7 +133,7 @@ export function ChatInterfaceRedesigned({ requestId, chatRoomId }: ChatInterface
 
     const messageContent = newMessage.trim();
     setIsSending(true);
-    
+
     try {
       const response = await chatApi.sendMessage({
         type: "text",
@@ -179,32 +191,53 @@ export function ChatInterfaceRedesigned({ requestId, chatRoomId }: ChatInterface
 
   const getMessageStatus = (message: ChatMessage) => {
     if (!message.isCurrentUser) return null;
-    
+
     // Check read receipts
     const isRead = message.readBy && message.readBy.length > 1;
-    const readInfo = isRead && message.readBy.length > 1 
-      ? `قُرئت في ${formatTime(message.readBy[message.readBy.length - 1]?.readAt)}`
-      : "";
-    
+    const readInfo =
+      isRead && message.readBy.length > 1
+        ? `قُرئت في ${formatTime(message.readBy[message.readBy.length - 1]?.readAt)}`
+        : "";
+
     if (isRead) {
-      return { icon: <CheckCheck className="h-3 w-3 text-blue-400" />, tooltip: readInfo };
+      return {
+        icon: <CheckCheck className="h-3 w-3 text-blue-400" />,
+        tooltip: readInfo,
+      };
     }
-    
+
     switch (message.status) {
       case "pending":
-        return { icon: <Clock className="h-3 w-3 opacity-50" />, tooltip: "قيد الإرسال" };
+        return {
+          icon: <Clock className="h-3 w-3 opacity-50" />,
+          tooltip: "قيد الإرسال",
+        };
       case "approved":
-        return { icon: <Check className="h-3 w-3 opacity-70" />, tooltip: "تم الإرسال" };
+        return {
+          icon: <Check className="h-3 w-3 opacity-70" />,
+          tooltip: "تم الإرسال",
+        };
       case "rejected":
-        return { icon: <span className="text-xs text-red-400">✕</span>, tooltip: "مرفوضة" };
+        return {
+          icon: <span className="text-xs text-red-400">✕</span>,
+          tooltip: "مرفوضة",
+        };
       case "flagged":
-        return { icon: <span className="text-xs text-yellow-500">⚠</span>, tooltip: "مُبلغ عنها" };
+        return {
+          icon: <span className="text-xs text-yellow-500">⚠</span>,
+          tooltip: "مُبلغ عنها",
+        };
       default:
-        return { icon: <Check className="h-3 w-3 opacity-70" />, tooltip: "تم الإرسال" };
+        return {
+          icon: <Check className="h-3 w-3 opacity-70" />,
+          tooltip: "تم الإرسال",
+        };
     }
   };
 
-  const renderStatusIcon = (statusData: { icon: React.ReactNode; tooltip: string } | null) => {
+  const renderStatusIcon = (
+    statusData: { icon: React.ReactNode; tooltip: string } | null,
+  ) => {
     if (!statusData) return null;
     return (
       <span title={statusData.tooltip} className="cursor-help">
@@ -241,7 +274,10 @@ export function ChatInterfaceRedesigned({ requestId, chatRoomId }: ChatInterface
             </Button>
 
             <Avatar className="h-10 w-10 border-2 border-primary-200">
-              <AvatarImage src={otherUser?.profilePicture} alt={otherUser?.name} />
+              <AvatarImage
+                src={otherUser?.profilePicture}
+                alt={otherUser?.name}
+              />
               <AvatarFallback className="bg-primary-100 text-primary-700 font-medium">
                 {getInitials(otherUser?.name || "مستخدم")}
               </AvatarFallback>
@@ -309,24 +345,26 @@ export function ChatInterfaceRedesigned({ requestId, chatRoomId }: ChatInterface
         ) : (
           messages.map((message, index) => {
             const isCurrentUser = message.isCurrentUser;
-            const showAvatar = !isCurrentUser && (
-              index === messages.length - 1 ||
-              messages[index + 1]?.isCurrentUser !== isCurrentUser
-            );
+            const showAvatar =
+              !isCurrentUser &&
+              (index === messages.length - 1 ||
+                messages[index + 1]?.isCurrentUser !== isCurrentUser);
 
             return (
               <div
                 key={message.id || index}
                 className={cn(
                   "flex gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300",
-                  isCurrentUser ? "justify-end" : "justify-start"
+                  isCurrentUser ? "justify-end" : "justify-start",
                 )}
               >
                 {!isCurrentUser && (
-                  <Avatar className={cn(
-                    "h-8 w-8 flex-shrink-0",
-                    !showAvatar && "invisible"
-                  )}>
+                  <Avatar
+                    className={cn(
+                      "h-8 w-8 flex-shrink-0",
+                      !showAvatar && "invisible",
+                    )}
+                  >
                     <AvatarImage src={message.sender?.profilePicture} />
                     <AvatarFallback className="bg-secondary-100 text-secondary-700 text-xs">
                       {getInitials(message.sender?.name || "م")}
@@ -339,58 +377,74 @@ export function ChatInterfaceRedesigned({ requestId, chatRoomId }: ChatInterface
                     "group relative max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm transition-all hover:shadow-md",
                     isCurrentUser
                       ? "bg-primary-500 text-white rounded-br-sm"
-                      : "bg-card text-text rounded-bl-sm border border-border"
+                      : "bg-card text-text rounded-bl-sm border border-border",
                   )}
                 >
                   {/* Reply Preview */}
                   {message.replyTo && (
-                    <div className={cn(
-                      "rounded-lg px-2 py-1 mb-2 text-xs border-r-2",
-                      isCurrentUser 
-                        ? "bg-white/20 border-white/50" 
-                        : "bg-gray-100 border-gray-400"
-                    )}>
-                      <span className={isCurrentUser ? "opacity-80" : "text-gray-600"}>
+                    <div
+                      className={cn(
+                        "rounded-lg px-2 py-1 mb-2 text-xs border-r-2",
+                        isCurrentUser
+                          ? "bg-white/20 border-white/50"
+                          : "bg-gray-100 border-gray-400",
+                      )}
+                    >
+                      <span
+                        className={
+                          isCurrentUser ? "opacity-80" : "text-gray-600"
+                        }
+                      >
                         رد على رسالة
                       </span>
                     </div>
                   )}
-                  
+
                   {/* Rejection Warning (for sender) */}
-                  {isCurrentUser && message.status === "rejected" && message.rejectionReason && (
-                    <div className="bg-red-500/30 rounded-lg px-2 py-1 mb-2 text-xs border-r-2 border-red-300">
-                      <span className="font-semibold">مرفوضة:</span> {message.rejectionReason}
-                    </div>
-                  )}
-                  
+                  {isCurrentUser &&
+                    message.status === "rejected" &&
+                    message.rejectionReason && (
+                      <div className="bg-red-500/30 rounded-lg px-2 py-1 mb-2 text-xs border-r-2 border-red-300">
+                        <span className="font-semibold">مرفوضة:</span>{" "}
+                        {message.rejectionReason}
+                      </div>
+                    )}
+
                   {/* Pending Moderation (for receiver) */}
                   {!isCurrentUser && message.status === "pending" && (
-                    <div className={cn(
-                      "rounded-lg px-2 py-1 mb-2 text-xs border-r-2",
-                      "bg-yellow-50 border-yellow-400 text-yellow-700"
-                    )}>
+                    <div
+                      className={cn(
+                        "rounded-lg px-2 py-1 mb-2 text-xs border-r-2",
+                        "bg-yellow-50 border-yellow-400 text-yellow-700",
+                      )}
+                    >
                       <span>⏳ قيد المراجعة</span>
                     </div>
                   )}
-                  
+
                   {/* Flagged Content Warning */}
-                  {message.islamicCompliance && !message.islamicCompliance.isAppropriate && (
-                    <div className={cn(
-                      "rounded-lg px-2 py-1 mb-2 text-xs border-r-2",
-                      isCurrentUser 
-                        ? "bg-yellow-500/30 border-yellow-300" 
-                        : "bg-yellow-50 border-yellow-400 text-yellow-700"
-                    )}>
-                      <span>⚠️ محتوى مشكوك فيه</span>
-                    </div>
-                  )}
-                  
+                  {message.islamicCompliance &&
+                    !message.islamicCompliance.isAppropriate && (
+                      <div
+                        className={cn(
+                          "rounded-lg px-2 py-1 mb-2 text-xs border-r-2",
+                          isCurrentUser
+                            ? "bg-yellow-500/30 border-yellow-300"
+                            : "bg-yellow-50 border-yellow-400 text-yellow-700",
+                        )}
+                      >
+                        <span>⚠️ محتوى مشكوك فيه</span>
+                      </div>
+                    )}
+
                   {/* Message Text */}
                   {message.isDeleted ? (
-                    <p className={cn(
-                      "text-sm italic",
-                      isCurrentUser ? "opacity-70" : "text-gray-400"
-                    )}>
+                    <p
+                      className={cn(
+                        "text-sm italic",
+                        isCurrentUser ? "opacity-70" : "text-gray-400",
+                      )}
+                    >
                       تم حذف هذه الرسالة
                     </p>
                   ) : (
@@ -398,38 +452,47 @@ export function ChatInterfaceRedesigned({ requestId, chatRoomId }: ChatInterface
                       {message.content?.text || message.content}
                     </p>
                   )}
-                  
+
                   {/* Media Attachment */}
                   {message.content?.media && !message.isDeleted && (
                     <div className="mt-2">
                       {message.content.media.type === "image" && (
-                        <img 
-                          src={message.content.media.url} 
+                        <img
+                          src={message.content.media.url}
                           alt={message.content.media.filename}
                           className="rounded-lg max-w-full max-h-64 object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                          onClick={() => window.open(message.content.media?.url, '_blank')}
+                          onClick={() =>
+                            window.open(message.content.media?.url, "_blank")
+                          }
                         />
                       )}
                       {message.content.media.type === "document" && (
-                        <a 
-                          href={message.content.media.url} 
-                          target="_blank" 
+                        <a
+                          href={message.content.media.url}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className={cn(
                             "flex items-center gap-2 rounded-lg px-3 py-2 transition-colors",
-                            isCurrentUser 
-                              ? "bg-white/20 hover:bg-white/30" 
-                              : "bg-gray-100 hover:bg-gray-200"
+                            isCurrentUser
+                              ? "bg-white/20 hover:bg-white/30"
+                              : "bg-gray-100 hover:bg-gray-200",
                           )}
                         >
                           <span>📄</span>
                           <div className="flex-1 min-w-0">
-                            <span className="text-xs truncate block">{message.content.media.filename}</span>
-                            <span className={cn(
-                              "text-[10px]",
-                              isCurrentUser ? "text-white/70" : "text-gray-500"
-                            )}>
-                              {(message.content.media.size / 1024).toFixed(1)} KB
+                            <span className="text-xs truncate block">
+                              {message.content.media.filename}
+                            </span>
+                            <span
+                              className={cn(
+                                "text-[10px]",
+                                isCurrentUser
+                                  ? "text-white/70"
+                                  : "text-gray-500",
+                              )}
+                            >
+                              {(message.content.media.size / 1024).toFixed(1)}{" "}
+                              KB
                             </span>
                           </div>
                         </a>
@@ -440,22 +503,25 @@ export function ChatInterfaceRedesigned({ requestId, chatRoomId }: ChatInterface
                   <div
                     className={cn(
                       "mt-1 flex items-center gap-1 text-xs",
-                      isCurrentUser ? "text-primary-100" : "text-text-secondary"
+                      isCurrentUser
+                        ? "text-primary-100"
+                        : "text-text-secondary",
                     )}
                   >
                     <span>{getRelativeTime(message.createdAt)}</span>
                     {message.isEdited && (
-                      <span 
+                      <span
                         className={cn(
                           "text-[9px]",
-                          isCurrentUser ? "text-white/70" : "text-gray-400"
+                          isCurrentUser ? "text-white/70" : "text-gray-400",
                         )}
                         title={`معدلة في ${formatTime(message.editedAt || message.updatedAt)}`}
                       >
                         • معدلة
                       </span>
                     )}
-                    {isCurrentUser && renderStatusIcon(getMessageStatus(message))}
+                    {isCurrentUser &&
+                      renderStatusIcon(getMessageStatus(message))}
                   </div>
 
                   {/* Message tail */}
@@ -464,7 +530,7 @@ export function ChatInterfaceRedesigned({ requestId, chatRoomId }: ChatInterface
                       "absolute bottom-0 h-4 w-4",
                       isCurrentUser
                         ? "-right-1 bg-primary-500"
-                        : "-left-1 bg-card border-l border-b border-border"
+                        : "-left-1 bg-card border-l border-b border-border",
                     )}
                     style={{
                       clipPath: isCurrentUser

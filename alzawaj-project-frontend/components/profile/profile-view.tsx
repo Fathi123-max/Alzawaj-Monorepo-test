@@ -67,8 +67,10 @@ export function ProfileView() {
 
   // Load selector data for dropdowns
   const { data: selectorData, loading: selectorLoading } = useSelectorData();
-  
-  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+
+  const handlePhotoUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -84,7 +86,7 @@ export function ProfileView() {
 
     setUploadingPhoto(true);
     setError(null);
-    
+
     try {
       const { uploadProfilePicture } = await import("@/lib/api/profile");
       await uploadProfilePicture(file);
@@ -95,7 +97,7 @@ export function ProfileView() {
       setUploadingPhoto(false);
     }
   };
-  
+
   useEffect(() => {
     loadProfile();
   }, []);
@@ -1572,12 +1574,23 @@ export function ProfileView() {
             <div className="relative">
               <div className="h-20 w-20 rounded-full bg-gradient-to-r from-primary-500 to-secondary-500 sm:flex hidden items-center justify-center overflow-hidden">
                 {profile.profilePicture?.url ? (
-                  <img src={profile.profilePicture.url} alt={profile.name} className="h-full w-full object-cover" />
+                  <img
+                    src={profile.profilePicture.url}
+                    alt={profile.name}
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
-                  <img src="/logo.png" alt="Logo" className="h-full w-full object-contain p-2" />
+                  <img
+                    src="/logo.png"
+                    alt="Logo"
+                    className="h-full w-full object-contain p-2"
+                  />
                 )}
               </div>
-              <label htmlFor="photo-upload" className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-1.5 cursor-pointer hover:bg-primary-600 transition-colors">
+              <label
+                htmlFor="photo-upload"
+                className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-1.5 cursor-pointer hover:bg-primary-600 transition-colors"
+              >
                 <Edit3 className="h-3 w-3" />
                 <input
                   id="photo-upload"

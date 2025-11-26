@@ -2,7 +2,7 @@
 
 import React, { Suspense, useState, useEffect, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { SearchFiltersComponent } from "@/components/search/search-filters";
+import { SearchFiltersRedesigned } from "@/components/search/search-filters-redesigned";
 import { ProfileCard } from "@/components/search/profile-card";
 
 import { Button } from "@/components/ui/button";
@@ -151,14 +151,21 @@ const convertToMockProfile = (apiProfile: Profile): MockProfile => {
     "غير محدد";
 
   // Get profile picture with fallback to default
-  const rawProfilePicture = apiProfile.profilePicture || (apiProfile as any).profile_picture || (apiProfile as any).avatar;
-  
+  const rawProfilePicture =
+    apiProfile.profilePicture ||
+    (apiProfile as any).profile_picture ||
+    (apiProfile as any).avatar;
+
   // Handle if profilePicture is an object (e.g., {url: "..."})
   let profilePicture = "/logo.png";
   if (typeof rawProfilePicture === "string") {
     profilePicture = rawProfilePicture;
   } else if (rawProfilePicture && typeof rawProfilePicture === "object") {
-    profilePicture = rawProfilePicture.url || rawProfilePicture.fileUrl || rawProfilePicture.path || "/logo.png";
+    profilePicture =
+      rawProfilePicture.url ||
+      rawProfilePicture.fileUrl ||
+      rawProfilePicture.path ||
+      "/logo.png";
   }
 
   console.log("🖼️ Profile Picture URL:", {
@@ -478,8 +485,6 @@ function SearchPageContent() {
         </p>
       </div>
 
-
-
       {/* Search Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
         <Card>
@@ -551,13 +556,12 @@ function SearchPageContent() {
           "
           >
             <div className="lg:pr-2">
-              <SearchFiltersComponent
+              <SearchFiltersRedesigned
                 filters={filters}
                 onFiltersChange={handleFiltersChange}
                 onSearch={handleSearch}
                 onReset={handleReset}
-                user={user}
-                className="shadow-lg border-0 transform transition-all duration-300 ease-in-out hover:shadow-xl lg:sticky lg:top-0 bg-white/95 backdrop-blur-sm"
+                userGender={user?.gender}
               />
             </div>
           </aside>

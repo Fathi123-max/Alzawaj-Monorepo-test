@@ -73,101 +73,129 @@ export async function updateProfileFlat(
     };
 
     // Map Basic Info
-    if (profileData['name']) structuredData.basicInfo.fullName = profileData['name'];
-    if (profileData['age']) structuredData.basicInfo.age = profileData['age'];
-    if (profileData['gender']) structuredData.basicInfo.gender = profileData['gender'];
-    if (profileData['nationality'])
-      structuredData.basicInfo.nationality = profileData['nationality'];
-    if (profileData['maritalStatus'])
-      structuredData.basicInfo.maritalStatus = profileData['maritalStatus'];
-    if (profileData['hasChildren'] !== undefined)
-      structuredData.basicInfo.hasChildren = profileData['hasChildren'] === "yes";
-    if (profileData['wantsChildren'] !== undefined)
+    if (profileData["name"])
+      structuredData.basicInfo.fullName = profileData["name"];
+    if (profileData["age"]) structuredData.basicInfo.age = profileData["age"];
+    if (profileData["gender"])
+      structuredData.basicInfo.gender = profileData["gender"];
+    if (profileData["nationality"])
+      structuredData.basicInfo.nationality = profileData["nationality"];
+    if (profileData["maritalStatus"])
+      structuredData.basicInfo.maritalStatus = profileData["maritalStatus"];
+    if (profileData["hasChildren"] !== undefined)
+      structuredData.basicInfo.hasChildren =
+        profileData["hasChildren"] === "yes";
+    if (profileData["wantsChildren"] !== undefined)
       structuredData.basicInfo.wantChildren =
-        profileData['wantsChildren'] === "yes";
-    if (profileData['dateOfBirth'])
-      structuredData.basicInfo.dateOfBirth = profileData['dateOfBirth'];
+        profileData["wantsChildren"] === "yes";
+    if (profileData["dateOfBirth"])
+      structuredData.basicInfo.dateOfBirth = profileData["dateOfBirth"];
 
     // Map Location
-    if (profileData['country']) {
-      structuredData.location.country = profileData['country'];
+    if (profileData["country"]) {
+      structuredData.location.country = profileData["country"];
       structuredData.basicInfo.currentLocation = {
         ...structuredData.basicInfo.currentLocation,
-        country: profileData['country'],
+        country: profileData["country"],
       };
     }
-    if (profileData['city']) {
-      structuredData.location.city = profileData['city'];
+    if (profileData["city"]) {
+      structuredData.location.city = profileData["city"];
       structuredData.basicInfo.currentLocation = {
         ...structuredData.basicInfo.currentLocation,
-        city: profileData['city'],
+        city: profileData["city"],
       };
     }
-    if (profileData['state']) structuredData.location.state = profileData['state'];
+    if (profileData["state"])
+      structuredData.location.state = profileData["state"];
 
     // Map Religious Info
-    if (profileData['religiousLevel'])
-      structuredData.religiousInfo.religiousLevel = profileData['religiousLevel'];
-    if (profileData['sect']) structuredData.religiousInfo.sect = profileData['sect'];
-    if (profileData['isPrayerRegular'] !== undefined)
-      structuredData.religiousInfo.prayerFrequency = profileData['isPrayerRegular']
+    if (profileData["religiousLevel"])
+      structuredData.religiousInfo.religiousLevel =
+        profileData["religiousLevel"];
+    if (profileData["sect"])
+      structuredData.religiousInfo.sect = profileData["sect"];
+    if (profileData["isPrayerRegular"] !== undefined)
+      structuredData.religiousInfo.prayerFrequency = profileData[
+        "isPrayerRegular"
+      ]
         ? "always"
         : "never"; // Simple mapping
-    if (profileData['quranMemorization'])
+    if (profileData["quranMemorization"])
       structuredData.religiousInfo.memorizedQuran =
-        profileData['quranMemorization'];
+        profileData["quranMemorization"];
 
     // Map Personal Info
-    if (profileData['height'])
-      structuredData.personalInfo.height = Number(profileData['height']);
-    if (profileData['weight'])
-      structuredData.personalInfo.weight = Number(profileData['weight']);
-    if (profileData['bodyType'])
-      structuredData.personalInfo.build = profileData['bodyType'];
-    if (profileData['skinColor'])
-      structuredData.personalInfo.ethnicity = profileData['skinColor']; // Mapping skinColor to ethnicity/skinColor
-    if (profileData['interests'])
-      structuredData.personalInfo.interests = profileData['interests'];
-    if (profileData['bio']) structuredData.personalInfo.about = profileData['bio'];
-    if (profileData['personalityDescription'])
+    if (profileData["height"])
+      structuredData.personalInfo.height = Number(profileData["height"]);
+    if (profileData["weight"])
+      structuredData.personalInfo.weight = Number(profileData["weight"]);
+    if (profileData["bodyType"])
+      structuredData.personalInfo.build = profileData["bodyType"];
+    if (profileData["skinColor"])
+      structuredData.personalInfo.ethnicity = profileData["skinColor"]; // Mapping skinColor to ethnicity/skinColor
+    if (profileData["interests"])
+      structuredData.personalInfo.interests = profileData["interests"];
+    if (profileData["bio"])
+      structuredData.personalInfo.about = profileData["bio"];
+    if (profileData["personalityDescription"])
       structuredData.personalInfo.personality = [
-        profileData['personalityDescription'],
+        profileData["personalityDescription"],
       ];
 
     // Map Professional
-    if (profileData['education'])
-      structuredData.professional.education = profileData['education'];
-    if (profileData['occupation'])
-      structuredData.professional.occupation = profileData['occupation'];
-    if (profileData['monthlyIncome'])
-      structuredData.professional.income = String(profileData['monthlyIncome']);
+    if (profileData["education"])
+      structuredData.professional.education = profileData["education"];
+    if (profileData["occupation"])
+      structuredData.professional.occupation = profileData["occupation"];
+    if (profileData["monthlyIncome"])
+      structuredData.professional.income = String(profileData["monthlyIncome"]);
 
     // Map Preferences (if any exist in flat data)
-    if (profileData['preferences']) structuredData.preferences = profileData['preferences'];
+    if (profileData["preferences"])
+      structuredData.preferences = profileData["preferences"];
 
     // Map top-level fields
-    if (profileData['areParentsAlive']) structuredData.areParentsAlive = profileData['areParentsAlive'];
-    if (profileData['parentRelationship']) structuredData.parentRelationship = profileData['parentRelationship'];
-    if (profileData['marriageGoals']) structuredData.marriageGoals = profileData['marriageGoals'];
-    if (profileData['familyPlans']) structuredData.familyPlans = profileData['familyPlans'];
-    if (profileData['relocationPlans']) structuredData.relocationPlans = profileData['relocationPlans'];
-    if (profileData['marriageTimeline']) structuredData.marriageTimeline = profileData['marriageTimeline'];
-    if (profileData['smokingStatus']) structuredData.smokingStatus = profileData['smokingStatus'];
-    
+    if (profileData["areParentsAlive"])
+      structuredData.areParentsAlive = profileData["areParentsAlive"];
+    if (profileData["parentRelationship"])
+      structuredData.parentRelationship = profileData["parentRelationship"];
+    if (profileData["marriageGoals"])
+      structuredData.marriageGoals = profileData["marriageGoals"];
+    if (profileData["familyPlans"])
+      structuredData.familyPlans = profileData["familyPlans"];
+    if (profileData["relocationPlans"])
+      structuredData.relocationPlans = profileData["relocationPlans"];
+    if (profileData["marriageTimeline"])
+      structuredData.marriageTimeline = profileData["marriageTimeline"];
+    if (profileData["smokingStatus"])
+      structuredData.smokingStatus = profileData["smokingStatus"];
+
     // Male specific top-level
-    if (profileData['hasBeard'] !== undefined) structuredData.hasBeard = profileData['hasBeard'];
-    if (profileData['financialSituation']) structuredData.financialSituation = profileData['financialSituation'];
-    if (profileData['housingOwnership']) structuredData.housingOwnership = profileData['housingOwnership'];
-    if (profileData['monthlyIncome']) structuredData.monthlyIncome = Number(profileData['monthlyIncome']);
+    if (profileData["hasBeard"] !== undefined)
+      structuredData.hasBeard = profileData["hasBeard"];
+    if (profileData["financialSituation"])
+      structuredData.financialSituation = profileData["financialSituation"];
+    if (profileData["housingOwnership"])
+      structuredData.housingOwnership = profileData["housingOwnership"];
+    if (profileData["monthlyIncome"])
+      structuredData.monthlyIncome = Number(profileData["monthlyIncome"]);
 
     // Female specific top-level
-    if (profileData['wearHijab'] !== undefined) structuredData.wearHijab = profileData['wearHijab'];
-    if (profileData['wearNiqab'] !== undefined) structuredData.wearNiqab = profileData['wearNiqab'];
-    if (profileData['clothingStyle']) structuredData.clothingStyle = profileData['clothingStyle'];
-    if (profileData['workAfterMarriage']) structuredData.workAfterMarriage = profileData['workAfterMarriage'];
-    if (profileData['guardianName']) structuredData.guardianName = profileData['guardianName'];
-    if (profileData['guardianPhone']) structuredData.guardianPhone = profileData['guardianPhone'];
-    if (profileData['guardianRelationship']) structuredData.guardianRelationship = profileData['guardianRelationship'];
+    if (profileData["wearHijab"] !== undefined)
+      structuredData.wearHijab = profileData["wearHijab"];
+    if (profileData["wearNiqab"] !== undefined)
+      structuredData.wearNiqab = profileData["wearNiqab"];
+    if (profileData["clothingStyle"])
+      structuredData.clothingStyle = profileData["clothingStyle"];
+    if (profileData["workAfterMarriage"])
+      structuredData.workAfterMarriage = profileData["workAfterMarriage"];
+    if (profileData["guardianName"])
+      structuredData.guardianName = profileData["guardianName"];
+    if (profileData["guardianPhone"])
+      structuredData.guardianPhone = profileData["guardianPhone"];
+    if (profileData["guardianRelationship"])
+      structuredData.guardianRelationship = profileData["guardianRelationship"];
 
     console.log("updateProfileFlat: Sending structured data:", structuredData);
 

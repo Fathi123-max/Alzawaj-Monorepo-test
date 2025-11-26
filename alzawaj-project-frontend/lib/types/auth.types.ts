@@ -21,7 +21,11 @@ export interface PrivacySettings {
     | "matches-only";
   showBasicInfo?: "everyone" | "verified-only" | "matches-only";
   showDetailedInfo?: "matches-only" | "guardian-approved" | "none";
-  allowContactRequests?: "everyone" | "verified-only" | "guardian-approved" | "none";
+  allowContactRequests?:
+    | "everyone"
+    | "verified-only"
+    | "guardian-approved"
+    | "none";
   showLastSeen?: "everyone" | "matches-only" | "none";
   hideFromLocalUsers?: boolean;
   requireGuardianApproval?: boolean;

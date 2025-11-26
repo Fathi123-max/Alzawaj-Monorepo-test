@@ -127,14 +127,15 @@ export function RegistrationWizard({
 
     switch (currentStep) {
       case 1:
+        return <Step1Auth {...stepProps} data={step1Data} />;
+      case 2:
         return (
-          <Step1Auth
+          <Step2AllData
             {...stepProps}
-            data={step1Data}
+            profilePicture={profilePicture}
+            setProfilePicture={setProfilePicture}
           />
         );
-      case 2:
-        return <Step2AllData {...stepProps} profilePicture={profilePicture} setProfilePicture={setProfilePicture} />;
       case 3:
         return (
           <Step3Review
@@ -253,7 +254,7 @@ export function RegistrationWizard({
 
         <CardFooter className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-2 px-4 sm:px-6 py-4">
           <div className="flex gap-2 w-full sm:w-auto order-2 sm:order-1">
-            {process.env.NODE_ENV === 'development' && (
+            {process.env.NODE_ENV === "development" && (
               <Button
                 type="button"
                 variant="outline"
@@ -266,7 +267,7 @@ export function RegistrationWizard({
                 بيانات تجريبية
               </Button>
             )}
-            
+
             <Button
               type="button"
               variant="outline"

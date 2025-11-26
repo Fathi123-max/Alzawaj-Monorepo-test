@@ -41,24 +41,33 @@ export function PrivacySettingsComponent({
     console.log("Privacy Settings - Profile data:", profile);
     console.log("Privacy Settings - Profile._id:", profile?._id);
     console.log("Privacy Settings - Profile.privacy:", profile?.privacy);
-    console.log("Privacy Settings - Profile.privacySettings:", profile?.privacySettings);
-    
+    console.log(
+      "Privacy Settings - Profile.privacySettings:",
+      profile?.privacySettings,
+    );
+
     if (profile?.privacy) {
       console.log("Privacy Settings - Using privacy field:", profile.privacy);
-      console.log("Privacy Settings - Current settings before merge:", settings);
+      console.log(
+        "Privacy Settings - Current settings before merge:",
+        settings,
+      );
       // Merge with defaults to ensure all fields are present
       const newSettings = {
         ...settings,
-        ...profile.privacy
+        ...profile.privacy,
       };
       console.log("Privacy Settings - New settings after merge:", newSettings);
       setSettings(newSettings);
     } else if (profile?.privacySettings) {
-      console.log("Privacy Settings - Using privacySettings field:", profile.privacySettings);
+      console.log(
+        "Privacy Settings - Using privacySettings field:",
+        profile.privacySettings,
+      );
       // Fallback for old data structure
-      setSettings(prev => ({
+      setSettings((prev) => ({
         ...prev,
-        ...profile.privacySettings
+        ...profile.privacySettings,
       }));
     } else {
       console.log("Privacy Settings - No privacy data found in profile");

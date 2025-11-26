@@ -25,7 +25,10 @@ export function NotificationsBox() {
   } = useQuery({
     queryKey: ["admin-notifications", filter],
     queryFn: async () => {
-      console.log("[NotificationsBox] Fetching notifications with filter:", filter); // Debug log
+      console.log(
+        "[NotificationsBox] Fetching notifications with filter:",
+        filter,
+      ); // Debug log
       const response = await adminApi.getNotifications(filter);
       console.log("[NotificationsBox] API Response:", response); // Debug log
       if (response.success && response.data) {

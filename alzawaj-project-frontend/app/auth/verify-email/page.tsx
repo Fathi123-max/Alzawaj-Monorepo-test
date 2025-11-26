@@ -30,7 +30,7 @@ export default function VerifyEmailPage() {
         setState({
           status: "success",
           message: "تم تأكيد بريدك الإلكتروني بنجاح",
-          ...(email && { email })
+          ...(email && { email }),
         });
       } catch (e: any) {
         const msg = "فشل في تأكيد البريد الإلكتروني";
@@ -62,14 +62,18 @@ export default function VerifyEmailPage() {
           {state.status === "success" && (
             <div className="space-y-4">
               <p>{state.message}</p>
-              <Button onClick={() => router.push("/auth/login")}>الانتقال لتسجيل الدخول</Button>
+              <Button onClick={() => router.push("/auth/login")}>
+                الانتقال لتسجيل الدخول
+              </Button>
             </div>
           )}
           {state.status === "error" && (
             <div className="space-y-4">
               <p className="text-red-600">{state.message}</p>
               {state.email && (
-                <Button variant="outline" onClick={resend}>إعادة إرسال رابط التأكيد</Button>
+                <Button variant="outline" onClick={resend}>
+                  إعادة إرسال رابط التأكيد
+                </Button>
               )}
             </div>
           )}
@@ -79,4 +83,3 @@ export default function VerifyEmailPage() {
     </div>
   );
 }
-
