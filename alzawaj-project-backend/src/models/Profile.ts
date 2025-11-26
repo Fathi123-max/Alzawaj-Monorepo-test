@@ -10,6 +10,7 @@ export interface IProfile extends Document {
   city: string;
   nationality: string;
   maritalStatus: "single" | "divorced" | "widowed";
+  education?: "primary" | "secondary" | "high-school" | "diploma" | "bachelor" | "master" | "doctorate" | "other";
   occupation?: string;
   religiousLevel: "basic" | "practicing" | "very-religious" | "moderate";
   isPrayerRegular: boolean;
@@ -315,6 +316,13 @@ const profileSchema = new Schema<IProfile>(
     },
 
     // Education & Work
+    education: {
+      type: String,
+      enum: {
+        values: ["primary", "secondary", "high-school", "diploma", "bachelor", "master", "doctorate", "other"],
+        message: "المستوى التعليمي غير صحيح",
+      },
+    },
     occupation: {
       type: String,
       maxlength: [100, "المهنة لا يجب أن تزيد عن 100 حرف"],

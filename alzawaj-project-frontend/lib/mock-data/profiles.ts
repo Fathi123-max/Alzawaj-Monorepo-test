@@ -607,10 +607,10 @@ export const filterOptions = {
     مصر: ["القاهرة", "الإسكندرية", "الجيزة"],
     سوريا: ["دمشق", "حلب", "حمص"],
   },
-  // Frontend displays Arabic, but backend expects English (see lib/constants/filter-mapping.ts)
+  // Frontend displays Arabic, backend expects English (see lib/constants/filter-mapping.ts)
   maritalStatuses: ["أعزب", "عزباء", "مطلق", "مطلقة", "أرمل", "أرملة"],
-  religiousLevels: ["متوسط", "ملتزم", "ملتزم جداً"],
-  educationLevels: ["ثانوي", "جامعي", "دراسات عليا"],
+  religiousLevels: ["أساسي", "متوسط", "ملتزم", "ملتزم جداً"],
+  educationLevels: ["ابتدائي", "ثانوي", "ثانوي عام", "دبلوم", "جامعي", "بكالوريوس", "دراسات عليا", "ماجستير", "دكتوراه", "أخرى"],
   occupations: [
     "مهندس",
     "طبيب",

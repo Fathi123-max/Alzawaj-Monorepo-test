@@ -252,9 +252,13 @@ export const searchProfiles = async (
       }
     }
 
-    // Education filter
+    // Education filter - check both top-level and professional.education
     if (education) {
-      searchQuery["education"] = education;
+      searchQuery.$or = searchQuery.$or || [];
+      searchQuery.$or.push(
+        { "education": education },
+        { "professional.education": education }
+      );
     }
 
     // Marital status filter
@@ -397,7 +401,11 @@ export const searchProfiles = async (
           doctorate: ["master", "doctorate"],
         };
         const educationLevels = similarEducation[education] || [education];
-        fuzzySearchQuery["education"] = { $in: educationLevels };
+        fuzzySearchQuery.$or = fuzzySearchQuery.$or || [];
+        fuzzySearchQuery.$or.push(
+          { "education": { $in: educationLevels } },
+          { "professional.education": { $in: educationLevels } }
+        );
       }
 
       // For religious commitment, include similar levels
