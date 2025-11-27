@@ -270,21 +270,21 @@ export default function RootLayout({
           rel="preload"
           href="/fonts/Noto_Kufi_Arabic/static/NotoKufiArabic-Regular.ttf"
           as="font"
-          type="font/truetype"
+          type="font/ttf"
           crossOrigin="anonymous"
         />
         <link
           rel="preload"
           href="/fonts/Noto_Kufi_Arabic/static/NotoKufiArabic-Medium.ttf"
           as="font"
-          type="font/truetype"
+          type="font/ttf"
           crossOrigin="anonymous"
         />
         <link
           rel="preload"
           href="/fonts/Amiri/Amiri-Regular.ttf"
           as="font"
-          type="font/truetype"
+          type="font/ttf"
           crossOrigin="anonymous"
         />
 

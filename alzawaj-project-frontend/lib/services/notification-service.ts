@@ -11,7 +11,8 @@ export const registerDeviceToken = async (): Promise<void> => {
     const token = await getFCMToken();
 
     if (!token) {
-      console.log('Could not get FCM token');
+      console.log('Could not get FCM token, this is normal in some environments');
+      // Still try to register even if we don't have a token since the backend might handle it
       return;
     }
 
@@ -20,6 +21,8 @@ export const registerDeviceToken = async (): Promise<void> => {
     console.log('Device token registered successfully');
   } catch (error) {
     console.error('Error registering device token:', error);
+    // Don't fail completely if token registration fails - the core messaging functionality
+    // should still work through Socket.IO even without push notifications
   }
 };
 
@@ -28,10 +31,24 @@ export const registerDeviceToken = async (): Promise<void> => {
  */
 export const requestNotificationPermission = async (): Promise<boolean> => {
   if (typeof window !== 'undefined' && 'Notification' in window) {
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      await registerDeviceToken();
-      return true;
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        try {
+          await registerDeviceToken();
+          console.log('Notification permission granted and device token registered');
+          return true;
+        } catch (error) {
+          console.error('Error registering device token:', error);
+          // Still return true because the permission was granted,
+          // even if token registration failed
+          return true;
+        }
+      }
+    } catch (permissionError) {
+      console.error('Error requesting notification permission:', permissionError);
+      // Continue without notifications
+      return false;
     }
   }
   return false;

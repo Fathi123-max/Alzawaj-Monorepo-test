@@ -6,6 +6,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from "react";
 import { io, Socket } from "socket.io-client";
 import { ChatRoom, Message } from "@/lib/types";
@@ -24,6 +25,7 @@ interface ChatContextType {
   rateLimited: boolean;
   setActiveRoom: (room: ChatRoom | null) => void;
   sendMessage: (content: string) => Promise<void>;
+  markMessagesAsRead: (roomId: string) => Promise<void>;
   startTyping: (roomId: string) => void;
   stopTyping: (roomId: string) => void;
   fetchChatRooms: () => Promise<void>;
@@ -40,6 +42,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [isTyping, setIsTyping] = useState<Record<string, boolean>>({});
   const [rateLimited, setRateLimited] = useState(false);
+  const messageTimeoutRefs = useRef<Record<string, NodeJS.Timeout>>({});
+  const pendingMessages = useRef<Record<string, { content: string, timestamp: number }>>({});
 
   const { user, isAuthenticated } = useAuth();
   const { addNotification } = useNotifications();
@@ -59,7 +63,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
       newSocket.on("connect", () => {
         setIsConnected(true);
-        console.log("Connected to chat server");
+        console.log("Connected to chat server with socket ID:", newSocket.id);
       });
 
       newSocket.on("disconnect", () => {
@@ -67,12 +71,75 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         console.log("Disconnected from chat server");
       });
 
+      // Listen for authentication events
+      newSocket.on("authenticated", (data) => {
+        console.log("Socket authenticated:", data);
+      });
+
+      newSocket.on("authentication_error", (error) => {
+        console.error("Socket authentication error:", error);
+      });
+
+      // Listen for errors from Socket.IO
+      newSocket.on("error", (error) => {
+        console.error("[ChatProvider] Socket.IO error:", error);
+        showToast.error("حدث خطأ في الاتصال بخادم المحادثة");
+      });
+
       // Listen for new messages
       newSocket.on("message", (message: Message) => {
-        setMessages((prev) => ({
-          ...prev,
-          [message.chatRoomId]: [...(prev[message.chatRoomId] || []), message],
-        }));
+        console.log('[SocketIO-Debug] Frontend received "message" event:', message);
+
+        setMessages((prev) => {
+          const roomMessages = prev[message.chatRoomId] || [];
+
+          // Check if this is a message we sent and have a temporary version of
+          const hasTempMessage = roomMessages.some(msg =>
+            msg.id.startsWith('temp-') &&
+            msg.content?.text === message.content?.text &&
+            msg.senderId === message.senderId
+          );
+
+          // If this is a message we sent coming back from the server, clear any related timeouts
+          if (message.senderId === user?.id && message.content?.text) {
+            // Find and clear any pending messages that match this content
+            for (const [attemptId, pendingMsg] of Object.entries(pendingMessages.current)) {
+              if (pendingMsg.content === message.content?.text) {
+                // Clear the associated timeout
+                const timeout = messageTimeoutRefs.current[attemptId];
+                if (timeout) {
+                  clearTimeout(timeout);
+                  delete messageTimeoutRefs.current[attemptId];
+                }
+                delete pendingMessages.current[attemptId];
+                break; // Only clear one matching attempt
+              }
+            }
+          }
+
+          if (hasTempMessage) {
+            // Replace temporary message with real one from server
+            const updatedMessages = roomMessages.map(msg => {
+              if (msg.id.startsWith('temp-') &&
+                  msg.content?.text === message.content?.text &&
+                  msg.senderId === message.senderId) {
+                return message; // Replace temp message with real one
+              }
+              return msg;
+            });
+
+            return {
+              ...prev,
+              [message.chatRoomId]: updatedMessages,
+            };
+          } else {
+            // This is a new incoming message, add it to the list
+            return {
+              ...prev,
+              [message.chatRoomId]: [...roomMessages, message],
+            };
+          }
+        });
 
         // Show notification if message is not from current user
         if (message.senderId !== user.id) {
@@ -123,14 +190,131 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         },
       );
 
+      // Listen for read receipts
+      newSocket.on("messagesRead", ({ chatRoomId, readerId, timestamp }) => {
+        console.log('[SocketIO-Debug] Frontend received "messagesRead" event:', { chatRoomId, readerId, timestamp });
+        // Update messages to show they've been read
+        setMessages((prev) => {
+          const roomMessages = prev[chatRoomId] || [];
+          const updatedMessages = roomMessages.map((msg) => {
+            if (msg.senderId === user.id) {
+              // If message was sent by current user, mark as read by recipient
+              return {
+                ...msg,
+                readBy: [...(msg.readBy || []), { user: readerId, readAt: timestamp }],
+              };
+            }
+            return msg;
+          });
+          return {
+            ...prev,
+            [chatRoomId]: updatedMessages,
+          };
+        });
+
+        // Update chat rooms to reflect read status
+        setChatRooms((prev) =>
+          prev.map((room) => {
+            if (room.id === chatRoomId) {
+              return {
+                ...room,
+                lastMessage: room.lastMessage
+                  ? { ...room.lastMessage, readBy: [...(room.lastMessage.readBy || []), readerId] }
+                  : undefined,
+              };
+            }
+            return room;
+          })
+        );
+      });
+
       // Listen for room updates
-      newSocket.on("roomUpdate", (room: ChatRoom) => {
-        setChatRooms((prev) => prev.map((r) => (r.id === room.id ? room : r)));
+      newSocket.on("roomUpdate", (updatedRoomData) => {
+        console.log('[SocketIO-Debug] Frontend received "roomUpdate" event:', updatedRoomData);
+        setChatRooms((prev) =>
+          prev.map((room) => {
+            if (room.id === updatedRoomData.id) {
+              return {
+                ...room,
+                lastMessage: {
+                  content: updatedRoomData.lastMessage?.content,
+                  senderId: updatedRoomData.lastMessage?.senderId,
+                  timestamp: updatedRoomData.lastMessage?.timestamp,
+                  type: updatedRoomData.lastMessage?.type,
+                },
+                lastMessageAt: updatedRoomData.lastMessageAt,
+                updatedAt: updatedRoomData.updatedAt,
+                unreadCount: updatedRoomData.unreadCount !== undefined ? updatedRoomData.unreadCount : room.unreadCount,
+              };
+            }
+            return room;
+          })
+        );
+      });
+
+      // Listen for read receipts
+      newSocket.on("messagesRead", (data) => {
+        console.log('[SocketIO-Debug] Frontend received "messagesRead" event:', data);
+        // Update messages to show they've been read
+        setMessages((prev) => {
+          const roomMessages = prev[data.chatRoomId] || [];
+          const updatedMessages = roomMessages.map((msg) => {
+            if (msg.senderId === user?.id) {
+              // If message was sent by current user, mark as read by recipient
+              return {
+                ...msg,
+                readBy: [...(msg.readBy || []), { user: data.readerId, readAt: data.timestamp }],
+              };
+            }
+            return msg;
+          });
+          return {
+            ...prev,
+            [data.chatRoomId]: updatedMessages,
+          };
+        });
+
+        // Update chat rooms to reflect read status
+        setChatRooms((prev) =>
+          prev.map((room) => {
+            if (room.id === data.chatRoomId) {
+              return {
+                ...room,
+                lastMessage: room.lastMessage
+                  ? { ...room.lastMessage, readBy: [...(room.lastMessage.readBy || []), data.readerId] }
+                  : undefined,
+              };
+            }
+            return room;
+          })
+        );
+      });
+
+      // Listen for markAsRead confirmations
+      newSocket.on("markAsReadConfirmation", (data) => {
+        console.log('[SocketIO-Debug] Frontend received "markAsReadConfirmation" event:', data);
+
+        // Clear any pending markAsRead timeouts
+        for (const [attemptId, timeout] of Object.entries(messageTimeoutRefs.current)) {
+          if (attemptId.startsWith('markRead_')) {
+            clearTimeout(timeout);
+            delete messageTimeoutRefs.current[attemptId];
+          }
+        }
       });
 
       setSocket(newSocket);
 
       return () => {
+        // Clear any remaining timeouts
+        Object.values(messageTimeoutRefs.current).forEach(timeout => {
+          clearTimeout(timeout);
+        });
+        messageTimeoutRefs.current = {};
+
+        // Clear pending messages
+        pendingMessages.current = {};
+
         newSocket.close();
       };
     }
@@ -205,27 +389,136 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           "to room:",
           activeRoom.id,
         ); // Debug log
-        // Send message via API
-        const response = await chatApi.sendMessage({
-          type: "text",
-          chatRoomId: activeRoom.id,
-          content,
-        });
 
-        console.log("[ChatProvider] Send message response:", response); // Debug log
-        if (response.success && response.data) {
-          // Add the new message to the local state
-          const newMessage = response.data;
+        // Primary: Try to send via Socket.IO first
+        if (socket && isConnected) {
+          console.log("[ChatProvider] Attempting to send message via Socket.IO");
+
+          // Optimistically update UI with the outgoing message
+          const optimisticMessage = {
+            id: `temp-${Date.now()}`,
+            chatRoomId: activeRoom.id,
+            senderId: user?.id,
+            content: {
+              text: content,
+              messageType: "text",
+            },
+            createdAt: new Date().toISOString(),
+            sender: { firstname: user?.firstname, lastname: user?.lastname },
+            status: "sending", // Indicate it's being sent
+            readBy: [],
+            islamicCompliance: { isAppropriate: true, checkedBy: "system" }
+          };
+
           setMessages((prev) => ({
             ...prev,
-            [activeRoom.id]: [...(prev[activeRoom.id] || []), newMessage],
+            [activeRoom.id]: [...(prev[activeRoom.id] || []), optimisticMessage],
           }));
 
-          showToast.success("تم إرسال الرسالة بنجاح");
+          // Send the message via Socket.IO
+          socket.emit("sendMessage", {
+            chatRoomId: activeRoom.id,
+            content: content,
+            senderId: user?.id
+          });
 
-          // Optionally refresh messages to ensure we have the latest data
-          // await fetchMessages(activeRoom.id);
+          // Create a unique ID for this message attempt
+          const messageAttemptId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+          // Register the pending message
+          pendingMessages.current[messageAttemptId] = {
+            content: content,
+            timestamp: Date.now()
+          };
+
+          // Set a timeout to fallback to API if Socket.IO doesn't respond within 2 seconds
+          const fallbackTimeout = setTimeout(() => {
+            console.log("[ChatProvider] Socket.IO timeout, falling back to API");
+
+            // Check if the temporary message still exists (meaning Socket.IO didn't replace it)
+            setMessages(prev => {
+              const roomMessages = prev[activeRoom.id] || [];
+              const hasTempMessage = roomMessages.some(msg =>
+                msg.id.startsWith('temp-') &&
+                msg.content?.text === content &&
+                msg.senderId === user?.id
+              );
+
+              if (hasTempMessage) {
+                // Make an API call to ensure the message is sent
+                chatApi.sendMessage({
+                  type: "text",
+                  chatRoomId: activeRoom.id,
+                  content,
+                })
+                .then(response => {
+                  if (response.success && response.data) {
+                    // Update the message with the one from the API
+                    setMessages(prev => {
+                      const updatedMessages = prev[activeRoom.id]?.map(msg => {
+                        if (msg.id.startsWith('temp-') &&
+                            msg.content?.text === content &&
+                            msg.senderId === user?.id) {
+                          return response.data; // Replace with API response
+                        }
+                        return msg;
+                      }) || [response.data];
+
+                      return {
+                        ...prev,
+                        [activeRoom.id]: updatedMessages
+                      };
+                    });
+                  } else {
+                    showToast.error("فشل إرسال الرسالة");
+                  }
+                })
+                .catch(error => {
+                  console.error("[ChatProvider] API fallback error:", error);
+                  showToast.error("فشل إرسال الرسالة");
+                });
+
+                return prev;
+              }
+              return prev;
+            });
+
+            // Clean up the timeout ref and pending message
+            delete messageTimeoutRefs.current[messageAttemptId];
+            delete pendingMessages.current[messageAttemptId];
+          }, 2000); // 2 second timeout for Socket.IO response
+
+          // Store the timeout ID for cleanup
+          messageTimeoutRefs.current[messageAttemptId] = fallbackTimeout;
+        } else {
+          // Fallback to API if Socket.IO is not available
+          console.log("[ChatProvider] Socket.IO not available, using API fallback");
+
+          const response = await chatApi.sendMessage({
+            type: "text",
+            chatRoomId: activeRoom.id,
+            content,
+          });
+
+          console.log("[ChatProvider] Send message response:", response); // Debug log
+          if (response.success && response.data) {
+            // Add the new message to the local state
+            const newMessage = response.data;
+            setMessages((prev) => ({
+              ...prev,
+              [activeRoom.id]: [...(prev[activeRoom.id] || []), newMessage],
+            }));
+          } else {
+            // If API failed, show error
+            showToast.error("فشل إرسال الرسالة");
+            return; // Don't show success message if failed
+          }
         }
+
+        showToast.success("تم إرسال الرسالة بنجاح");
+
+        // Optionally refresh messages to ensure we have the latest data
+        // await fetchMessages(activeRoom.id);
       } catch (error: any) {
         console.error("[ChatProvider] Send message error:", error); // Debug log
         const errorMessage =
@@ -244,7 +537,60 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         }
       }
     },
-    [activeRoom],
+    [activeRoom, socket, isConnected, user],
+  );
+
+  const markMessagesAsRead = useCallback(
+    async (roomId: string) => {
+      try {
+        console.log("[ChatProvider] Marking messages as read for room:", roomId);
+
+        // Primary: Try to mark as read via Socket.IO first
+        if (socket && isConnected) {
+          console.log("[ChatProvider] Attempting to mark messages as read via Socket.IO");
+
+          // Send the mark as read request via Socket.IO
+          socket.emit("markAsRead", {
+            chatRoomId: roomId
+          });
+
+          // Set a timeout to fallback to API if Socket.IO doesn't confirm within 2 seconds
+          const markReadAttemptId = `markRead_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+          const fallbackTimeout = setTimeout(async () => {
+            console.log("[ChatProvider] Socket.IO markAsRead timeout, falling back to API");
+
+            try {
+              await chatApi.markMessagesAsRead(roomId);
+              console.log("[ChatProvider] Messages marked as read via API fallback");
+            } catch (error: any) {
+              console.error("[ChatProvider] Error marking messages as read:", error);
+              showToast.error("فشل في تعليم الرسائل كمقروءة");
+            }
+
+            // Clean up
+            delete messageTimeoutRefs.current[markReadAttemptId];
+          }, 2000); // 2 second timeout for Socket.IO response
+
+          // Store the timeout ID for cleanup
+          messageTimeoutRefs.current[markReadAttemptId] = fallbackTimeout;
+        } else {
+          // Fallback: Mark as read via API if Socket.IO is not available
+          console.log("[ChatProvider] Socket.IO not available, using API fallback for markAsRead");
+
+          await chatApi.markMessagesAsRead(roomId);
+          console.log("[ChatProvider] Messages marked as read via API");
+        }
+      } catch (error: any) {
+        console.error("[ChatProvider] Error marking messages as read:", error);
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          "خطأ في تعليم الرسائل كمقروءة";
+        showToast.error(errorMessage);
+      }
+    },
+    [socket, isConnected],
   );
 
   const startTyping = useCallback(
@@ -275,6 +621,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     rateLimited,
     setActiveRoom,
     sendMessage,
+    markMessagesAsRead,
     startTyping,
     stopTyping,
     fetchChatRooms,

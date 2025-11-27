@@ -75,7 +75,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   height={38}
                   className="h-12 md:h-16 w-auto sm:mb-2"
                   priority
-                  quality={100}
                   sizes="(max-width: 768px) 64px, (max-width: 1280px) 80px, 96px"
                   suppressHydrationWarning
                 />

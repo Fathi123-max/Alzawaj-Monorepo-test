@@ -146,7 +146,6 @@ export function LandingNavigation() {
                 height={48}
                 className={`transition-all duration-300 ${isScrolled ? "xl:h-20" : "xl:h-24"} md:h-20 h-16 w-auto mb-2`}
                 priority
-                quality={100}
                 sizes="(max-width: 768px) 64px, (max-width: 1280px) 80px, 96px"
               />
               <span className="inline font-display sm:text-xl text-lg font-bold">
@@ -317,7 +316,6 @@ export function LandingNavigation() {
                   width={32}
                   height={32}
                   priority
-                  quality={100}
                   sizes="(max-width: 768px) 64px, (max-width: 1280px) 80px, 96px"
                 />
                 <h3 className="text-xl font-bold text-white mt-3">

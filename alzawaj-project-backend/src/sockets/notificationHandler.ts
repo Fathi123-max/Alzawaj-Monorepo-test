@@ -60,6 +60,190 @@ export const initializeSocketHandlers = (io: Server) => {
         socket.to(roomId).emit('userTyping', { userId, roomId, isTyping });
       }
     });
+
+    // Handle sending messages via Socket.IO
+    socket.on('sendMessage', async (data) => {
+      const userId = socket.data.userId;
+      if (!userId) {
+        socket.emit('error', { message: 'Authentication required' });
+        return;
+      }
+
+      try {
+        // We need to import the necessary models and controllers
+        const { Message } = await import('../models/Message');
+        const { ChatRoom } = await import('../models/ChatRoom');
+        const mongoose = await import('mongoose');
+
+        // Find the chat room
+        const chatRoom = await ChatRoom.findOne({
+          _id: data.chatRoomId,
+          "participants.user": new mongoose.Types.ObjectId(userId),
+          isActive: true,
+        });
+
+        if (!chatRoom) {
+          socket.emit('error', { message: 'Chat room not found or not authorized' });
+          return;
+        }
+
+        // Create the message
+        const message = new Message({
+          chatRoom: data.chatRoomId,
+          sender: new (mongoose as any).Types.ObjectId(userId),
+          content: {
+            text: data.content,
+            messageType: "text",
+          },
+          status: "approved", // Auto-approve messages by default
+          approvedAt: new Date(),
+          approvedBy: new (mongoose as any).Types.ObjectId(userId),
+        });
+
+        // Check content compliance
+        (message as any).checkCompliance();
+
+        // If content is inappropriate, mark as pending for moderation
+        if (!message.islamicCompliance.isAppropriate) {
+          message.status = "pending";
+          message.approvedAt = undefined;
+          message.approvedBy = undefined;
+        }
+
+        await message.save();
+
+        // Update chat room last message
+        (chatRoom as any).lastMessage = {
+          content: data.content,
+          sender: new (mongoose as any).Types.ObjectId(userId),
+          timestamp: new Date(),
+          type: "text",
+        };
+        (chatRoom as any).lastMessageAt = new Date();
+        await chatRoom.save();
+
+        // Populate sender info
+        await message.populate("sender", "firstname lastname");
+
+        // Emit to all participants except sender
+        chatRoom.participants.forEach((participant) => {
+          const participantUserId = (participant.user as any)._id || participant.user;
+          const participantStringId = typeof participantUserId === 'string' ? participantUserId : participantUserId.toString();
+          if (participantStringId !== userId) {
+            io.to(`user_${participantStringId}`).emit("message", {
+              id: (message._id as any).toString(),
+              chatRoomId: (chatRoom._id as any).toString(),
+              senderId: userId,
+              content: {
+                text: data.content,
+                messageType: "text",
+              },
+              createdAt: message.createdAt.toISOString(),
+              sender: message.sender, // Include sender info
+              status: "delivered", // Mark as delivered via real-time
+              readBy: [], // Initially no one has read the message
+              islamicCompliance: message.islamicCompliance,
+            });
+          }
+        });
+
+        // Emit room update to all participants (including sender) for last message updates
+        for (const participant of chatRoom.participants) {
+          const participantUserId = (participant.user as any)._id || participant.user;
+          const participantStringId = typeof participantUserId === 'string' ? participantUserId : participantUserId.toString();
+          const unreadCount = await Message.countDocuments({
+            chatRoom: chatRoom._id,
+            "readBy.user": { $ne: participantUserId },
+            sender: { $ne: participantUserId },
+            isDeleted: false,
+          });
+
+          io.to(`user_${participantStringId}`).emit("roomUpdate", {
+            id: (chatRoom._id as any).toString(),
+            lastMessage: {
+              content: data.content,
+              senderId: userId,
+              timestamp: new Date(),
+              type: "text",
+            },
+            lastMessageAt: new Date(),
+            updatedAt: new Date(),
+            unreadCount: participantStringId === userId ? 0 : unreadCount, // Unread count for recipient
+          });
+        }
+
+        // Also emit back to sender to update their UI
+        socket.emit('message', {
+          id: (message._id as any).toString(),
+          chatRoomId: (chatRoom._id as any).toString(),
+          senderId: userId,
+          content: {
+            text: data.content,
+            messageType: "text",
+          },
+          createdAt: message.createdAt.toISOString(),
+          sender: message.sender, // Include sender info
+          status: "delivered", // Mark as delivered via real-time
+          readBy: [], // Initially no one has read the message
+          islamicCompliance: message.islamicCompliance,
+        });
+      } catch (error) {
+        console.error('Error handling sendMessage via Socket.IO:', error);
+        socket.emit('error', { message: 'Failed to send message' });
+      }
+    });
+
+    // Handle marking messages as read via Socket.IO
+    socket.on('markAsRead', async (data) => {
+      const userId = socket.data.userId;
+      if (!userId) {
+        socket.emit('error', { message: 'Authentication required' });
+        return;
+      }
+
+      try {
+        // Import the required models
+        const { Message } = await import('../models/Message');
+        const { ChatRoom } = await import('../models/ChatRoom');
+        const mongoose = await import('mongoose');
+
+        const chatRoomId = data.chatRoomId;
+
+        // Mark all messages as read for this user in the chat room
+        await Message.markChatAsRead(
+          new mongoose.Types.ObjectId(chatRoomId),
+          new mongoose.Types.ObjectId(userId)
+        );
+
+        // Get the updated chat room to find the participants
+        const updatedChatRoom = await ChatRoom.findById(new mongoose.Types.ObjectId(chatRoomId))
+          .populate("participants.user", "firstname lastname");
+
+        if (updatedChatRoom) {
+          // Notify sender that messages have been read
+          for (const participant of updatedChatRoom.participants) {
+            const participantUserId = (participant.user as any)._id || participant.user;
+            const participantStringId = typeof participantUserId === 'string' ? participantUserId : participantUserId.toString();
+            if (participantStringId !== userId) {
+              io.to(`user_${participantStringId}`).emit("messagesRead", {
+                chatRoomId: chatRoomId,
+                readerId: userId,
+                timestamp: new Date().toISOString(),
+              });
+            }
+          }
+        }
+
+        // Confirm successful read marking to the client
+        socket.emit('markAsReadConfirmation', {
+          chatRoomId: chatRoomId,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Error handling markAsRead via Socket.IO:', error);
+        socket.emit('error', { message: 'Failed to mark messages as read' });
+      }
+    });
   });
 
   // Function to send notification to a specific user

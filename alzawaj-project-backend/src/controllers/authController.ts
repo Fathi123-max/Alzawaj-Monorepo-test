@@ -298,6 +298,13 @@ export const register = async (
       console.error("Error preparing verification email:", emailError);
     }
 
+    // Check for FCM token in request body and update user
+    if (req.body.fcmToken) {
+      newUser.fcmToken = req.body.fcmToken;
+      console.log("Updated FCM token for user during registration:", newUser._id);
+      await newUser.save(); // Save the FCM token update to the database
+    }
+
     res.status(201).json(
       createSuccessResponse(
         "تم التسجيل بنجاح. يرجى تأكيد بريدك الإلكتروني من الرسالة التي أرسلناها",
@@ -462,6 +469,12 @@ export const login = async (
       }),
     });
 
+    // Check for FCM token in request body and update user
+    if (req.body.fcmToken) {
+      user.fcmToken = req.body.fcmToken;
+      console.log("Updated FCM token for user:", user._id);
+    }
+
     console.log("Cleaning up old refresh tokens");
     // Clean up old refresh tokens
     user.refreshTokens = user.refreshTokens.filter(
@@ -554,6 +567,12 @@ export const refreshToken = async (
         ip: req.ip || "",
       }),
     };
+
+    // Check for FCM token in request body and update user
+    if (req.body.fcmToken) {
+      user.fcmToken = req.body.fcmToken;
+      console.log("Updated FCM token for user during refresh:", user._id);
+    }
 
     await user.save();
 

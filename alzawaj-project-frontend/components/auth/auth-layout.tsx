@@ -39,7 +39,6 @@ export function AuthLayout({
                 height={48}
                 className="h-16 xl:h-24 md:h-20 w-auto"
                 priority
-                quality={100}
                 sizes="(max-width: 768px) 64px, (max-width: 1280px) 80px, 96px"
               />
               <span className="inline md:mt-1">الزواج السعيد</span>

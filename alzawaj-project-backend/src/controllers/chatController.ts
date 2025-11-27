@@ -445,21 +445,90 @@ export const sendMessage = async (
     // Populate sender info
     await message.populate("sender", "firstname lastname");
 
-    // Emit message to socket (if implemented)
+    // Primary: Emit message to socket
     const io = req.app.get("io");
+    let socketEmissionSuccessful = false;
+
     if (io) {
-      // Emit to all participants except sender
-      chatRoom.participants.forEach((participant) => {
-        if (participant.user.toString() !== userId?.toString()) {
-          io.to(participant.user.toString()).emit("new_message", {
-            messageId: message._id,
-            chatRoomId: chatRoom._id,
-            senderId: userId,
-            content: content,
-            createdAt: message.createdAt,
-          });
+      try {
+        console.log(`[SocketIO-Debug] Found io object, attempting to emit messages to chat room: ${chatRoom._id}`);
+        console.log(`[SocketIO-Debug] Total participants: ${chatRoom.participants.length}`);
+
+        // Emit to all participants except sender
+        for (const participant of chatRoom.participants) {
+          const participantUserId = (participant.user as any)._id || participant.user;
+          const participantStringId = typeof participantUserId === 'string' ? participantUserId : participantUserId.toString();
+          console.log(`[SocketIO-Debug] Checking participant: ${participantStringId}, Sender: ${userId?.toString()}, Match: ${participantStringId === userId?.toString()}`);
+
+          if (participantStringId !== userId?.toString()) {
+            console.log(`[SocketIO-Debug] Attempting to emit 'message' event to participant room: user_${participantStringId}`);
+
+            io.to(`user_${participantStringId}`).emit("message", {
+              id: (message._id as mongoose.Types.ObjectId).toString(),
+              chatRoomId: (chatRoom._id as mongoose.Types.ObjectId).toString(),
+              senderId: userId.toString(),
+              content: {
+                text: content,
+                messageType: "text",
+              },
+              createdAt: message.createdAt.toISOString(),
+              sender: message.sender, // Include sender info
+              status: "delivered", // Mark as delivered via real-time
+              readBy: [], // Initially no one has read the message
+              islamicCompliance: message.islamicCompliance,
+            });
+
+            console.log(`[SocketIO-Debug] Successfully emitted 'message' event to participant room: user_${participantStringId}`);
+          } else {
+            console.log(`[SocketIO-Debug] Skipping sender: ${participantStringId}`);
+          }
         }
-      });
+
+        // Emit room update to all participants (including sender) for last message updates
+        for (const participant of chatRoom.participants) {
+          const participantUserId = (participant.user as any)._id || participant.user;
+          const participantStringId = typeof participantUserId === 'string' ? participantUserId : participantUserId.toString();
+
+          // Calculate unread count for this participant
+          const unreadCount = await Message.countDocuments({
+            chatRoom: chatRoom._id,
+            "readBy.user": { $ne: participantUserId },
+            sender: { $ne: participantUserId },
+            isDeleted: false,
+          });
+
+          console.log(`[SocketIO-Debug] Attempting to emit 'roomUpdate' event to participant room: user_${participantStringId} with unread count: ${unreadCount}`);
+
+          io.to(`user_${participantStringId}`).emit("roomUpdate", {
+            id: (chatRoom._id as mongoose.Types.ObjectId).toString(),
+            lastMessage: {
+              content: content,
+              senderId: userId.toString(),
+              timestamp: new Date(),
+              type: "text",
+            },
+            lastMessageAt: new Date(),
+            updatedAt: new Date(),
+            unreadCount: participantStringId === userId.toString() ? 0 : unreadCount, // Unread count for recipient
+          });
+
+          console.log(`[SocketIO-Debug] Successfully emitted 'roomUpdate' event to participant room: user_${participantStringId}`);
+        }
+
+        console.log(`[SocketIO-Debug] Completed all Socket.IO emissions`);
+        socketEmissionSuccessful = true;
+      } catch (error) {
+        console.error(`[SocketIO-Debug] Error emitting via Socket.IO:`, error);
+        socketEmissionSuccessful = false;
+      }
+    } else {
+      console.log(`[SocketIO-Debug] io object is not available in req.app`);
+      socketEmissionSuccessful = false;
+    }
+
+    // Fallback: If Socket.IO failed, client will use API polling
+    if (!socketEmissionSuccessful) {
+      console.log(`[SocketIO-Debug] Socket.IO failed, relying on API fallback`);
     }
 
     res.status(201).json(
@@ -554,9 +623,62 @@ export const markAsRead = async (
     // Mark all messages as read
     if (userId) {
       await Message.markChatAsRead(
-        new mongoose.Types.ObjectId(chatRoomId), 
+        new mongoose.Types.ObjectId(chatRoomId),
         userId as mongoose.Types.ObjectId
       );
+    }
+
+    // Primary: Emit read receipt to sender via Socket.IO
+    const io = req.app.get("io");
+    let socketEmissionSuccessful = false;
+
+    if (io && userId) {
+      try {
+        console.log(`[SocketIO-Debug] markAsRead: Found io object, attempting to emit read receipts for chat room: ${chatRoomId}`);
+
+        // Get the chat room to find the sender
+        const updatedChatRoom = await ChatRoom.findById(new mongoose.Types.ObjectId(chatRoomId))
+          .populate("participants.user", "firstname lastname");
+
+        if (updatedChatRoom) {
+          console.log(`[SocketIO-Debug] markAsRead: Found chat room with ${updatedChatRoom.participants.length} participants`);
+
+          // Notify sender that messages have been read
+          for (const participant of updatedChatRoom.participants) {
+            const participantUserId = (participant.user as any)._id || participant.user;
+            const participantStringId = typeof participantUserId === 'string' ? participantUserId : participantUserId.toString();
+            console.log(`[SocketIO-Debug] markAsRead: Checking participant: ${participantStringId}, Reader: ${userId.toString()}, Match: ${participantStringId === userId.toString()}`);
+
+            if (participantStringId !== userId.toString()) {
+              console.log(`[SocketIO-Debug] markAsRead: Emitting 'messagesRead' event to participant: ${participantStringId}`);
+
+              io.to(participantStringId).emit("messagesRead", {
+                chatRoomId: chatRoomId,
+                readerId: userId.toString(),
+                timestamp: new Date().toISOString(),
+              });
+
+              console.log(`[SocketIO-Debug] markAsRead: Successfully emitted 'messagesRead' event to participant: ${participantStringId}`);
+            } else {
+              console.log(`[SocketIO-Debug] markAsRead: Skipping reader: ${participantStringId}`);
+            }
+          }
+          socketEmissionSuccessful = true;
+        } else {
+          console.log(`[SocketIO-Debug] markAsRead: Could not find chat room: ${chatRoomId}`);
+        }
+      } catch (error) {
+        console.error(`[SocketIO-Debug] Error emitting read receipts via Socket.IO:`, error);
+        socketEmissionSuccessful = false;
+      }
+    } else {
+      console.log(`[SocketIO-Debug] markAsRead: io object is not available or userId is null`);
+      socketEmissionSuccessful = false;
+    }
+
+    // Fallback: If Socket.IO failed, client will use API polling
+    if (!socketEmissionSuccessful) {
+      console.log(`[SocketIO-Debug] markAsRead: Socket.IO failed, relying on API fallback`);
     }
 
     res.json(createSuccessResponse("تم تحديد الرسائل كمقروءة"));

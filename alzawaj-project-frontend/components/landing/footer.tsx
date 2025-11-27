@@ -19,7 +19,6 @@ export function LandingFooter() {
                 height={48}
                 className="h-20 sm:h-20 w-auto"
                 priority
-                quality={100}
                 sizes="(max-width: 768px) 64px, (max-width: 1280px) 80px, 96px"
               />
               <h3 className="text-card-title font-heading sm:mt-4 mt-2 arabic-optimized">

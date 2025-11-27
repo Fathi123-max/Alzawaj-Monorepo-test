@@ -22,14 +22,23 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
     const permission = await Notification.requestPermission();
 
     if (permission === 'granted') {
-      // Get registration token
-      const token = await getToken(messaging, {
-        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
-      });
+      let token: string | null = null;
+      try {
+        // Get registration token
+        token = await getToken(messaging, {
+          vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+        });
+      } catch (tokenErr) {
+        console.warn('Failed to get FCM token (this is normal in development):', tokenErr);
+        // In development, especially with HTTP or self-signed certs, token retrieval may fail
+        // but we can still use Socket.IO for real-time messaging
+      }
 
       // Send token to your backend to store against user
       if (token) {
         await registerTokenWithBackend(token);
+      } else {
+        console.log('Notification permission granted, but no FCM token obtained (this is OK for development)');
       }
 
       return token;
@@ -39,6 +48,7 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
     }
   } catch (err) {
     console.error('Error getting notification permission:', err);
+    // Still allow the app to function without notifications
     return null;
   }
 };
@@ -48,20 +58,16 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
  */
 const registerTokenWithBackend = async (token: string): Promise<void> => {
   try {
-    const response = await fetch('/api/notifications/register-token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`, // Include user's auth token
-      },
-      body: JSON.stringify({ token }),
-    });
+    // Use the API client to ensure proper headers and authentication
+    const ApiClient = (await import('@/lib/api/client')).ApiClient;
 
-    if (!response.ok) {
-      throw new Error('Failed to register token with backend');
+    const response = await ApiClient.post('/notifications/register-token', { token });
+
+    if (response.success) {
+      console.log('FCM token registered with backend successfully');
+    } else {
+      console.error('Failed to register token with backend:', response);
     }
-
-    console.log('FCM token registered with backend successfully');
   } catch (error) {
     console.error('Error registering token with backend:', error);
   }

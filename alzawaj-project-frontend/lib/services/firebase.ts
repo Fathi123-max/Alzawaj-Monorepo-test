@@ -36,23 +36,73 @@ export const getFCMToken = async (): Promise<string | null> => {
   }
 
   try {
-    // Register service worker first
-    await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-
-    // Request notification permission
+    // Request notification permission first
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
       console.log('Notification permission not granted.');
       return null;
     }
 
-    // Get token
-    const token = await getToken(messaging, {
-      vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || undefined,
-    });
+    // Ensure service worker is supported and registered
+    if ('serviceWorker' in navigator) {
+      try {
+        // Wait for service worker to be ready before getting token
+        // This ensures proper initialization for Firebase Messaging
+        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        console.log('Firebase messaging service worker registered with scope:', registration.scope);
+
+        // Wait for the service worker to be active
+        if (registration.waiting) {
+          console.log('Service worker is waiting to become active');
+        } else if (registration.active) {
+          console.log('Service worker is already active');
+        } else if (registration.installing) {
+          console.log('Service worker is installing');
+          // Wait for the service worker to become active
+          await new Promise((resolve) => {
+            const serviceWorker = registration.installing;
+            if (serviceWorker) {
+              serviceWorker.addEventListener('statechange', (event) => {
+                const target = event.target as ServiceWorker;
+                if (target.state === 'activated') {
+                  console.log('Service worker is now active');
+                  resolve(void 0);
+                }
+              });
+            } else {
+              resolve(void 0);
+            }
+          });
+        }
+
+        // Wait a bit more to ensure the service worker is fully ready
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (swError) {
+        console.warn('Service worker registration failed, push notifications will not be available in this environment:', swError);
+        // In development, service worker registration often fails for various reasons (HTTPS required, etc.)
+        // We can still use Socket.IO for real-time messaging
+        return null;
+      }
+    } else {
+      console.log('Service Worker not supported in this browser');
+      return null;
+    }
+
+    // Get token - Firebase will use the registered service worker
+    let token;
+    try {
+      token = await getToken(messaging, {
+        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || undefined,
+      });
+    } catch (tokenError) {
+      console.warn('Failed to get FCM token:', tokenError);
+      // This commonly fails in development environments (HTTP vs HTTPS, etc.)
+      // but we can still function with Socket.IO for real-time messaging
+      return null;
+    }
 
     if (token) {
-      console.log('FCM Registration token:', token);
+      console.log('FCM Registration token:', token.substring(0, 20) + '...');
       return token;
     } else {
       console.log('No registration token available. Request permission to generate one.');
@@ -60,6 +110,15 @@ export const getFCMToken = async (): Promise<string | null> => {
     }
   } catch (err) {
     console.log('An error occurred while retrieving token:', err);
+    // Check if it's specifically a service worker registration or FCM error
+    if (err instanceof Error &&
+        (err.message.includes('ServiceWorker') ||
+         err.message.includes('Messaging') ||
+         err.message.includes('push service'))) {
+      console.log('Service worker or messaging registration failed:', err.message);
+      // This error can occur in certain environments (development, HTTP vs HTTPS)
+      // Just return null instead of failing completely
+    }
     return null;
   }
 };

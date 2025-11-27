@@ -42,16 +42,11 @@ export const sendPushNotification = async (
   data?: Record<string, string>
 ): Promise<boolean> => {
   try {
-    // In a real application, you'd fetch the FCM token from the user's profile
-    // This is a simplified version
-    // Example: const user = await User.findById(userId); 
-    // const fcmToken = user.fcmToken;
+    // Fetch the user from the database
+    const User = (await import('../models/User')).User;
+    const user = await User.findById(userId);
 
-    // Since we don't have real tokens stored, we'll use a mock token for testing
-    // In production, replace this with the real FCM token from the user's profile
-    const mockToken = process.env.FIREBASE_MOCK_TOKEN || null;
-
-    if (!mockToken) {
+    if (!user || !user.fcmToken) {
       logger.warn(`No FCM token found for user ${userId}`);
       return false;
     }
@@ -65,14 +60,14 @@ export const sendPushNotification = async (
         ...data,
         userId, // Include user ID in the data payload
       },
-      token: mockToken, // Replace with actual user FCM token
+      token: user.fcmToken, // Use the actual FCM token from the user's profile
     };
 
     const response = await messaging.send(message);
-    logger.info(`Successfully sent message: ${response}`);
+    logger.info(`Successfully sent message to user ${userId}: ${response}`);
     return true;
   } catch (error) {
-    logger.error(`Error sending push notification:`, error);
+    logger.error(`Error sending push notification to user ${userId}:`, error);
     return false;
   }
 };
@@ -87,13 +82,43 @@ export const sendMulticastNotification = async (
   data?: Record<string, string>
 ): Promise<{ successCount: number; failureCount: number }> => {
   try {
-    // In a real application, you'd fetch FCM tokens for all users
-    // const users = await User.find({ _id: { $in: userIds } });
-    // const tokens = users.map(user => user.fcmToken).filter(token => token);
+    // Fetch users from the database
+    const User = (await import('../models/User')).User;
+    const users = await User.find({ _id: { $in: userIds } });
 
-    // For now, we'll return a mock response
-    logger.info(`Sending multicast notification to ${userIds.length} users`);
-    return { successCount: userIds.length, failureCount: 0 };
+    // Get tokens from users who have them
+    const tokens = users
+      .filter(user => user.fcmToken)
+      .map(user => user.fcmToken as string);
+
+    if (tokens.length === 0) {
+      logger.warn(`No FCM tokens found for any of the ${userIds.length} users`);
+      return { successCount: 0, failureCount: userIds.length };
+    }
+
+    // For multiple tokens, we need to send individual notifications
+    const results = await Promise.allSettled(
+      tokens.map(token => {
+        return messaging.send({
+          notification: {
+            title,
+            body,
+          },
+          data: data || {},
+          token, // Individual token
+        });
+      })
+    );
+
+    const successCount = results.filter(result => result.status === 'fulfilled').length;
+    const failureCount = results.filter(result => result.status === 'rejected').length;
+
+    logger.info(`Successfully sent ${successCount} out of ${tokens.length} multicast notifications`);
+
+    return {
+      successCount,
+      failureCount,
+    };
   } catch (error) {
     logger.error(`Error sending multicast notification:`, error);
     return { successCount: 0, failureCount: userIds.length };

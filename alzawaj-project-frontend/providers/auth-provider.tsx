@@ -14,6 +14,7 @@ import {
   debugAuthState,
   initializeAuth,
 } from "@/lib/utils/auth.utils";
+import { requestNotificationPermission } from "@/lib/services/notification-service";
 
 interface AuthState {
   user: User | null;
@@ -271,6 +272,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         console.log("AuthProvider: Login completed successfully");
+
+        // Request notification permissions after successful login
+        // Using setTimeout to ensure token is properly stored before notification registration
+        setTimeout(async () => {
+          try {
+            const notificationGranted = await requestNotificationPermission();
+            console.log("AuthProvider: Notification permission granted:", notificationGranted);
+          } catch (notificationError) {
+            console.error("AuthProvider: Error requesting notification permission:", notificationError);
+            // Don't throw this error as login was successful, just log it
+          }
+        }, 1000); // Delay by 1 second to ensure proper token setup
       } else {
         console.log(
           "AuthProvider: Backend response was not successful:",
@@ -306,6 +319,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         dispatch({ type: "SET_USER", payload: { user } });
         showToast.success("تم التحقق بنجاح");
+
+        // Request notification permissions after successful OTP verification
+        setTimeout(async () => {
+          try {
+            const notificationGranted = await requestNotificationPermission();
+            console.log("AuthProvider: Notification permission granted after OTP:", notificationGranted);
+          } catch (notificationError) {
+            console.error("AuthProvider: Error requesting notification permission after OTP:", notificationError);
+            // Don't throw this error as OTP verification was successful, just log it
+          }
+        }, 1000); // Delay by 1 second to ensure proper token setup
       }
     } catch (error: any) {
       showToast.error(error.message || "خطأ في التحقق");
