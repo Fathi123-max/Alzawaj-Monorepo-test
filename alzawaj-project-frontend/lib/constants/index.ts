@@ -67,6 +67,8 @@ export const API_ENDPOINTS = {
     GET: "/notifications",
     MARK_READ: "/notifications/read",
     GET_UNREAD_COUNT: "/notifications/unread-count",
+    REGISTER_TOKEN: "/notifications/register-token",
+    SEND: "/notifications/send",
   },
 
   // Reports

@@ -12,6 +12,7 @@ import { LoadingProvider } from "@/providers/loading-provider";
 import { ProfilePrivacyProvider } from "@/providers/profile-privacy-provider";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useState } from "react";
+import NotificationsProviderClient from "./notifications-provider-client";
 
 interface ProvidersProps {
   children: ReactNode;
@@ -53,7 +54,11 @@ export function Providers({ children }: ProvidersProps) {
               <ProfilePrivacyProvider>
                 <LoadingProvider>
                   <NotificationProvider>
-                    <ChatProvider>{children}</ChatProvider>
+                    <ChatProvider>
+                      <NotificationsProviderClient>
+                        {children}
+                      </NotificationsProviderClient>
+                    </ChatProvider>
                   </NotificationProvider>
                 </LoadingProvider>
               </ProfilePrivacyProvider>

@@ -6,6 +6,8 @@ import * as notificationController from "../controllers/notificationController";
 
 const router: Router = express.Router();
 
+import { body } from "express-validator";
+
 // Validation rules
 const getNotificationsValidation = [
   query("page").optional().isInt({ min: 1 }).withMessage("رقم الصفحة يجب أن يكون رقمًا موجبًا"),
@@ -14,6 +16,10 @@ const getNotificationsValidation = [
 
 const markAsReadValidation = [
   param("notificationId").isMongoId().withMessage("معرف الإشعار غير صحيح"),
+];
+
+const registerTokenValidation = [
+  body("token").notEmpty().withMessage("FCM token is required"),
 ];
 
 // Routes
@@ -32,5 +38,11 @@ router.get("/unread-count", protect, notificationController.getUnreadCount);
 
 // Delete notification
 router.delete("/:notificationId", protect, notificationController.deleteNotification);
+
+// Register device token for push notifications
+router.post("/register-token", protect, registerTokenValidation, validateRequest, notificationController.registerDeviceToken);
+
+// Send notification (admin only)
+router.post("/send", protect, notificationController.sendNotification);
 
 export default router;

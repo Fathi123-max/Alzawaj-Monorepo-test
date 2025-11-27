@@ -455,148 +455,7 @@ export const searchProfiles = async (
 
     // Calculate pagination
     let totalPages = Math.ceil(totalProfiles / Number(limit));
-    let isFuzzySearchResult = false;
-
-    // If no exact matches found and fuzzy search is enabled, try near values
-    if (totalProfiles === 0 && fuzzy) {
-      // Create a fuzzy search query that broadens the criteria
-      const fuzzySearchQuery: any = {
-        userId: { $ne: userId },
-        isActive: true,
-        isDeleted: false,
-        "gender": searcherProfile.gender === "m" ? "f" : "m",
-        "privacy.profileVisibility": { $in: ["everyone", "verified-only", "matches-only"] },
-      };
-
-      // For age, expand the range by ±5 years if age criteria were provided
-      if (ageMin || ageMax) {
-        const fuzzyAgeQuery: any = {};
-        if (ageMin)
-          fuzzyAgeQuery.$gte = Math.max(18, parseInt(ageMin.toString()) - 5);
-        if (ageMax)
-          fuzzyAgeQuery.$lte = Math.min(100, parseInt(ageMax.toString()) + 5);
-        fuzzySearchQuery["age"] = fuzzyAgeQuery;
-      }
-
-      // For location, use the same original location criteria
-      if (location) {
-        const locationConditions = [
-          { "location.country": { $regex: location, $options: "i" } },
-          { "location.city": { $regex: location, $options: "i" } },
-          { "location.state": { $regex: location, $options: "i" } },
-        ];
-        
-        if (fuzzySearchQuery.$or) {
-          // If there are existing $or conditions, add location conditions
-          fuzzySearchQuery.$or = [...fuzzySearchQuery.$or, ...locationConditions];
-        } else {
-          fuzzySearchQuery.$or = locationConditions;
-        }
-      }
-
-      // For education, include similar levels
-      if (education) {
-        // Define similar education levels
-        const similarEducation: Record<string, string[]> = {
-          primary: ["primary", "secondary"],
-          secondary: ["primary", "secondary", "high-school"],
-          "high-school": ["secondary", "high-school", "diploma"],
-          diploma: ["high-school", "diploma", "bachelor"],
-          bachelor: ["diploma", "bachelor", "master"],
-          master: ["bachelor", "master", "doctorate"],
-          doctorate: ["master", "doctorate"],
-        };
-        const educationLevels = similarEducation[education] || [education];
-        fuzzySearchQuery.$or = fuzzySearchQuery.$or || [];
-        fuzzySearchQuery.$or.push(
-          { "education": { $in: educationLevels } },
-          { "professional.education": { $in: educationLevels } }
-        );
-      }
-
-      // For religious commitment, include similar levels
-      if (religiousCommitment) {
-        // Define similar religious levels
-        const similarReligiousLevels: Record<string, string[]> = {
-          basic: ["basic", "moderate"],
-          moderate: ["basic", "moderate", "practicing"],
-          practicing: ["moderate", "practicing", "very-religious"],
-          "very-religious": ["practicing", "very-religious"],
-        };
-        const religiousLevels = similarReligiousLevels[religiousCommitment] || [
-          religiousCommitment,
-        ];
-        fuzzySearchQuery["religiousLevel"] = {
-          $in: religiousLevels,
-        };
-      }
-
-      // For profession, use substring matching with original profession
-      if (profession) {
-        fuzzySearchQuery["occupation"] = {
-          $regex: profession,
-          $options: "i",
-        };
-      }
-
-      // For marital status, religious commitment, and children criteria, keep exact matches
-      if (maritalStatus) {
-        fuzzySearchQuery["maritalStatus"] = maritalStatus;
-      }
-
-      if (hasChildren !== undefined) {
-        fuzzySearchQuery["hasChildren"] =
-          hasChildren === true || (hasChildren as any) === "true" ? "yes" : "no";
-      }
-
-      if (wantsChildren !== undefined) {
-        fuzzySearchQuery["wantsChildren"] =
-          wantsChildren === true || (wantsChildren as any) === "true" ? "yes" : "no";
-      }
-
-      // Name fuzzy search - only if name was provided in original search
-      if (name) {
-        const nameConditions = [
-          { "basicInfo.fullName": { $regex: name, $options: "i" } },
-          { name: { $regex: name, $options: "i" } }
-        ];
-        
-        if (fuzzySearchQuery.$or) {
-          // If other filter already created $or, add name conditions to it
-          fuzzySearchQuery.$or = [...fuzzySearchQuery.$or, ...nameConditions];
-        } else {
-          // Otherwise, create a new $or condition for name
-          fuzzySearchQuery.$or = nameConditions;
-        }
-      }
-
-      // Exclude blocked users
-      if (
-        searcherProfile.privacy?.blockedUsers &&
-        searcherProfile.privacy.blockedUsers.length > 0
-      ) {
-        fuzzySearchQuery.userId = {
-          $nin: [...(searcherProfile.privacy.blockedUsers || []), userId],
-        };
-      }
-
-      // Execute the fuzzy search to get total count
-      const fuzzyTotalProfiles = await Profile.countDocuments(fuzzySearchQuery);
-
-      if (fuzzyTotalProfiles > 0) {
-        // Now execute the fuzzy search with pagination
-        profiles = await Profile.find(fuzzySearchQuery)
-          .select('-__v')
-          .skip((Number(page) - 1) * Number(limit))
-          .limit(Number(limit));
-
-        totalProfiles = fuzzyTotalProfiles;
-        isFuzzySearchResult = true;
-      }
-    }
-
-    // Calculate pagination
-    totalPages = Math.ceil(totalProfiles / Number(limit));
+    const isFuzzySearchResult = false; // Fuzzy search has been removed
     pagination = {
       currentPage: Number(page),
       totalPages,
@@ -693,7 +552,7 @@ export const searchProfiles = async (
           hasChildren,
           wantsChildren,
           sortBy,
-          fuzzy, // This will be true by default now
+          fuzzy: false, // Fuzzy search has been removed
         },
       })
     );

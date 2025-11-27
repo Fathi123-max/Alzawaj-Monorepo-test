@@ -275,6 +275,21 @@ export const notificationsApi = {
     ApiClient.get<{ count: number }>(
       API_ENDPOINTS.NOTIFICATIONS.GET_UNREAD_COUNT,
     ),
+  registerDeviceToken: (data: { token: string }) =>
+    ApiClient.post<{ success: boolean }>(
+      `${API_ENDPOINTS.NOTIFICATIONS.REGISTER_TOKEN}`,
+      data,
+    ),
+  sendNotification: (data: {
+    userId: string;
+    title: string;
+    message: string;
+    type: string
+  }) =>
+    ApiClient.post<{ success: boolean }>(
+      `${API_ENDPOINTS.NOTIFICATIONS.SEND}`,
+      data,
+    ),
 };
 
 // Reports API (unchanged)

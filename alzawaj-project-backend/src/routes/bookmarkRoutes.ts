@@ -4,7 +4,7 @@ import { validateRequest } from '../middleware/validationMiddleware';
 import { protect } from '../middleware/authMiddleware';
 import * as bookmarkController from '../controllers/bookmarkController';
 
-const router = express.Router();
+const router: express.Router = express.Router();
 
 // Add bookmark
 router.post(

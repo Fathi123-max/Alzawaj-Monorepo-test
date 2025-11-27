@@ -25,7 +25,7 @@ async function fixTokenStorage() {
     console.log('Current token:', user.emailVerificationToken);
 
     // Hash the current token and update it
-    const hashedToken = crypto.createHash('sha256').update(user.emailVerificationToken).digest('hex');
+    const hashedToken = crypto.createHash('sha256').update(user.emailVerificationToken || "").digest('hex');
     console.log('Hashed token:', hashedToken);
 
     // Update the user with the hashed token

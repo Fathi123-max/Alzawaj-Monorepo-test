@@ -45,83 +45,98 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { addNotification } = useNotifications();
 
   // Initialize socket connection
-  // useEffect(() => {
-  //   if (isAuthenticated && user) {
-  //     const newSocket = io(
-  //       process.env["NEXT_PUBLIC_SOCKET_URL"] || "http://localhost:3000",
-  //       {
-  //         auth: {
-  //           token: localStorage.getItem("zawaj_auth_token"),
-  //         },
-  //       },
-  //     );
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const newSocket = io(
+        process.env["NEXT_PUBLIC_SOCKET_URL"] || "http://localhost:5001",
+        {
+          auth: {
+            token: localStorage.getItem("zawaj_auth_token"),
+          },
+          transports: ["websocket", "polling"],
+        },
+      );
 
-  //     newSocket.on("connect", () => {
-  //       setIsConnected(true);
-  //       console.log("Connected to chat server");
-  //     });
+      newSocket.on("connect", () => {
+        setIsConnected(true);
+        console.log("Connected to chat server");
+      });
 
-  //     newSocket.on("disconnect", () => {
-  //       setIsConnected(false);
-  //       console.log("Disconnected from chat server");
-  //     });
+      newSocket.on("disconnect", () => {
+        setIsConnected(false);
+        console.log("Disconnected from chat server");
+      });
 
-  //     // Listen for new messages
-  //     newSocket.on("message", (message: Message) => {
-  //       setMessages((prev) => ({
-  //         ...prev,
-  //         [message.chatRoomId]: [...(prev[message.chatRoomId] || []), message],
-  //       }));
+      // Listen for new messages
+      newSocket.on("message", (message: Message) => {
+        setMessages((prev) => ({
+          ...prev,
+          [message.chatRoomId]: [...(prev[message.chatRoomId] || []), message],
+        }));
 
-  //       // Show notification if message is not from current user
-  //       if (message.senderId !== user.id) {
-  //         addNotification({
-  //           id: Date.now().toString(),
-  //           userId: user.id,
-  //           type: "message",
-  //           title: "رسالة جديدة",
-  //           message: `رسالة جديدة من ${(message as any).senderName || "مستخدم"}`,
-  //           isRead: false,
-  //           createdAt: new Date().toISOString(),
-  //           data: { messageId: message.id, chatRoomId: message.chatRoomId },
-  //         });
+        // Show notification if message is not from current user
+        if (message.senderId !== user.id) {
+          addNotification({
+            id: message.id,
+            userId: user.id,
+            type: "message",
+            title: "رسالة جديدة",
+            message: `رسالة جديدة من ${(message as any).senderName || "مستخدم"}`,
+            isRead: false,
+            createdAt: new Date().toISOString(),
+            data: { messageId: message.id, chatRoomId: message.chatRoomId },
+          });
 
-  //         // Show toast if not in active room
-  //         if (!activeRoom || activeRoom.id !== message.chatRoomId) {
-  //           showToast.info(
-  //             `رسالة جديدة من ${(message as any).senderName || "مستخدم"}`,
-  //           );
-  //         }
-  //       }
-  //     });
+          // Show toast if not in active room
+          if (!activeRoom || activeRoom.id !== message.chatRoomId) {
+            showToast.info(
+              `رسالة جديدة من ${(message as any).senderName || "مستخدم"}`,
+            );
+          }
+        }
+      });
 
-  //     // Listen for typing indicators
-  //     newSocket.on(
-  //       "userTyping",
-  //       ({ userId, roomId, isTyping: typing }: any) => {
-  //         if (userId !== user.id) {
-  //           setIsTyping((prev) => ({
-  //             ...prev,
-  //             [`${roomId}-${userId}`]: typing,
-  //           }));
-  //         }
-  //       },
-  //     );
+      // Listen for general notifications
+      newSocket.on("notification", (notification: any) => {
+        addNotification({
+          ...notification,
+          id: notification._id || notification.id,
+          userId: user.id,
+        });
 
-  //     // Listen for room updates
-  //     newSocket.on("roomUpdate", (room: ChatRoom) => {
-  //       setChatRooms((prev) => prev.map((r) => (r.id === room.id ? room : r)));
-  //     });
+        // Show toast for important notifications
+        if (!notification.isRead) {
+          showToast.info(notification.message || "لديك إشعار جديد");
+        }
+      });
 
-  //     setSocket(newSocket);
+      // Listen for typing indicators
+      newSocket.on(
+        "userTyping",
+        ({ userId, roomId, isTyping: typing }: any) => {
+          if (userId !== user.id) {
+            setIsTyping((prev) => ({
+              ...prev,
+              [`${roomId}-${userId}`]: typing,
+            }));
+          }
+        },
+      );
 
-  //     return () => {
-  //       newSocket.close();
-  //     };
-  //   }
+      // Listen for room updates
+      newSocket.on("roomUpdate", (room: ChatRoom) => {
+        setChatRooms((prev) => prev.map((r) => (r.id === room.id ? room : r)));
+      });
 
-  //   return undefined;
-  // }, [isAuthenticated, user, activeRoom, addNotification]);
+      setSocket(newSocket);
+
+      return () => {
+        newSocket.close();
+      };
+    }
+
+    return () => {};
+  }, [isAuthenticated, user, activeRoom, addNotification]);
 
   const fetchChatRooms = useCallback(async () => {
     try {

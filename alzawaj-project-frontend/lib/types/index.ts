@@ -390,7 +390,7 @@ export interface RegistrationData {
   country: string;
   city: string;
   nationality: string;
-  maritalStatus?: "single" | "divorced" | "widowed";
+  maritalStatus: "single" | "divorced" | "widowed";
   religiousLevel: "practicing" | "basic" | "very-religious" | "moderate";
   isPrayerRegular: boolean;
   areParentsAlive: "both" | "father" | "mother" | "none";
@@ -413,29 +413,29 @@ export interface RegistrationData {
   bio?: string;
   phone?: string;
   otpCode?: string;
-  acceptDeclaration?: boolean; // Add acceptDeclaration field
+  acceptDeclaration: boolean; // Make this required (not optional)
 
   // Female-specific fields
   guardianName?: string;
   guardianPhone?: string;
-  guardianRelationship?: string;
+  guardianRelationship?: "father" | "brother" | "uncle" | "other";
   guardianEmail?: string;
   guardianNotes?: string;
-  wearHijab?: string; // "none" | "hijab" | "niqab"
+  wearHijab?: "none" | "hijab" | "niqab"; // Proper enum for hijab status
   wearNiqab?: boolean;
   clothingStyle?: string;
   prayingLocation?: string;
   mahramAvailable?: boolean;
-  workAfterMarriage?: string;
+  workAfterMarriage?: "yes" | "no" | "maybe";
   childcarePreference?: string;
 
   // Male-specific fields
-  hasBeard?: boolean;
-  isRegularAtMosque?: boolean;
-  smokes?: boolean;
-  financialSituation?: string;
+  hasBeard: boolean; // Make this required for males
+  isRegularAtMosque: boolean; // Make this required for males
+  smokes: boolean; // Make this required for males
+  financialSituation?: "excellent" | "good" | "average" | "struggling";
   housingLocation?: string;
-  housingOwnership?: string;
+  housingOwnership?: "owned" | "rented" | "family-owned";
   housingType?: string;
   monthlyIncome?: number;
   providerView?: string;

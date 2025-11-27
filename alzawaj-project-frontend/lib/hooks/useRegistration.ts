@@ -68,12 +68,12 @@ const initialState: RegistrationState = {
     education: "bachelor",
     occupation: "مهندس",
     bio: "مهندس برمجيات، أحب القراءة والسفر، أسعى لتكوين أسرة مسلمة متماسكة",
-    acceptDeclaration: true,
-    // Male-specific
-    hasBeard: true,
+    acceptDeclaration: true, // Required field
+    // Male-specific (all required for males)
+    hasBeard: false, // Required field
+    isRegularAtMosque: true, // Required field
+    smokes: false, // Required field
     prayingLocation: "البيت",
-    isRegularAtMosque: true,
-    smokes: false,
     financialSituation: "good",
     housingLocation: "الرياض",
     housingOwnership: "owned",
@@ -84,14 +84,14 @@ const initialState: RegistrationState = {
     // Female-specific
     guardianName: "",
     guardianPhone: "",
-    guardianRelationship: "",
-    wearHijab: "",
+    guardianRelationship: "father",
+    wearHijab: "hijab",
     wearNiqab: false,
     clothingStyle: "",
     guardianEmail: "",
     guardianNotes: "",
     mahramAvailable: false,
-    workAfterMarriage: "",
+    workAfterMarriage: "yes",
     childcarePreference: "",
   },
   completedSteps: new Set(),
@@ -239,80 +239,141 @@ const useRegistration = (): UseRegistrationResult => {
         // No OTP required during registration process
       }
 
-      // Step 2: Validate personal data
+      // Step 2: Validate personal data - aligned with backend requirements
       if (state.currentStep === 2) {
-        const requiredFields: (keyof RegistrationData)[] = [
-          "firstname",
-          "lastname",
-          "age",
-          "nationality",
-          "maritalStatus",
-          "country",
-          "city",
-          "religiousLevel",
-          "height",
-          "weight",
-          "skinColor",
-          "bodyType",
-          "appearance",
-          "areParentsAlive",
-          "parentRelationship",
-          "wantsChildren",
-          "interests",
-          "marriageGoals",
-          "personalityDescription",
-          "familyPlans",
-          "marriageTimeline",
-        ];
-
-        for (const field of requiredFields) {
-          if (!state.data[field]) {
-            dispatch({ type: "SET_ERROR", payload: `الحقل ${field} مطلوب` });
-            return false;
-          }
+        // Basic required fields validation
+        if (!state.data.firstname?.trim()) {
+          dispatch({ type: "SET_ERROR", payload: "الاسم الأول مطلوب" });
+          return false;
+        }
+        if (!state.data.lastname?.trim()) {
+          dispatch({ type: "SET_ERROR", payload: "الاسم الأخير مطلوب" });
+          return false;
+        }
+        if (!state.data.age || state.data.age < 18 || state.data.age > 100) {
+          dispatch({ type: "SET_ERROR", payload: "العمر يجب أن يكون بين 18-100 سنة" });
+          return false;
+        }
+        if (!state.data.nationality?.trim()) {
+          dispatch({ type: "SET_ERROR", payload: "الجنسية مطلوبة" });
+          return false;
+        }
+        if (!state.data.maritalStatus) {
+          dispatch({ type: "SET_ERROR", payload: "الحالة الاجتماعية مطلوبة" });
+          return false;
+        }
+        if (!state.data.country?.trim()) {
+          dispatch({ type: "SET_ERROR", payload: "البلد مطلوب" });
+          return false;
+        }
+        if (!state.data.city?.trim()) {
+          dispatch({ type: "SET_ERROR", payload: "المدينة مطلوبة" });
+          return false;
+        }
+        if (!state.data.religiousLevel) {
+          dispatch({ type: "SET_ERROR", payload: "المستوى الديني مطلوب" });
+          return false;
+        }
+        if (state.data.height === undefined || state.data.height < 120 || state.data.height > 220) {
+          dispatch({ type: "SET_ERROR", payload: "الطول يجب أن يكون بين 120-220 سم" });
+          return false;
+        }
+        if (state.data.weight === undefined || state.data.weight < 30 || state.data.weight > 200) {
+          dispatch({ type: "SET_ERROR", payload: "الوزن يجب أن يكون بين 30-200 كجم" });
+          return false;
+        }
+        if (!state.data.skinColor) {
+          dispatch({ type: "SET_ERROR", payload: "لون البشرة مطلوب" });
+          return false;
+        }
+        if (!state.data.bodyType) {
+          dispatch({ type: "SET_ERROR", payload: "نوع الجسم مطلوب" });
+          return false;
+        }
+        if (!state.data.appearance) {
+          dispatch({ type: "SET_ERROR", payload: "المظهر العام مطلوب" });
+          return false;
+        }
+        if (!state.data.areParentsAlive) {
+          dispatch({ type: "SET_ERROR", payload: "حالة الوالدين مطلوبة" });
+          return false;
+        }
+        if (!state.data.parentRelationship) {
+          dispatch({ type: "SET_ERROR", payload: "العلاقة مع الوالدين مطلوبة" });
+          return false;
+        }
+        if (!state.data.wantsChildren) {
+          dispatch({ type: "SET_ERROR", payload: "الرغبة في الأطفال مطلوبة" });
+          return false;
+        }
+        if (!state.data.interests?.trim()) {
+          dispatch({ type: "SET_ERROR", payload: "الاهتمامات مطلوبة" });
+          return false;
+        }
+        if (!state.data.marriageGoals?.trim()) {
+          dispatch({ type: "SET_ERROR", payload: "أهداف الزواج مطلوبة" });
+          return false;
+        }
+        if (!state.data.personalityDescription?.trim()) {
+          dispatch({ type: "SET_ERROR", payload: "وصف الشخصية مطلوب" });
+          return false;
+        }
+        if (!state.data.familyPlans?.trim()) {
+          dispatch({ type: "SET_ERROR", payload: "خطط العائلة مطلوبة" });
+          return false;
+        }
+        if (!state.data.marriageTimeline?.trim()) {
+          dispatch({ type: "SET_ERROR", payload: "التوقيت المفضل للزواج مطلوب" });
+          return false;
         }
 
         // Gender-specific validations
         if (state.data.gender === "m") {
-          const maleRequiredFields: (keyof RegistrationData)[] = [
-            "hasBeard",
-            "smokes",
-            "financialSituation",
-            "housingOwnership",
-            "isRegularAtMosque",
-          ];
-          for (const field of maleRequiredFields) {
-            if (state.data[field] === undefined) {
-              dispatch({
-                type: "SET_ERROR",
-                payload: `يرجى ملء جميع البيانات المطلوبة للذكور`,
-              });
-              return false;
-            }
+          if (state.data.hasBeard === undefined) {
+            dispatch({ type: "SET_ERROR", payload: "حالة اللحية مطلوبة للذكور" });
+            return false;
+          }
+          if (!state.data.financialSituation) {
+            dispatch({ type: "SET_ERROR", payload: "الوضع المالي مطلوب للذكور" });
+            return false;
+          }
+          if (!state.data.housingOwnership) {
+            dispatch({ type: "SET_ERROR", payload: "ملكية السكن مطلوبة للذكور" });
+            return false;
+          }
+          if (state.data.isRegularAtMosque === undefined) {
+            dispatch({ type: "SET_ERROR", payload: "حالة الصلاة في المسجد مطلوبة للذكور" });
+            return false;
+          }
+          if (state.data.smokes === undefined) {
+            dispatch({ type: "SET_ERROR", payload: "حالة التدخين مطلوبة للذكور" });
+            return false;
           }
         }
 
         if (state.data.gender === "f") {
-          const femaleRequiredFields: (keyof RegistrationData)[] = [
-            "wearHijab",
-            "guardianName",
-            "guardianPhone",
-          ];
-          for (const field of femaleRequiredFields) {
-            if (state.data[field] === undefined) {
-              dispatch({
-                type: "SET_ERROR",
-                payload: `يرجى ملء جميع البيانات المطلوبة للإناث`,
-              });
-              return false;
-            }
+          if (state.data.wearHijab === undefined || state.data.wearHijab === "") {
+            dispatch({ type: "SET_ERROR", payload: "حالة الحجاب مطلوبة للإناث" });
+            return false;
+          }
+          if (!state.data.guardianName?.trim()) {
+            dispatch({ type: "SET_ERROR", payload: "اسم الولي مطلوب للإناث" });
+            return false;
+          }
+          if (!state.data.guardianPhone?.trim()) {
+            dispatch({ type: "SET_ERROR", payload: "رقم هاتف الولي مطلوب للإناث" });
+            return false;
+          }
+          if (!state.data.guardianRelationship) {
+            dispatch({ type: "SET_ERROR", payload: "علاقة الولي مطلوبة للإناث" });
+            return false;
           }
         }
 
         // Preferences validation
         if (
-          !state.data.preferences.ageRange.min ||
-          !state.data.preferences.ageRange.max
+          !state.data.preferences?.ageRange?.min ||
+          !state.data.preferences?.ageRange?.max
         ) {
           dispatch({
             type: "SET_ERROR",
@@ -408,29 +469,35 @@ const useRegistration = (): UseRegistrationResult => {
       // Transform RegistrationData to match the exact structure from TODO.md
       const regData = state.data; // Use the full registration data from state
 
-      // Comprehensive validation before sending
+      // Comprehensive validation before sending - aligned with backend validation
       const validationErrors: string[] = [];
 
       if (!regData.email) validationErrors.push("البريد الإلكتروني مطلوب");
       if (!regData.password) validationErrors.push("كلمة المرور مطلوبة");
       if (!regData.firstname) validationErrors.push("الاسم الأول مطلوب");
       if (!regData.lastname) validationErrors.push("الاسم الأخير مطلوب");
-      // Phone is optional during registration
-      if (!regData.country) validationErrors.push("البلد مطلوب");
-      if (!regData.city) validationErrors.push("المدينة مطلوبة");
-      if (!regData.nationality) validationErrors.push("الجنسية مطلوبة");
-      if (!regData.acceptDeclaration)
-        validationErrors.push("يجب الموافقة على الإقرار والتعهد");
+      if (!regData.gender) validationErrors.push("الجنس مطلوب");
+      // Phone is optional during registration but if provided, must be valid
+      if (regData.phone && !/^\+[1-9]\d{1,14}$/.test(regData.phone)) {
+        validationErrors.push("رقم الهاتف غير صحيح");
+      }
+      if (!regData.country?.trim()) validationErrors.push("البلد مطلوب");
+      if (!regData.city?.trim()) validationErrors.push("المدينة مطلوبة");
+      if (!regData.nationality?.trim()) validationErrors.push("الجنسية مطلوبة");
+      if (regData.acceptDeclaration !== true) validationErrors.push("يجب الموافقة على الإقرار والتعهد");
 
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (regData.email && !emailRegex.test(regData.email)) {
+      if (regData.email && !emailRegex.test(regData.email.trim())) {
         validationErrors.push("تنسيق البريد الإلكتروني غير صحيح");
       }
 
-      // Validate password strength
+      // Validate password strength (backend requires uppercase, lowercase, digit)
       if (regData.password && regData.password.length < 8) {
         validationErrors.push("كلمة المرور يجب أن تكون 8 أحرف على الأقل");
+      }
+      if (regData.password && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(regData.password)) {
+        validationErrors.push("كلمة المرور يجب أن تحتوي على حرف كبير وصغير ورقم");
       }
 
       // Validate password confirmation
@@ -438,47 +505,52 @@ const useRegistration = (): UseRegistrationResult => {
         validationErrors.push("كلمة المرور وتأكيد كلمة المرور غير متطابقين");
       }
 
-      // Validate age
-      if (regData.age < 18 || regData.age > 100) {
+      // Validate age (backend requires 18-100)
+      if (regData.age === undefined || regData.age < 18 || regData.age > 100) {
         validationErrors.push("العمر يجب أن يكون بين 18 و 100 سنة");
       }
 
-      // Validate height and weight
-      if (regData.height < 120 || regData.height > 220) {
-        validationErrors.push("الطول يجب أن يكون بين 120 و 220 سم");
+      // Validate basicInfo.name (combined firstname and lastname)
+      if (!regData.firstname?.trim() || !regData.lastname?.trim()) {
+        validationErrors.push("الاسم الأول واسم العائلة مطلوبان");
       }
 
-      if (regData.weight < 30 || regData.weight > 200) {
-        validationErrors.push("الوزن يجب أن يكون بين 30 و 200 كيلو");
-      }
+      // Validate location fields
+      if (!regData.location?.country?.trim()) validationErrors.push("اسم الدولة مطلوب");
+      if (!regData.location?.city?.trim()) validationErrors.push("اسم المدينة مطلوب");
+      if (!regData.location?.nationality?.trim()) validationErrors.push("الجنسية مطلوبة");
 
       // Validate required text fields
       if (!regData.marriageGoals?.trim())
         validationErrors.push("أهداف الزواج مطلوبة");
       if (!regData.personalityDescription?.trim())
-        validationErrors.push("وصف الشخصية مطلوب");
+        validationErrors.push("وصف الشخصية مطلوبة");
       if (!regData.familyPlans?.trim())
         validationErrors.push("خطط العائلة مطلوبة");
 
-      // Gender-specific validations
+      // Gender-specific validations based on backend requirements
       if (regData.gender === "f") {
         if (!regData.guardianName?.trim())
-          validationErrors.push("اسم الولي مطلوب للنساء");
+          validationErrors.push("اسم الولي مطلوب للإناث");
         if (!regData.guardianPhone?.trim())
-          validationErrors.push("رقم هاتف الولي مطلوب للنساء");
-        if (!regData.guardianRelationship)
-          validationErrors.push("علاقة الولي مطلوبة للنساء");
-        if (!regData.wearHijab || regData.wearHijab === "")
-          validationErrors.push("حالة الحجاب مطلوبة للنساء");
+          validationErrors.push("رقم هاتف الولي مطلوب للإناث");
+        if (!regData.guardianRelationship || !["father", "brother", "uncle", "other"].includes(regData.guardianRelationship))
+          validationErrors.push("علاقة الولي غير صحيحة للإناث");
+        if (regData.wearHijab === undefined || regData.wearHijab === "")
+          validationErrors.push("حالة الحجاب مطلوبة للإناث");
+        if (regData.wearNiqab === undefined)
+          validationErrors.push("حالة النقاب مطلوبة للإناث");
       }
 
       if (regData.gender === "m") {
-        if (!regData.financialSituation)
-          validationErrors.push("الوضع المالي مطلوب للرجال");
-        if (!regData.housingOwnership)
-          validationErrors.push("ملكية السكن مطلوبة للرجال");
+        if (regData.hasBeard === undefined)
+          validationErrors.push("حالة اللحية مطلوبة للذكور");
+        if (!regData.financialSituation || !["excellent", "good", "average", "struggling"].includes(regData.financialSituation))
+          validationErrors.push("الحالة المالية مطلوبة للذكور");
+        if (!regData.housingOwnership || !["owned", "rented", "family-owned"].includes(regData.housingOwnership))
+          validationErrors.push("نوع السكن مطلوب للذكور");
         if (regData.monthlyIncome === undefined || regData.monthlyIncome < 0) {
-          validationErrors.push("الدخل الشهري مطلوب للرجال");
+          validationErrors.push("الدخل الشهري مطلوب للذكور");
         }
       }
 
@@ -488,87 +560,74 @@ const useRegistration = (): UseRegistrationResult => {
         return false;
       }
 
-      // Format data to match the exact structure from TODO.md
+      // Format data to match the exact structure expected by backend
       const backendData = {
         email: regData.email.trim(),
         password: regData.password,
-        confirmPassword: regData.password, // Add confirmPassword field
-        phone: regData.phone ? (regData.phone || "").trim() : undefined,
+        confirmPassword: regData.confirmPassword || regData.password, // Use confirmPassword if provided
+        phone: regData.phone ? regData.phone.trim() : undefined,
         gender: regData.gender,
         acceptDeclaration: regData.acceptDeclaration || false,
         basicInfo: {
           name: `${regData.firstname.trim()} ${regData.lastname.trim()}`, // Combine names to single field
           age: regData.age,
           maritalStatus: regData.maritalStatus || "single",
-          ...(regData.gender === "m" && { hasBeard: regData.hasBeard ?? true }), // Only include for males
+          ...(regData.gender === "m" && {
+            hasBeard: regData.hasBeard ?? false, // Default to false instead of true
+            financialSituation: (regData.financialSituation as "excellent" | "good" | "average" | "struggling") || "average",
+            housingOwnership: (regData.housingOwnership as "owned" | "rented" | "family-owned") || "family-owned",
+          }), // Only include for males
           ...(regData.gender === "f" && {
             guardianName: regData.guardianName?.trim() || "",
             guardianPhone: regData.guardianPhone?.trim() || "",
             guardianRelationship: regData.guardianRelationship || "",
             guardianEmail: regData.guardianEmail?.trim() || "",
-            wearHijab:
-              regData.wearHijab === "hijab" || regData.wearHijab === "niqab",
+            wearHijab: regData.wearHijab === "hijab" || regData.wearHijab === "niqab",
             wearNiqab: regData.wearHijab === "niqab",
           }), // Include guardian info and hijab status for females
-          financialSituation:
-            (regData.financialSituation as
-              | "excellent"
-              | "good"
-              | "average"
-              | "struggling") || "excellent",
-          housingOwnership:
-            (regData.housingOwnership as "owned" | "rented" | "family-owned") ||
-            "owned",
         },
         location: {
-          country: regData.country || "مصر",
-          city: regData.city || "القاهرة",
-          nationality: regData.nationality || "مصري",
+          country: regData.country?.trim() || "",
+          city: regData.city?.trim() || "",
+          nationality: regData.nationality?.trim() || "",
         },
         education: {
-          education: regData.education || "primary",
-          occupation: regData.occupation || "مهندس برمجيات",
+          education: regData.education?.trim() || "",
+          occupation: regData.occupation?.trim() || "",
         },
         professional: {
-          occupation: regData.occupation || "مهندس برمجيات",
-          monthlyIncome: regData.monthlyIncome || 8000,
+          occupation: regData.occupation?.trim() || "",
+          monthlyIncome: regData.monthlyIncome || 0,
         },
         religiousInfo: {
           religiousLevel: regData.religiousLevel || "basic",
-          isPrayerRegular: regData.isPrayerRegular ?? true,
+          isPrayerRegular: regData.isPrayerRegular ?? false,
           areParentsAlive: regData.areParentsAlive || "both",
           parentRelationship: regData.parentRelationship || "excellent",
           wantsChildren: regData.wantsChildren || "yes",
-          isRegularAtMosque: regData.isRegularAtMosque ?? true,
+          isRegularAtMosque: regData.isRegularAtMosque ?? false,
           smokes: regData.smokes ?? false,
         },
         personalInfo: {
-          height: regData.height || 175,
-          weight: regData.weight || 70,
-          appearance: regData.appearance || "very-attractive",
-          skinColor: regData.skinColor || "fair",
-          bodyType: regData.bodyType || "slim",
+          height: regData.height || 0,
+          weight: regData.weight || 0,
+          appearance: regData.appearance || "average",
+          skinColor: regData.skinColor || "medium",
+          bodyType: regData.bodyType || "average",
           interests: regData.interests
             ? regData.interests
                 .split(",")
                 .map((s) => s.trim())
                 .filter((s) => s)
-            : ["القراءة", "السفر", "الطهي"],
-          marriageGoals: regData.marriageGoals.trim(),
-          personalityDescription: regData.personalityDescription.trim(),
-          familyPlans: regData.familyPlans.trim(),
-          relocationPlans:
-            regData.relocationPlans || "مفتوح للانتقال داخل نفس البلد",
-          marriageTimeline: regData.marriageTimeline || "6-12 شهر",
+            : [],
+          marriageGoals: regData.marriageGoals?.trim() || "",
+          personalityDescription: regData.personalityDescription?.trim() || "",
+          familyPlans: regData.familyPlans?.trim() || "",
+          relocationPlans: regData.relocationPlans?.trim() || "",
+          marriageTimeline: regData.marriageTimeline?.trim() || "",
           ...(regData.gender === "f" && {
-            clothingStyle:
-              regData.wearHijab === "niqab"
-                ? "منتقبة"
-                : regData.wearHijab === "hijab"
-                  ? "محجبة"
-                  : "غير محجبة",
-            workAfterMarriage:
-              (regData.workAfterMarriage as "yes" | "no" | "maybe") || "yes",
+            clothingStyle: regData.clothingStyle || "",
+            workAfterMarriage: regData.workAfterMarriage as "yes" | "no" | "maybe",
           }),
         },
         familyInfo: {
@@ -583,18 +642,19 @@ const useRegistration = (): UseRegistrationResult => {
             | "regularly",
         },
         preferences: {
-          ageMin: regData.preferences?.ageRange?.min || 25,
-          ageMax: regData.preferences?.ageRange?.max || 35,
-          country: regData.country || "مصر",
+          ageMin: regData.preferences?.ageRange?.min || 18,
+          ageMax: regData.preferences?.ageRange?.max || 40,
+          country: regData.country?.trim() || "",
           maritalStatus: [regData.maritalStatus || "single"],
         },
         privacy: {
-          showProfilePicture: "everyone" as const,
+          showProfilePicture: "everyone" as "everyone" | "matches-only" | "none",
           showAge: true,
           showLocation: true,
           showOccupation: true,
-          allowMessagesFrom: "everyone" as const,
-          profileVisibility: "everyone" as const,
+          allowMessagesFrom: "everyone" as "everyone" | "matches-only" | "none",
+          profileVisibility: (regData.gender === "f" ? "guardian-approved" : "everyone") as
+            "everyone" | "verified-only" | "premium-only" | "guardian-approved" | "matches-only",
           requireGuardianApproval: regData.gender === "f",
           showOnlineStatus: false,
           allowNearbySearch: true,

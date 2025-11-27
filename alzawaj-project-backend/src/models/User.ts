@@ -29,6 +29,7 @@ export interface IUser extends Document {
   // Additional properties needed by controllers
   isActive: boolean;
   profile?: mongoose.Types.ObjectId;
+  fcmToken?: string;
   emailVerificationToken?: string;
   emailVerificationExpires?: Date;
   phoneVerificationOTP?: string;
@@ -175,6 +176,10 @@ const userSchema = new Schema<IUser>(
     // Additional fields for authentication
     isActive: { type: Boolean, default: true },
     profile: { type: Schema.Types.ObjectId, ref: "Profile" },
+    fcmToken: {
+      type: String,
+      default: null,
+    },
     emailVerificationToken: { type: String, select: false },
     emailVerificationExpires: { type: Date, select: false },
     phoneVerificationOTP: { type: String, select: false },

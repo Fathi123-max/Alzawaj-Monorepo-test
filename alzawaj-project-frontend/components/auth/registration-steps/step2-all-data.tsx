@@ -5,7 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import Phone from "@/components/ui/phone-number";
 import { RegisterRequest } from "@/lib/types/auth.types";
 import { RegistrationData } from "@/lib/types";
-import { getCountriesByGroup } from "@/lib/static-data";
+import { getCountriesByGroup, getCitiesByCountry } from "@/lib/static-data";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Upload, X } from "lucide-react";
 
@@ -40,9 +40,29 @@ export default function NewStep2AllData({
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Validate file type
+      if (!file.type.match('image.*')) {
+        clearError();
+        updateData({ ...data, error: 'الرجاء اختيار ملف صورة صالح (JPEG, PNG, GIF, إلخ)' });
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        clearError();
+        updateData({ ...data, error: 'الصورة كبيرة جداً. يرجى اختيار صورة أقل من 5 ميغابايت' });
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfilePicturePreview(reader.result as string);
+        // Clear any previous error
+        clearError();
+      };
+      reader.onerror = () => {
+        clearError();
+        updateData({ ...data, error: 'حدث خطأ أثناء قراءة الملف' });
       };
       reader.readAsDataURL(file);
       // Set the actual file in parent state
@@ -53,6 +73,7 @@ export default function NewStep2AllData({
   };
   const countries = getCountriesByGroup();
   const allCountries = Object.values(countries).flat();
+  const cities = data.country ? getCitiesByCountry(data.country) : [];
 
   const isGenderSelected = data.gender;
   const isMale = data.gender === "m";
@@ -90,7 +111,7 @@ export default function NewStep2AllData({
             <input
               type="checkbox"
               id="acceptDeclaration"
-              checked={data.acceptDeclaration || false}
+              checked={data.acceptDeclaration}
               onChange={(e) =>
                 handleInputChange("acceptDeclaration", e.target.checked)
               }
@@ -223,20 +244,36 @@ export default function NewStep2AllData({
                   >
                     <option value="">اختر البلد</option>
                     {allCountries.map((country) => (
-                      <option key={country.value} value={country.label}>
+                      <option key={country.value} value={country.value}>
                         {country.label}
                       </option>
                     ))}
                   </select>
                 </div>
-                <Input
-                  label="المدينة"
-                  value={data.city || ""}
-                  onChange={(e) => handleInputChange("city", e.target.value)}
-                  placeholder="أدخل مدينتك"
-                  disabled={isSubmitting}
-                  required
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    المدينة <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={data.city || ""}
+                    onChange={(e) => handleInputChange("city", e.target.value)}
+                    disabled={isSubmitting || !data.country}
+                    className="w-full px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    required
+                  >
+                    <option value="">اختر المدينة</option>
+                    {cities.map((city) => (
+                      <option key={city.value} value={city.value}>
+                        {city.label}
+                      </option>
+                    ))}
+                  </select>
+                  {!data.country && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      يرجى اختيار البلد أولاً
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -322,10 +359,10 @@ export default function NewStep2AllData({
                       اللحية <span className="text-red-500">*</span>
                     </label>
                     <select
-                      value={(data as any).hasBeard ? "true" : "false"}
+                      value={data.hasBeard ? "true" : "false"}
                       onChange={(e) =>
                         updateData({
-                          ...(data as any),
+                          ...data,
                           hasBeard: e.target.value === "true",
                         })
                       }
@@ -343,10 +380,10 @@ export default function NewStep2AllData({
                       التدخين <span className="text-red-500">*</span>
                     </label>
                     <select
-                      value={(data as any).smokes ? "true" : "false"}
+                      value={data.smokes ? "true" : "false"}
                       onChange={(e) =>
                         updateData({
-                          ...(data as any),
+                          ...data,
                           smokes: e.target.value === "true",
                         })
                       }
@@ -369,11 +406,11 @@ export default function NewStep2AllData({
                       الحجاب <span className="text-red-500">*</span>
                     </label>
                     <select
-                      value={(data as any).wearHijab || ""}
+                      value={data.wearHijab || ""}
                       onChange={(e) =>
                         updateData({
-                          ...(data as any),
-                          wearHijab: e.target.value,
+                          ...data,
+                          wearHijab: e.target.value as "none" | "hijab" | "niqab",
                         })
                       }
                       disabled={isSubmitting}
@@ -496,8 +533,8 @@ export default function NewStep2AllData({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   الصورة الشخصية (اختياري)
                 </label>
-                <div className="flex items-center space-x-4">
-                  <div className="flex-1">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="flex-1 w-full">
                     <input
                       type="file"
                       id="profilePicture"
@@ -508,10 +545,15 @@ export default function NewStep2AllData({
                     />
                     <label
                       htmlFor="profilePicture"
-                      className="flex items-center justify-center w-full px-4 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
+                      className="flex flex-col items-center justify-center w-full px-4 py-6 border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
                     >
-                      <Upload className="w-4 h-4 mr-2" />
-                      اختر صورة
+                      <Upload className="w-6 h-6 text-gray-400 mb-2" />
+                      <span className="text-sm text-gray-600 text-center">
+                        {profilePicturePreview ? "تغيير الصورة" : "انقر لاختيار صورة شخصية"}
+                      </span>
+                      <p className="text-xs text-gray-500 mt-1 text-center">
+                        PNG, JPG, GIF حتى 5 ميغابايت
+                      </p>
                     </label>
                   </div>
                   {profilePicturePreview && (
@@ -519,19 +561,27 @@ export default function NewStep2AllData({
                       <img
                         src={profilePicturePreview}
                         alt="معاينة الصورة"
-                        className="w-16 h-16 object-cover rounded-md"
+                        className="w-20 h-20 object-cover rounded-md border border-gray-200"
+                        onError={() => {
+                          setProfilePicturePreview(null);
+                        }}
                       />
                       <button
                         type="button"
                         onClick={() => {
                           setProfilePicturePreview(null);
-                          const newData = { ...data };
+                          // Clear any error when removing image
+                          clearError();
                           // profilePicture is not part of RegistrationData, no need to updateData
                         }}
-                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs"
+                        className="absolute -top-1.5 -right-1.5 bg-white rounded-full p-1 shadow-md hover:shadow-lg transition-shadow"
+                        title="إزالة الصورة"
                       >
-                        <X className="w-3 h-3" />
+                        <X className="w-3 h-3 text-red-500 hover:text-red-700" />
                       </button>
+                      <p className="text-xs text-gray-500 mt-1 text-center max-w-20 truncate">
+                        تم الرفع بنجاح
+                      </p>
                     </div>
                   )}
                 </div>
@@ -684,11 +734,11 @@ export default function NewStep2AllData({
                       الوضع المالي <span className="text-red-500">*</span>
                     </label>
                     <select
-                      value={(data as any).financialSituation || ""}
+                      value={data.financialSituation || ""}
                       onChange={(e) =>
                         updateData({
-                          ...(data as any),
-                          financialSituation: e.target.value,
+                          ...data,
+                          financialSituation: e.target.value as "excellent" | "good" | "average" | "struggling",
                         })
                       }
                       disabled={isSubmitting}
@@ -699,7 +749,7 @@ export default function NewStep2AllData({
                       <option value="excellent">ممتاز</option>
                       <option value="good">جيد</option>
                       <option value="average">متوسط</option>
-                      <option value="poor">ضعيف</option>
+                      <option value="struggling">ضعيف</option>
                     </select>
                   </div>
                   <div>
@@ -707,11 +757,11 @@ export default function NewStep2AllData({
                       ملكية السكن <span className="text-red-500">*</span>
                     </label>
                     <select
-                      value={(data as any).housingOwnership || ""}
+                      value={data.housingOwnership || ""}
                       onChange={(e) =>
                         updateData({
-                          ...(data as any),
-                          housingOwnership: e.target.value,
+                          ...data,
+                          housingOwnership: e.target.value as "owned" | "rented" | "family-owned",
                         })
                       }
                       disabled={isSubmitting}
@@ -721,7 +771,7 @@ export default function NewStep2AllData({
                       <option value="">اختر</option>
                       <option value="owned">مملوك</option>
                       <option value="rented">مستأجر</option>
-                      <option value="family">مع الأهل</option>
+                      <option value="family-owned">مع الأهل</option>
                     </select>
                   </div>
                 </div>
@@ -751,11 +801,11 @@ export default function NewStep2AllData({
                         علاقة الولي <span className="text-red-500">*</span>
                       </label>
                       <select
-                        value={(data as any).guardianRelationship || ""}
+                        value={data.guardianRelationship || ""}
                         onChange={(e) =>
                           updateData({
-                            ...(data as any),
-                            guardianRelationship: e.target.value,
+                            ...data,
+                            guardianRelationship: e.target.value as "father" | "brother" | "uncle" | "other",
                           })
                         }
                         disabled={isSubmitting}
@@ -923,12 +973,12 @@ export default function NewStep2AllData({
                       العمل بعد الزواج
                     </label>
                     <select
-                      value={(data as any).workAfterMarriage || ""}
+                      value={data.workAfterMarriage || ""}
                       onChange={(e) =>
                         updateData({
                           ...data,
-                          workAfterMarriage: e.target.value,
-                        } as any)
+                          workAfterMarriage: e.target.value as "yes" | "no" | "maybe",
+                        })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     >

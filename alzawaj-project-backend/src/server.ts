@@ -17,7 +17,7 @@ import connectDB from "./config/database";
 import logger from "./config/logger";
 import { errorHandler, notFound } from "./middleware/errorMiddleware";
 import { rateLimitConfig } from "./config/rateLimiting";
-// import socketHandler from './sockets/socketHandler'; // Uncomment when socketHandler is converted
+import { initializeSocketHandlers, ExtendedServer } from "./sockets/notificationHandler";
 
 // Import routes
 import authRoutes from "./routes/authRoutes";
@@ -149,7 +149,12 @@ app.use('/api/debug', debugRoutes);
 
 // Socket.IO integration
 app.set("io", io);
-// socketHandler(io); // Uncomment when socketHandler is converted
+initializeSocketHandlers(io);
+
+// Set the io instance in the notification service
+import { setIoInstance } from './services/notificationService';
+
+setIoInstance(io as ExtendedServer);
 
 // API documentation
 try {

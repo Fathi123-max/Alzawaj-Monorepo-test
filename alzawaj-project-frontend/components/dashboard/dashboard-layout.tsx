@@ -5,8 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { MobileBottomNav } from "./mobile-bottom-nav";
-import { Bell, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
+import { NotificationBell } from "@/components/ui/notification-bell";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -42,6 +43,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: "الطلبات", href: "/dashboard/requests", icon: "heart" },
     { name: "المحادثات", href: "/dashboard/chat", icon: "message-circle" },
     { name: "الإعدادات", href: "/dashboard/settings", icon: "settings" },
+  ];
+
+  const settingsNavigation = [
+    { name: "الحساب", href: "/dashboard/settings" },
+    { name: "الإشعارات", href: "/dashboard/settings/notifications" },
+    { name: "الخصوصية", href: "/dashboard/settings/privacy" },
+    { name: "الأمن", href: "/dashboard/settings/security" },
   ];
 
   const isActive = (href: string) => pathname === href;
@@ -97,10 +105,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             {/* User Menu */}
             <div className="flex items-center gap-2 sm:gap-4">
               {/* Notifications */}
-              <button className="relative hidden p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary rounded-full">
-                <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
-              </button>
+              <NotificationBell />
               <button
                 onClick={toggleMobileMenu}
                 className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
@@ -138,8 +143,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </button>
                 {showUserMenu && (
                   <div className="absolute left-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                    <Link
+                      href="/dashboard/settings"
+                      className="block text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      الإعدادات
+                    </Link>
+                    <Link
+                      href="/dashboard/settings/notifications"
+                      className="block text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      إعدادات الإشعارات
+                    </Link>
                     <button
-                      className="w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
+                      className="w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg"
                       onClick={handleLogout}
                     >
                       تسجيل الخروج

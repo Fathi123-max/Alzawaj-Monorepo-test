@@ -154,10 +154,84 @@ export const deleteNotification = async (
   }
 };
 
+import { sendPushNotification } from '../services/fcmService';
+import { User } from '../models/User';
+
+/**
+ * Register device token for push notifications
+ */
+export const registerDeviceToken = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req.user?._id;
+    const { token } = req.body;
+
+    if (!userId) {
+      res.status(400).json(createErrorResponse("User ID is required"));
+      return;
+    }
+
+    // Update user profile with FCM token
+    await User.findByIdAndUpdate(userId, { fcmToken: token });
+
+    res.json(createSuccessResponse("تم تسجيل جهاز الإشعارات بنجاح"));
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Send notification (admin only)
+ */
+export const sendNotification = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { userId, title, message, type } = req.body;
+
+    if (!userId || !title || !message) {
+      res.status(400).json(createErrorResponse("User ID, title, and message are required"));
+      return;
+    }
+
+    // Create the notification in DB
+    const newNotification = await Notification.create({
+      user: userId,
+      type: type || 'system',
+      title,
+      message,
+      isRead: false,
+      priority: 'medium',
+    });
+
+    // Send the notification via FCM
+    const sendResult = await sendPushNotification(
+      userId,
+      title,
+      message,
+      { notificationId: newNotification._id ? newNotification._id.toString() : '', type: type || 'system' }
+    );
+
+    res.json(createSuccessResponse("تم إرسال الإشعار بنجاح", {
+      notification: newNotification,
+      fcmSent: sendResult
+    }));
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getNotifications,
   markAsRead,
   markAllAsRead,
   getUnreadCount,
   deleteNotification,
+  registerDeviceToken,
+  sendNotification,
 };
