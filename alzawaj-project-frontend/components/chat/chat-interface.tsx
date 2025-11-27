@@ -51,7 +51,7 @@ export function ChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
 function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
   const router = useRouter();
   const { user } = useAuth();
-  const { isConnected, fetchChatRooms } = useChat();
+  const { isConnected, fetchChatRooms, sendMessage, setActiveRoom } = useChat();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -116,6 +116,9 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
           const chatRoomResponse = await chatApi.getChatRoomById(chatRoomId);
           if (chatRoomResponse.success && chatRoomResponse.data) {
             setChatRoom(chatRoomResponse.data);
+
+            // Set as active room in the context
+            setActiveRoom(chatRoomResponse.data);
 
             // Extract other participant info
             const otherParticipant = chatRoomResponse.data.participants.find(
@@ -237,46 +240,16 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
   const handleSendMessage = async () => {
     if (!newMessage.trim() || isSending) return;
 
-    const tempId = `temp-${Date.now()}`;
     const messageContent = newMessage.trim();
-
-    // Add to failed messages set for tracking
-    setFailedMessages((prev) => new Set(prev).add(tempId));
 
     setIsSending(true);
     try {
-      // Send message via API
-      const response = await chatApi.sendMessage({
-        type: "text",
-        chatRoomId,
-        content: messageContent,
-      });
+      // Send message via Socket.IO only
+      await sendMessage(messageContent);
 
-      if (response.success && response.data) {
-        // Add the new message to the local state
-        const responseData = response.data as any;
-        const newMsg = {
-          ...responseData.message,
-          isCurrentUser: true,
-          sender: {
-            id: user?.id,
-            name: "أنت",
-          },
-        };
-        setMessages((prev) => [...prev, newMsg]);
-        setNewMessage("");
-        setFailedMessages((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(tempId);
-          return newSet;
-        });
-        showToast.success("تم إرسال الرسالة");
-
-        // Check if rate limited
-        if (responseData.rateLimited) {
-          setRateLimited(true);
-        }
-      }
+      // Clear the input field
+      setNewMessage("");
+      showToast.success("تم إرسال الرسالة");
     } catch (error: any) {
       console.error("Failed to send message:", error);
       // Keep message in input on error

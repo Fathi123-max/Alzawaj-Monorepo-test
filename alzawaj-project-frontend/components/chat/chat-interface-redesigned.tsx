@@ -49,7 +49,7 @@ export function ChatInterfaceRedesigned({
 }: ChatInterfaceProps) {
   const router = useRouter();
   const { user } = useAuth();
-  const { isConnected, fetchChatRooms } = useChat();
+  const { isConnected, fetchChatRooms, sendMessage, setActiveRoom } = useChat();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -73,6 +73,9 @@ export function ChatInterfaceRedesigned({
           const chatRoomResponse = await chatApi.getChatRoomById(chatRoomId);
           if (chatRoomResponse.success && chatRoomResponse.data) {
             setChatRoom(chatRoomResponse.data);
+
+            // Set as active room in the context
+            setActiveRoom(chatRoomResponse.data);
 
             const otherParticipant = chatRoomResponse.data.participants.find(
               (p: any) => {
@@ -135,22 +138,12 @@ export function ChatInterfaceRedesigned({
     setIsSending(true);
 
     try {
-      const response = await chatApi.sendMessage({
-        type: "text",
-        chatRoomId,
-        content: messageContent,
-      });
+      // Send message via Socket.IO only
+      await sendMessage(messageContent);
 
-      if (response.success && response.data) {
-        const newMsg = {
-          ...(response.data as any).message,
-          isCurrentUser: true,
-          sender: { id: user?.id, name: "أنت" },
-        };
-        setMessages((prev) => [...prev, newMsg]);
-        setNewMessage("");
-        showToast.success("تم إرسال الرسالة");
-      }
+      // Clear the input field
+      setNewMessage("");
+      showToast.success("تم إرسال الرسالة");
     } catch (error: any) {
       console.error("Failed to send message:", error);
       showToast.error(error.message || "خطأ في إرسال الرسالة");

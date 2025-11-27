@@ -37,6 +37,8 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [isSocketAuthenticated, setIsSocketAuthenticated] = useState(false);
+  const isSocketAuthenticatedRef = useRef(false);
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
   const [activeRoom, setActiveRoom] = useState<ChatRoom | null>(null);
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
@@ -47,6 +49,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   const { user, isAuthenticated } = useAuth();
   const { addNotification } = useNotifications();
+
+  // Sync ref with state
+  useEffect(() => {
+    isSocketAuthenticatedRef.current = isSocketAuthenticated;
+  }, [isSocketAuthenticated]);
 
   // Initialize socket connection
   useEffect(() => {
@@ -61,23 +68,48 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         },
       );
 
+      // Handle connection and authentication
       newSocket.on("connect", () => {
         setIsConnected(true);
         console.log("Connected to chat server with socket ID:", newSocket.id);
+        console.log("Socket connected, authenticating...");
+
+        // The authentication should happen automatically via the 'auth' field in the socket options
+        // but we'll set a timeout to check if authentication completes
+        const authTimeout = setTimeout(() => {
+          // Check current authentication state using the ref approach
+          if (newSocket.connected && !newSocket.disconnected) {
+            console.log("Authentication didn't complete within 2 seconds, checking status...");
+            // Retry authentication by emitting authenticate event manually if needed
+            const token = localStorage.getItem("zawaj_auth_token");
+            if (token && !isSocketAuthenticatedRef.current) { // Check current state using ref
+              console.log("Attempting manual authentication...");
+              newSocket.emit("authenticate", token);
+            } else if (!token) {
+              console.error("No authentication token found");
+            }
+          }
+        }, 2000); // 2 second timeout for authentication
       });
 
       newSocket.on("disconnect", () => {
         setIsConnected(false);
+        setIsSocketAuthenticated(false);
+        isSocketAuthenticatedRef.current = false;
         console.log("Disconnected from chat server");
       });
 
       // Listen for authentication events
       newSocket.on("authenticated", (data) => {
         console.log("Socket authenticated:", data);
+        setIsSocketAuthenticated(true);
+        isSocketAuthenticatedRef.current = true;
       });
 
       newSocket.on("authentication_error", (error) => {
         console.error("Socket authentication error:", error);
+        setIsSocketAuthenticated(false);
+        isSocketAuthenticatedRef.current = false;
       });
 
       // Listen for errors from Socket.IO
@@ -390,8 +422,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           activeRoom.id,
         ); // Debug log
 
-        // Primary: Try to send via Socket.IO first
-        if (socket && isConnected) {
+        // Send via Socket.IO only (real-time messaging)
+        if (socket && isConnected && isSocketAuthenticated) {
           console.log("[ChatProvider] Attempting to send message via Socket.IO");
 
           // Optimistically update UI with the outgoing message
@@ -431,9 +463,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             timestamp: Date.now()
           };
 
-          // Set a timeout to fallback to API if Socket.IO doesn't respond within 2 seconds
-          const fallbackTimeout = setTimeout(() => {
-            console.log("[ChatProvider] Socket.IO timeout, falling back to API");
+          // Set a timeout to handle potential failures
+          const failureTimeout = setTimeout(() => {
+            console.log("[ChatProvider] Socket.IO send timeout");
 
             // Check if the temporary message still exists (meaning Socket.IO didn't replace it)
             setMessages(prev => {
@@ -445,40 +477,23 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
               );
 
               if (hasTempMessage) {
-                // Make an API call to ensure the message is sent
-                chatApi.sendMessage({
-                  type: "text",
-                  chatRoomId: activeRoom.id,
-                  content,
-                })
-                .then(response => {
-                  if (response.success && response.data) {
-                    // Update the message with the one from the API
-                    setMessages(prev => {
-                      const updatedMessages = prev[activeRoom.id]?.map(msg => {
-                        if (msg.id.startsWith('temp-') &&
-                            msg.content?.text === content &&
-                            msg.senderId === user?.id) {
-                          return response.data; // Replace with API response
-                        }
-                        return msg;
-                      }) || [response.data];
-
-                      return {
-                        ...prev,
-                        [activeRoom.id]: updatedMessages
-                      };
-                    });
-                  } else {
-                    showToast.error("فشل إرسال الرسالة");
+                // Mark the temporary message as failed
+                const updatedMessages = roomMessages.map(msg => {
+                  if (msg.id.startsWith('temp-') &&
+                      msg.content?.text === content &&
+                      msg.senderId === user?.id) {
+                    return {
+                      ...msg,
+                      status: "failed" // Mark as failed
+                    };
                   }
-                })
-                .catch(error => {
-                  console.error("[ChatProvider] API fallback error:", error);
-                  showToast.error("فشل إرسال الرسالة");
+                  return msg;
                 });
 
-                return prev;
+                return {
+                  ...prev,
+                  [activeRoom.id]: updatedMessages
+                };
               }
               return prev;
             });
@@ -486,33 +501,23 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             // Clean up the timeout ref and pending message
             delete messageTimeoutRefs.current[messageAttemptId];
             delete pendingMessages.current[messageAttemptId];
-          }, 2000); // 2 second timeout for Socket.IO response
+
+            // Show error notification
+            showToast.error("فشل إرسال الرسالة");
+          }, 5000); // 5 second timeout for Socket.IO response
 
           // Store the timeout ID for cleanup
-          messageTimeoutRefs.current[messageAttemptId] = fallbackTimeout;
+          messageTimeoutRefs.current[messageAttemptId] = failureTimeout;
+        } else if (!isSocketAuthenticated) {
+          // Show error if socket is not authenticated
+          console.log("[ChatProvider] Socket not authenticated");
+          showToast.error("ال.Socket غير موثق بعد، يرجى المحاولة لاحقاً");
+          return; // Exit if socket is not authenticated
         } else {
-          // Fallback to API if Socket.IO is not available
-          console.log("[ChatProvider] Socket.IO not available, using API fallback");
-
-          const response = await chatApi.sendMessage({
-            type: "text",
-            chatRoomId: activeRoom.id,
-            content,
-          });
-
-          console.log("[ChatProvider] Send message response:", response); // Debug log
-          if (response.success && response.data) {
-            // Add the new message to the local state
-            const newMessage = response.data;
-            setMessages((prev) => ({
-              ...prev,
-              [activeRoom.id]: [...(prev[activeRoom.id] || []), newMessage],
-            }));
-          } else {
-            // If API failed, show error
-            showToast.error("فشل إرسال الرسالة");
-            return; // Don't show success message if failed
-          }
+          // Show error if Socket.IO is not available
+          console.log("[ChatProvider] Socket.IO not available");
+          showToast.error("الاتصال بالدردشة غير متوفر حالياً");
+          return; // Exit if Socket.IO is not available
         }
 
         showToast.success("تم إرسال الرسالة بنجاح");
@@ -537,7 +542,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         }
       }
     },
-    [activeRoom, socket, isConnected, user],
+    [activeRoom, socket, isConnected, isSocketAuthenticated, user],
   );
 
   const markMessagesAsRead = useCallback(
@@ -545,8 +550,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       try {
         console.log("[ChatProvider] Marking messages as read for room:", roomId);
 
-        // Primary: Try to mark as read via Socket.IO first
-        if (socket && isConnected) {
+        // Use Socket.IO only for marking as read (real-time)
+        if (socket && isConnected && isSocketAuthenticated) {
           console.log("[ChatProvider] Attempting to mark messages as read via Socket.IO");
 
           // Send the mark as read request via Socket.IO
@@ -554,32 +559,29 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             chatRoomId: roomId
           });
 
-          // Set a timeout to fallback to API if Socket.IO doesn't confirm within 2 seconds
+          // Set a timeout to handle potential failures
           const markReadAttemptId = `markRead_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-          const fallbackTimeout = setTimeout(async () => {
-            console.log("[ChatProvider] Socket.IO markAsRead timeout, falling back to API");
-
-            try {
-              await chatApi.markMessagesAsRead(roomId);
-              console.log("[ChatProvider] Messages marked as read via API fallback");
-            } catch (error: any) {
-              console.error("[ChatProvider] Error marking messages as read:", error);
-              showToast.error("فشل في تعليم الرسائل كمقروءة");
-            }
+          const failureTimeout = setTimeout(() => {
+            console.log("[ChatProvider] Socket.IO markAsRead timeout");
 
             // Clean up
             delete messageTimeoutRefs.current[markReadAttemptId];
-          }, 2000); // 2 second timeout for Socket.IO response
+
+            // Show error notification
+            showToast.error("فشل في تعليم الرسائل كمقروءة");
+          }, 5000); // 5 second timeout for Socket.IO response
 
           // Store the timeout ID for cleanup
-          messageTimeoutRefs.current[markReadAttemptId] = fallbackTimeout;
+          messageTimeoutRefs.current[markReadAttemptId] = failureTimeout;
+        } else if (!isSocketAuthenticated) {
+          // Show error if socket is not authenticated
+          console.log("[ChatProvider] Socket not authenticated for markMessagesAsRead");
+          showToast.error("ال.Socket غير موثق بعد، يرجى المحاولة لاحقاً");
         } else {
-          // Fallback: Mark as read via API if Socket.IO is not available
-          console.log("[ChatProvider] Socket.IO not available, using API fallback for markAsRead");
-
-          await chatApi.markMessagesAsRead(roomId);
-          console.log("[ChatProvider] Messages marked as read via API");
+          // Show error if Socket.IO is not available
+          console.log("[ChatProvider] Socket.IO not available");
+          showToast.error("الاتصال بالدردشة غير متوفر حالياً");
         }
       } catch (error: any) {
         console.error("[ChatProvider] Error marking messages as read:", error);
@@ -590,25 +592,25 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         showToast.error(errorMessage);
       }
     },
-    [socket, isConnected],
+    [socket, isConnected, isSocketAuthenticated],
   );
 
   const startTyping = useCallback(
     (roomId: string) => {
-      if (socket) {
+      if (socket && isSocketAuthenticated) {
         socket.emit("typing", { roomId, isTyping: true });
       }
     },
-    [socket],
+    [socket, isSocketAuthenticated],
   );
 
   const stopTyping = useCallback(
     (roomId: string) => {
-      if (socket) {
+      if (socket && isSocketAuthenticated) {
         socket.emit("typing", { roomId, isTyping: false });
       }
     },
-    [socket],
+    [socket, isSocketAuthenticated],
   );
 
   const value: ChatContextType = {

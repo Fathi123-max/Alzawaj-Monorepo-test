@@ -126,26 +126,43 @@ export const initializeSocketHandlers = (io: Server) => {
         await message.populate("sender", "firstname lastname");
 
         // Emit to all participants except sender
-        chatRoom.participants.forEach((participant) => {
+        for (const participant of chatRoom.participants) {
           const participantUserId = (participant.user as any)._id || participant.user;
           const participantStringId = typeof participantUserId === 'string' ? participantUserId : participantUserId.toString();
           if (participantStringId !== userId) {
-            io.to(`user_${participantStringId}`).emit("message", {
-              id: (message._id as any).toString(),
-              chatRoomId: (chatRoom._id as any).toString(),
-              senderId: userId,
-              content: {
-                text: data.content,
-                messageType: "text",
-              },
-              createdAt: message.createdAt.toISOString(),
-              sender: message.sender, // Include sender info
-              status: "delivered", // Mark as delivered via real-time
-              readBy: [], // Initially no one has read the message
-              islamicCompliance: message.islamicCompliance,
-            });
+            try {
+              // Check if the recipient is connected before emitting
+              const connectedSockets = await io.fetchSockets();
+              const recipientSocket = connectedSockets.find(sock =>
+                sock.data.userId === participantStringId &&
+                sock.rooms.has(`user_${participantStringId}`)
+              );
+
+              if (recipientSocket) {
+                io.to(`user_${participantStringId}`).emit("message", {
+                  id: (message._id as any).toString(),
+                  chatRoomId: (chatRoom._id as any).toString(),
+                  senderId: userId,
+                  content: {
+                    text: data.content,
+                    messageType: "text",
+                  },
+                  createdAt: message.createdAt.toISOString(),
+                  sender: message.sender, // Include sender info
+                  status: "delivered", // Mark as delivered via real-time
+                  readBy: [], // Initially no one has read the message
+                  islamicCompliance: message.islamicCompliance,
+                });
+
+                console.log(`[SocketIO-Debug] Successfully emitted message to recipient: ${participantStringId}`);
+              } else {
+                console.log(`[SocketIO-Debug] Recipient ${participantStringId} is not connected, message will be available when they connect`);
+              }
+            } catch (emitError) {
+              console.error(`[SocketIO-Error] Error emitting message to ${participantStringId}:`, emitError);
+            }
           }
-        });
+        }
 
         // Emit room update to all participants (including sender) for last message updates
         for (const participant of chatRoom.participants) {
@@ -158,18 +175,35 @@ export const initializeSocketHandlers = (io: Server) => {
             isDeleted: false,
           });
 
-          io.to(`user_${participantStringId}`).emit("roomUpdate", {
-            id: (chatRoom._id as any).toString(),
-            lastMessage: {
-              content: data.content,
-              senderId: userId,
-              timestamp: new Date(),
-              type: "text",
-            },
-            lastMessageAt: new Date(),
-            updatedAt: new Date(),
-            unreadCount: participantStringId === userId ? 0 : unreadCount, // Unread count for recipient
-          });
+          try {
+            // Check if the recipient is connected before emitting
+            const connectedSockets = await io.fetchSockets();
+            const recipientSocket = connectedSockets.find(sock =>
+              sock.data.userId === participantStringId &&
+              sock.rooms.has(`user_${participantStringId}`)
+            );
+
+            if (recipientSocket) {
+              io.to(`user_${participantStringId}`).emit("roomUpdate", {
+                id: (chatRoom._id as any).toString(),
+                lastMessage: {
+                  content: data.content,
+                  senderId: userId,
+                  timestamp: new Date(),
+                  type: "text",
+                },
+                lastMessageAt: new Date(),
+                updatedAt: new Date(),
+                unreadCount: participantStringId === userId ? 0 : unreadCount, // Unread count for recipient
+              });
+
+              console.log(`[SocketIO-Debug] Successfully emitted roomUpdate to participant: ${participantStringId}`);
+            } else {
+              console.log(`[SocketIO-Debug] Participant ${participantStringId} is not connected, room update will be available when they connect`);
+            }
+          } catch (emitError) {
+            console.error(`[SocketIO-Error] Error emitting roomUpdate to ${participantStringId}:`, emitError);
+          }
         }
 
         // Also emit back to sender to update their UI
@@ -225,11 +259,28 @@ export const initializeSocketHandlers = (io: Server) => {
             const participantUserId = (participant.user as any)._id || participant.user;
             const participantStringId = typeof participantUserId === 'string' ? participantUserId : participantUserId.toString();
             if (participantStringId !== userId) {
-              io.to(`user_${participantStringId}`).emit("messagesRead", {
-                chatRoomId: chatRoomId,
-                readerId: userId,
-                timestamp: new Date().toISOString(),
-              });
+              try {
+                // Check if the recipient is connected before emitting
+                const connectedSockets = await io.fetchSockets();
+                const recipientSocket = connectedSockets.find(sock =>
+                  sock.data.userId === participantStringId &&
+                  sock.rooms.has(`user_${participantStringId}`)
+                );
+
+                if (recipientSocket) {
+                  io.to(`user_${participantStringId}`).emit("messagesRead", {
+                    chatRoomId: chatRoomId,
+                    readerId: userId,
+                    timestamp: new Date().toISOString(),
+                  });
+
+                  console.log(`[SocketIO-Debug] Successfully emitted messagesRead to sender: ${participantStringId}`);
+                } else {
+                  console.log(`[SocketIO-Debug] Sender ${participantStringId} is not connected, read receipt will be available when they connect`);
+                }
+              } catch (emitError) {
+                console.error(`[SocketIO-Error] Error emitting messagesRead to ${participantStringId}:`, emitError);
+              }
             }
           }
         }
