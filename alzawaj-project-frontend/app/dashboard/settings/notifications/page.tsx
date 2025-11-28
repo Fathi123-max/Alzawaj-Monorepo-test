@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -112,7 +118,7 @@ export default function NotificationSettingsPage() {
     try {
       // In a real implementation, you would save settings to the API
       // await saveNotificationSettings(settings);
-      
+
       showToast.success("تم تحديث إعدادات الإشعارات بنجاح");
     } catch (error) {
       showToast.error("حدث خطأ أثناء تحديث إعدادات الإشعارات");
@@ -121,10 +127,10 @@ export default function NotificationSettingsPage() {
   };
 
   const updateSettings = (path: string, value: any) => {
-    setSettings(prev => {
+    setSettings((prev) => {
       const updated = { ...prev };
-      const [category, subCategory, field] = path.split('.');
-      
+      const [category, subCategory, field] = path.split(".");
+
       if (subCategory === undefined) {
         // Update top-level field
         (updated as any)[category] = value;
@@ -135,7 +141,7 @@ export default function NotificationSettingsPage() {
         // Update category.subCategory.field
         (updated as any)[category][subCategory][field] = value;
       }
-      
+
       return updated;
     });
   };
@@ -176,30 +182,44 @@ export default function NotificationSettingsPage() {
                       <span className="font-medium">{channel.label}</span>
                     </div>
                     <Switch
-                      checked={settings[channel.id as keyof NotificationSettings].enabled}
-                      onCheckedChange={(checked) => 
+                      checked={
+                        settings[channel.id as keyof NotificationSettings]
+                          .enabled
+                      }
+                      onCheckedChange={(checked) =>
                         updateSettings(`${channel.id}.enabled`, checked)
                       }
                     />
                   </div>
-                  
+
                   <Separator className="my-3" />
-                  
+
                   <div className="space-y-3">
                     <h4 className="text-sm font-medium">نوع الإشعارات</h4>
                     {notificationTypes.map((type) => (
-                      <div key={type.id} className="flex items-center justify-between">
-                        <Label htmlFor={`${channel.id}-${type.id}`} className="text-sm">
+                      <div
+                        key={type.id}
+                        className="flex items-center justify-between"
+                      >
+                        <Label
+                          htmlFor={`${channel.id}-${type.id}`}
+                          className="text-sm"
+                        >
                           {type.label}
                         </Label>
                         <Switch
                           id={`${channel.id}-${type.id}`}
                           checked={
                             settings[channel.id as keyof NotificationSettings]
-                              .notifications[type.id as keyof typeof settings.email.notifications]
+                              .notifications[
+                              type.id as keyof typeof settings.email.notifications
+                            ]
                           }
-                          onCheckedChange={(checked) => 
-                            updateSettings(`${channel.id}.notifications.${type.id}`, checked)
+                          onCheckedChange={(checked) =>
+                            updateSettings(
+                              `${channel.id}.notifications.${type.id}`,
+                              checked,
+                            )
                           }
                         />
                       </div>
@@ -219,26 +239,34 @@ export default function NotificationSettingsPage() {
                   <Label htmlFor="daily-digest" className="font-medium">
                     ملخص يومي
                   </Label>
-                  <p className="text-sm text-gray-500">تلقي ملخص يومي للإشعارات</p>
+                  <p className="text-sm text-gray-500">
+                    تلقي ملخص يومي للإشعارات
+                  </p>
                 </div>
                 <Switch
                   id="daily-digest"
                   checked={settings.dailyDigest}
-                  onCheckedChange={(checked) => updateSettings("dailyDigest", checked)}
+                  onCheckedChange={(checked) =>
+                    updateSettings("dailyDigest", checked)
+                  }
                 />
               </div>
-              
+
               <div className="flex items-center justify-between p-4 border rounded-lg">
                 <div>
                   <Label htmlFor="weekly-digest" className="font-medium">
                     ملخص أسبوعي
                   </Label>
-                  <p className="text-sm text-gray-500">تلقي ملخص أسبوعي للإشعارات</p>
+                  <p className="text-sm text-gray-500">
+                    تلقي ملخص أسبوعي للإشعارات
+                  </p>
                 </div>
                 <Switch
                   id="weekly-digest"
                   checked={settings.weeklyDigest}
-                  onCheckedChange={(checked) => updateSettings("weeklyDigest", checked)}
+                  onCheckedChange={(checked) =>
+                    updateSettings("weeklyDigest", checked)
+                  }
                 />
               </div>
             </div>
@@ -260,12 +288,12 @@ export default function NotificationSettingsPage() {
                 <Switch
                   id="do-not-disturb"
                   checked={settings.doNotDisturb.enabled}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     updateSettings("doNotDisturb.enabled", checked)
                   }
                 />
               </div>
-              
+
               {settings.doNotDisturb.enabled && (
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
@@ -274,7 +302,7 @@ export default function NotificationSettingsPage() {
                       type="time"
                       id="start-time"
                       value={settings.doNotDisturb.startTime}
-                      onChange={(e) => 
+                      onChange={(e) =>
                         updateSettings("doNotDisturb.startTime", e.target.value)
                       }
                       className="w-full p-2 border rounded mt-1"
@@ -286,7 +314,7 @@ export default function NotificationSettingsPage() {
                       type="time"
                       id="end-time"
                       value={settings.doNotDisturb.endTime}
-                      onChange={(e) => 
+                      onChange={(e) =>
                         updateSettings("doNotDisturb.endTime", e.target.value)
                       }
                       className="w-full p-2 border rounded mt-1"
@@ -322,9 +350,7 @@ export default function NotificationSettingsPage() {
 
           {/* Save Button */}
           <div className="flex justify-end pt-4">
-            <Button onClick={handleSaveSettings}>
-              حفظ الإعدادات
-            </Button>
+            <Button onClick={handleSaveSettings}>حفظ الإعدادات</Button>
           </div>
         </CardContent>
       </Card>

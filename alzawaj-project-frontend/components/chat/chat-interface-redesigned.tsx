@@ -49,7 +49,15 @@ export function ChatInterfaceRedesigned({
 }: ChatInterfaceProps) {
   const router = useRouter();
   const { user } = useAuth();
-  const { isConnected, fetchChatRooms, sendMessage, setActiveRoom } = useChat();
+  const {
+    isConnected,
+    fetchChatRooms,
+    fetchMessages,
+    fetchChatRoomById,
+    sendMessage,
+    setActiveRoom,
+    canMakeSocketRequests,
+  } = useChat();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -66,18 +74,18 @@ export function ChatInterfaceRedesigned({
 
   // Load chat data
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && canMakeSocketRequests) {
       const fetchData = async () => {
         setIsLoading(true);
         try {
-          const chatRoomResponse = await chatApi.getChatRoomById(chatRoomId);
-          if (chatRoomResponse.success && chatRoomResponse.data) {
-            setChatRoom(chatRoomResponse.data);
+          const chatRoomData = await fetchChatRoomById(chatRoomId);
+          if (chatRoomData) {
+            setChatRoom(chatRoomData);
 
             // Set as active room in the context
-            setActiveRoom(chatRoomResponse.data);
+            setActiveRoom(chatRoomData);
 
-            const otherParticipant = chatRoomResponse.data.participants.find(
+            const otherParticipant = chatRoomData.participants.find(
               (p: any) => {
                 const userId =
                   typeof p === "string"
@@ -99,22 +107,8 @@ export function ChatInterfaceRedesigned({
             }
           }
 
-          const messagesResponse = await chatApi.getMessages(chatRoomId, 1, 50);
-          if (messagesResponse.success && messagesResponse.data) {
-            const loadedMessages = messagesResponse.data.messages.map(
-              (msg: any) => ({
-                ...msg,
-                sender:
-                  typeof msg.sender === "object"
-                    ? msg.sender
-                    : { id: msg.sender },
-                isCurrentUser:
-                  msg.sender?.id === user?.id || msg.sender === user?.id,
-              }),
-            );
-            setMessages(loadedMessages);
-            await fetchChatRooms();
-          }
+          // Load messages via Socket.IO
+          await fetchMessages(chatRoomId);
         } catch (error) {
           console.error("Failed to load chat data:", error);
           showToast.error("خطأ في تحميل بيانات المحادثة");
@@ -125,7 +119,7 @@ export function ChatInterfaceRedesigned({
 
       fetchData();
     }
-  }, [chatRoomId, user?.id]);
+  }, [chatRoomId, user?.id, canMakeSocketRequests]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

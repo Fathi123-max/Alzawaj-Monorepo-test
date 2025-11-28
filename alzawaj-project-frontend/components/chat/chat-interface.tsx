@@ -51,7 +51,15 @@ export function ChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
 function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
   const router = useRouter();
   const { user } = useAuth();
-  const { isConnected, fetchChatRooms, sendMessage, setActiveRoom } = useChat();
+  const {
+    isConnected,
+    fetchChatRooms,
+    fetchMessages,
+    fetchChatRoomById,
+    sendMessage,
+    setActiveRoom,
+    canMakeSocketRequests,
+  } = useChat();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -107,21 +115,43 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
   }, [userGender, guardianInfoSent, messages.length]);
 
   useEffect(() => {
-    // Only load when user is available
+    // Only load when user is available and socket is authenticated
     if (user?.id) {
       const fetchData = async () => {
         setIsLoading(true);
         try {
-          // Load chat room details first
-          const chatRoomResponse = await chatApi.getChatRoomById(chatRoomId);
-          if (chatRoomResponse.success && chatRoomResponse.data) {
-            setChatRoom(chatRoomResponse.data);
+          // Wait for socket to be ready before making requests
+          if (!canMakeSocketRequests()) {
+            console.log("Waiting for socket to be ready for requests...");
+            // Wait up to 15 seconds for socket to be ready
+            await new Promise<void>((resolve, reject) => {
+              const timeout = setTimeout(() => {
+                reject(new Error("Timeout waiting for socket"));
+              }, 15000);
+
+              const checkReady = () => {
+                if (canMakeSocketRequests()) {
+                  clearTimeout(timeout);
+                  resolve();
+                } else {
+                  setTimeout(checkReady, 100);
+                }
+              };
+
+              checkReady();
+            });
+          }
+
+          // Load chat room details via Socket.IO
+          const chatRoomData = await fetchChatRoomById(chatRoomId);
+          if (chatRoomData) {
+            setChatRoom(chatRoomData);
 
             // Set as active room in the context
-            setActiveRoom(chatRoomResponse.data);
+            setActiveRoom(chatRoomData);
 
             // Extract other participant info
-            const otherParticipant = chatRoomResponse.data.participants.find(
+            const otherParticipant = chatRoomData.participants.find(
               (p: any) => {
                 const userId =
                   typeof p === "string"
@@ -143,39 +173,8 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
             }
           }
 
-          // Load messages from API (this marks them as read on backend)
-          const messagesResponse = await chatApi.getMessages(chatRoomId, 1, 50);
-
-          if (messagesResponse.success && messagesResponse.data) {
-            // Set messages with sender info
-            const loadedMessages = messagesResponse.data.messages.map(
-              (msg: any) => {
-                // Ensure sender is handled correctly whether it's an ID or object
-                const sender = msg.sender || {};
-                const senderName =
-                  typeof sender === "object"
-                    ? getUserFullName(sender)
-                    : "مستخدم";
-
-                return {
-                  ...msg,
-                  sender: {
-                    ...(typeof sender === "object" ? sender : {}),
-                    name: senderName,
-                    // Ensure ID is preserved if sender was just an ID string
-                    ...(typeof sender === "string"
-                      ? { id: sender, _id: sender }
-                      : {}),
-                  },
-                };
-              },
-            );
-
-            setMessages(loadedMessages);
-
-            // Refresh chat rooms to update unread count badge
-            await fetchChatRooms();
-          }
+          // Load messages via Socket.IO
+          await fetchMessages(chatRoomId);
         } catch (error) {
           console.error("Failed to load chat data:", error);
           showToast.error("خطأ في تحميل بيانات المحادثة");
@@ -186,7 +185,7 @@ function DesktopChatInterface({ requestId, chatRoomId }: ChatInterfaceProps) {
 
       fetchData();
     }
-  }, [chatRoomId, user?.id]);
+  }, [chatRoomId, user?.id, canMakeSocketRequests]);
 
   useEffect(() => {
     scrollToBottom();

@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { 
-  Card, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription, 
-  CardContent 
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,13 +15,13 @@ import { useNotifications } from "@/providers/notification-provider";
 import { useRouter } from "next/navigation";
 
 export default function NotificationsPage() {
-  const { 
-    notifications, 
-    unreadCount, 
-    isLoading, 
-    fetchNotifications, 
-    markAsRead, 
-    markAllAsRead 
+  const {
+    notifications,
+    unreadCount,
+    isLoading,
+    fetchNotifications,
+    markAsRead,
+    markAllAsRead,
   } = useNotifications();
   const router = useRouter();
 
@@ -32,7 +32,7 @@ export default function NotificationsPage() {
   const handleNotificationClick = (notification: any) => {
     // Mark as read
     markAsRead(notification.id);
-    
+
     // Navigate to relevant page based on notification type
     if (notification.data?.url) {
       router.push(notification.data.url);
@@ -52,9 +52,7 @@ export default function NotificationsPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <CardTitle className="text-2xl">الإشعارات</CardTitle>
-              <CardDescription>
-                جميع إشعارات منصتك في مكان واحد
-              </CardDescription>
+              <CardDescription>جميع إشعارات منصتك في مكان واحد</CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-500">
@@ -119,13 +117,18 @@ export default function NotificationsPage() {
                       <div className="flex items-center gap-2">
                         <h4
                           className={`font-medium ${
-                            !notification.isRead ? "text-primary font-semibold" : "text-gray-900"
+                            !notification.isRead
+                              ? "text-primary font-semibold"
+                              : "text-gray-900"
                           }`}
                         >
                           {notification.title}
                         </h4>
                         {!notification.isRead && (
-                          <Badge variant="secondary" className="h-5 px-1.5 py-0 text-xs">
+                          <Badge
+                            variant="secondary"
+                            className="h-5 px-1.5 py-0 text-xs"
+                          >
                             جديد
                           </Badge>
                         )}

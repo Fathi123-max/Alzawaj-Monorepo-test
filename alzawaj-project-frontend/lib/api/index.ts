@@ -286,7 +286,7 @@ export const notificationsApi = {
     userId: string;
     title: string;
     message: string;
-    type: string
+    type: string;
   }) =>
     ApiClient.post<{ success: boolean }>(
       `${API_ENDPOINTS.NOTIFICATIONS.SEND}`,

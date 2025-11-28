@@ -278,9 +278,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTimeout(async () => {
           try {
             const notificationGranted = await requestNotificationPermission();
-            console.log("AuthProvider: Notification permission granted:", notificationGranted);
+            console.log(
+              "AuthProvider: Notification permission granted:",
+              notificationGranted,
+            );
           } catch (notificationError) {
-            console.error("AuthProvider: Error requesting notification permission:", notificationError);
+            console.error(
+              "AuthProvider: Error requesting notification permission:",
+              notificationError,
+            );
             // Don't throw this error as login was successful, just log it
           }
         }, 1000); // Delay by 1 second to ensure proper token setup
@@ -324,9 +330,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTimeout(async () => {
           try {
             const notificationGranted = await requestNotificationPermission();
-            console.log("AuthProvider: Notification permission granted after OTP:", notificationGranted);
+            console.log(
+              "AuthProvider: Notification permission granted after OTP:",
+              notificationGranted,
+            );
           } catch (notificationError) {
-            console.error("AuthProvider: Error requesting notification permission after OTP:", notificationError);
+            console.error(
+              "AuthProvider: Error requesting notification permission after OTP:",
+              notificationError,
+            );
             // Don't throw this error as OTP verification was successful, just log it
           }
         }, 1000); // Delay by 1 second to ensure proper token setup

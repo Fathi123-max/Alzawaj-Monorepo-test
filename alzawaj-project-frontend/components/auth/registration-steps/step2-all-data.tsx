@@ -41,16 +41,22 @@ export default function NewStep2AllData({
     const file = event.target.files?.[0];
     if (file) {
       // Validate file type
-      if (!file.type.match('image.*')) {
+      if (!file.type.match("image.*")) {
         clearError();
-        updateData({ ...data, error: 'الرجاء اختيار ملف صورة صالح (JPEG, PNG, GIF, إلخ)' });
+        updateData({
+          ...data,
+          error: "الرجاء اختيار ملف صورة صالح (JPEG, PNG, GIF, إلخ)",
+        });
         return;
       }
 
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         clearError();
-        updateData({ ...data, error: 'الصورة كبيرة جداً. يرجى اختيار صورة أقل من 5 ميغابايت' });
+        updateData({
+          ...data,
+          error: "الصورة كبيرة جداً. يرجى اختيار صورة أقل من 5 ميغابايت",
+        });
         return;
       }
 
@@ -62,7 +68,7 @@ export default function NewStep2AllData({
       };
       reader.onerror = () => {
         clearError();
-        updateData({ ...data, error: 'حدث خطأ أثناء قراءة الملف' });
+        updateData({ ...data, error: "حدث خطأ أثناء قراءة الملف" });
       };
       reader.readAsDataURL(file);
       // Set the actual file in parent state
@@ -410,7 +416,10 @@ export default function NewStep2AllData({
                       onChange={(e) =>
                         updateData({
                           ...data,
-                          wearHijab: e.target.value as "none" | "hijab" | "niqab",
+                          wearHijab: e.target.value as
+                            | "none"
+                            | "hijab"
+                            | "niqab",
                         })
                       }
                       disabled={isSubmitting}
@@ -549,7 +558,9 @@ export default function NewStep2AllData({
                     >
                       <Upload className="w-6 h-6 text-gray-400 mb-2" />
                       <span className="text-sm text-gray-600 text-center">
-                        {profilePicturePreview ? "تغيير الصورة" : "انقر لاختيار صورة شخصية"}
+                        {profilePicturePreview
+                          ? "تغيير الصورة"
+                          : "انقر لاختيار صورة شخصية"}
                       </span>
                       <p className="text-xs text-gray-500 mt-1 text-center">
                         PNG, JPG, GIF حتى 5 ميغابايت
@@ -738,7 +749,11 @@ export default function NewStep2AllData({
                       onChange={(e) =>
                         updateData({
                           ...data,
-                          financialSituation: e.target.value as "excellent" | "good" | "average" | "struggling",
+                          financialSituation: e.target.value as
+                            | "excellent"
+                            | "good"
+                            | "average"
+                            | "struggling",
                         })
                       }
                       disabled={isSubmitting}
@@ -761,7 +776,10 @@ export default function NewStep2AllData({
                       onChange={(e) =>
                         updateData({
                           ...data,
-                          housingOwnership: e.target.value as "owned" | "rented" | "family-owned",
+                          housingOwnership: e.target.value as
+                            | "owned"
+                            | "rented"
+                            | "family-owned",
                         })
                       }
                       disabled={isSubmitting}
@@ -805,7 +823,11 @@ export default function NewStep2AllData({
                         onChange={(e) =>
                           updateData({
                             ...data,
-                            guardianRelationship: e.target.value as "father" | "brother" | "uncle" | "other",
+                            guardianRelationship: e.target.value as
+                              | "father"
+                              | "brother"
+                              | "uncle"
+                              | "other",
                           })
                         }
                         disabled={isSubmitting}
@@ -977,7 +999,10 @@ export default function NewStep2AllData({
                       onChange={(e) =>
                         updateData({
                           ...data,
-                          workAfterMarriage: e.target.value as "yes" | "no" | "maybe",
+                          workAfterMarriage: e.target.value as
+                            | "yes"
+                            | "no"
+                            | "maybe",
                         })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"

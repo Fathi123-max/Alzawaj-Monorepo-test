@@ -10,8 +10,22 @@ export const initializeSocketHandlers = (io: Server) => {
     logger.info(`New socket connection: ${socket.id}`);
 
     // Handle user authentication
-    socket.on('authenticate', async (token: string) => {
+    socket.on('authenticate', async (authData: { token: string } | string) => {
       try {
+        let token: string;
+
+        // Handle both string and object format for token
+        if (typeof authData === 'string') {
+          token = authData;
+        } else if (authData && typeof authData === 'object' && 'token' in authData) {
+          token = authData.token;
+        } else {
+          logger.error('Invalid authentication data format received:', authData);
+          socket.emit('authentication_error', { message: 'Invalid authentication data' });
+          socket.disconnect();
+          return;
+        }
+
         // Verify token and get user
         // In a real implementation, you would verify the JWT token
         // and get the user info from it
@@ -295,6 +309,188 @@ export const initializeSocketHandlers = (io: Server) => {
         socket.emit('error', { message: 'Failed to mark messages as read' });
       }
     });
+
+    // Handle request for chat rooms
+    socket.on('requestChatRooms', async (data: any) => {
+      const userId = socket.data.userId;
+      if (!userId) {
+        socket.emit('error', { message: 'Authentication required' });
+        return;
+      }
+
+      try {
+        const { ChatRoom } = await import('../models/ChatRoom');
+        const mongoose = await import('mongoose');
+
+        // Find all chat rooms for the user
+        const chatRooms = await ChatRoom.find({
+          "participants.user": new mongoose.Types.ObjectId(userId),
+          isActive: true,
+        })
+        .populate('participants.user', 'firstname lastname profilePicture')
+        .sort({ lastMessageAt: -1 }); // Sort by last message time
+
+        // Format the chat rooms for the response
+        const formattedRooms = chatRooms.map(room => {
+          // Calculate unread count for this user
+          const participant = room.participants.find(
+            (p: any) => (p.user as any)._id.toString() === userId
+          );
+
+          return {
+            id: (room._id as any).toString(),
+            requestId: (room._id as any).toString(), // Use room id as request id for consistency
+            participants: room.participants.map((p: any) => ({
+              user: {
+                _id: (p.user as any)._id || p.user.id,
+                id: (p.user as any)._id || p.user.id,
+                firstname: (p.user as any).firstname,
+                lastname: (p.user as any).lastname,
+                fullName: `${(p.user as any).firstname} ${(p.user as any).lastname}`,
+              },
+              joinedAt: p.joinedAt || (room as any).createdAt,
+              lastSeen: p.lastSeen,
+              isActive: true,
+              role: p.role || "member",
+              _id: p._id,
+              id: (p._id as any)?.toString() || Math.random().toString(36).substr(2,9),
+            })),
+            status: room.isActive ? "active" : "closed",
+            createdAt: (room as any).createdAt.toISOString(),
+            updatedAt: (room as any).updatedAt.toISOString(),
+            expiresAt: (room as any).expiresAt ? (room as any).expiresAt.toISOString() : new Date(Date.now() + 30*24*60*60*1000).toISOString(), // Default 30 days
+          };
+        });
+
+        // Emit the chat rooms back to the requesting user
+        socket.emit('chatRoomsList', {
+          rooms: formattedRooms,
+        });
+
+      } catch (error) {
+        console.error('Error handling requestChatRooms via Socket.IO:', error);
+        socket.emit('error', { message: 'Failed to load chat rooms' });
+      }
+    });
+
+    // Handle request for a specific chat room
+    socket.on('requestChatRoomById', async (data: any) => {
+      const userId = socket.data.userId;
+      if (!userId) {
+        socket.emit('error', { message: 'Authentication required' });
+        return;
+      }
+
+      try {
+        const { ChatRoom } = await import('../models/ChatRoom');
+        const mongoose = await import('mongoose');
+
+        // Find the specific chat room for the user
+        const chatRoom = await ChatRoom.findOne({
+          _id: data.chatRoomId,
+          "participants.user": new mongoose.Types.ObjectId(userId),
+          isActive: true,
+        })
+        .populate('participants.user', 'firstname lastname profilePicture');
+
+        if (!chatRoom) {
+          socket.emit('error', { message: 'Chat room not found or not authorized' });
+          return;
+        }
+
+        // Format the chat room for the response
+        const formattedRoom = {
+          id: (chatRoom._id as any).toString(),
+          requestId: (chatRoom._id as any).toString(), // Use room id as request id for consistency
+          participants: chatRoom.participants.map((p: any) => ({
+            user: {
+              _id: (p.user as any)._id || p.user.id,
+              id: (p.user as any)._id || p.user.id,
+              firstname: (p.user as any).firstname,
+              lastname: (p.user as any).lastname,
+              fullName: `${(p.user as any).firstname} ${(p.user as any).lastname}`,
+            },
+            joinedAt: p.joinedAt || (chatRoom as any).createdAt,
+            lastSeen: p.lastSeen,
+            isActive: true,
+            role: p.role || "member",
+            _id: p._id,
+            id: (p._id as any)?.toString() || Math.random().toString(36).substr(2,9),
+          })),
+          status: chatRoom.isActive ? "active" : "closed",
+          createdAt: (chatRoom as any).createdAt.toISOString(),
+          updatedAt: (chatRoom as any).updatedAt.toISOString(),
+          expiresAt: (chatRoom as any).expiresAt ? (chatRoom as any).expiresAt.toISOString() : new Date(Date.now() + 30*24*60*60*1000).toISOString(), // Default 30 days
+        };
+
+        // Emit the chat room back to the requesting user
+        socket.emit('chatRoomDetail', {
+          room: formattedRoom,
+        });
+
+      } catch (error) {
+        console.error('Error handling requestChatRoomById via Socket.IO:', error);
+        socket.emit('error', { message: 'Failed to load chat room' });
+      }
+    });
+
+    // Handle request for chat history
+    socket.on('requestChatHistory', async (data: any) => {
+      const userId = socket.data.userId;
+      if (!userId) {
+        socket.emit('error', { message: 'Authentication required' });
+        return;
+      }
+
+      try {
+        const { ChatRoom } = await import('../models/ChatRoom');
+        const { Message } = await import('../models/Message');
+        const mongoose = await import('mongoose');
+
+        // Find the chat room to ensure user has access
+        const chatRoom = await ChatRoom.findOne({
+          _id: data.chatRoomId,
+          "participants.user": new mongoose.Types.ObjectId(userId),
+          isActive: true,
+        });
+
+        if (!chatRoom) {
+          socket.emit('error', { message: 'Chat room not found or not authorized' });
+          return;
+        }
+
+        // Fetch messages for this room
+        const messages = await Message.find({
+          chatRoom: data.chatRoomId,
+          isDeleted: false,
+        })
+        .populate('sender', 'firstname lastname')
+        .sort({ createdAt: 1 })
+        .limit(data.limit || 50)
+        .skip(data.skip || 0);
+
+        // Emit the chat history back to the requesting user
+        socket.emit('chatHistory', {
+          chatRoomId: data.chatRoomId,
+          messages: messages.map(msg => ({
+            id: (msg._id as any).toString(),
+            chatRoomId: data.chatRoomId,
+            senderId: (msg.sender as any)._id || msg.sender,
+            content: msg.content,
+            createdAt: msg.createdAt.toISOString(),
+            sender: msg.sender,
+            status: msg.status,
+            readBy: msg.readBy || [],
+            islamicCompliance: msg.islamicCompliance,
+          })),
+          hasMore: messages.length === (data.limit || 50) // Simplified - in real app you'd check if there are more
+        });
+
+      } catch (error) {
+        console.error('Error handling requestChatHistory via Socket.IO:', error);
+        socket.emit('error', { message: 'Failed to load chat history' });
+      }
+    });
   });
 
   // Function to send notification to a specific user
@@ -336,15 +532,21 @@ const verifyTokenAndGetUser = async (token: string): Promise<IUser | null> => {
     // 2. Get user info from token payload
     // 3. Return the user object
 
+    // First check if token exists and is a string
+    if (!token || typeof token !== 'string' || token.trim() === '') {
+      logger.error('Token verification failed: Invalid or empty token provided');
+      return null;
+    }
+
     // This is a mock implementation for now
     // Replace with your actual token verification logic
     const jwt = require('jsonwebtoken');
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
-    
+
     // You would typically fetch the user from the database
     // const user = await User.findById(decoded.id);
     // return user;
-    
+
     // For now, returning a mock user
     return { id: decoded.id, role: decoded.role } as IUser;
   } catch (error) {
@@ -352,8 +554,6 @@ const verifyTokenAndGetUser = async (token: string): Promise<IUser | null> => {
     return null;
   }
 };
-
-// Function to emit notification to a specific user via socket
 // This would be called from other parts of the application
 export const emitNotificationToUser = (io: ExtendedServer, userId: string, notification: any) => {
   try {

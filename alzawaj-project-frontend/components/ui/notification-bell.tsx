@@ -26,13 +26,13 @@ interface NotificationItem {
 export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { 
-    notifications, 
-    unreadCount, 
-    isLoading, 
-    fetchNotifications, 
-    markAsRead, 
-    markAllAsRead 
+  const {
+    notifications,
+    unreadCount,
+    isLoading,
+    fetchNotifications,
+    markAsRead,
+    markAllAsRead,
   } = useNotifications();
   const router = useRouter();
 
@@ -46,7 +46,10 @@ export function NotificationBell() {
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
@@ -60,7 +63,7 @@ export function NotificationBell() {
   const handleNotificationClick = (notification: NotificationItem) => {
     // Mark as read
     markAsRead(notification.id);
-    
+
     // Navigate to relevant page based on notification type
     if (notification.data?.url) {
       router.push(notification.data.url);
@@ -71,7 +74,7 @@ export function NotificationBell() {
     } else if (notification.data?.profileId) {
       router.push(`/dashboard/profile/${notification.data.profileId}`);
     }
-    
+
     setIsOpen(false);
   };
 
@@ -150,13 +153,18 @@ export function NotificationBell() {
                         <div className="flex items-center gap-2">
                           <h4
                             className={`text-sm font-medium truncate ${
-                              !notification.isRead ? "text-primary font-semibold" : "text-gray-900"
+                              !notification.isRead
+                                ? "text-primary font-semibold"
+                                : "text-gray-900"
                             }`}
                           >
                             {notification.title}
                           </h4>
                           {!notification.isRead && (
-                            <Badge variant="secondary" className="h-5 px-1.5 py-0 text-xs">
+                            <Badge
+                              variant="secondary"
+                              className="h-5 px-1.5 py-0 text-xs"
+                            >
                               جديد
                             </Badge>
                           )}

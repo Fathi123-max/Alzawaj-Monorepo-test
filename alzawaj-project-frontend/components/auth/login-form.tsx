@@ -90,7 +90,7 @@ export function LoginForm({
   };
 
   return (
-    <Card className={`w-full max-w-md mx-auto ${className}`}>
+    <Card className={`w-full max-w-md mx-auto ${className}`} key="login-form">
       <CardHeader className="space-y-1">
         <h2 className="text-2xl font-bold text-center">تسجيل الدخول</h2>
         <p className="text-sm text-gray-600 text-center">
@@ -109,6 +109,7 @@ export function LoginForm({
               placeholder="أدخل بريدك الإلكتروني"
               autoComplete="email"
               disabled={isLoading}
+              key="email-input"
             />
           </div>
 
@@ -122,6 +123,7 @@ export function LoginForm({
                 placeholder="أدخل كلمة المرور"
                 autoComplete="current-password"
                 disabled={isLoading}
+                key="password-input"
               />
               <button
                 type="button"

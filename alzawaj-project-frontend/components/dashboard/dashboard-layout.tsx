@@ -76,6 +76,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   className="h-12 md:h-16 w-auto sm:mb-2"
                   priority
                   sizes="(max-width: 768px) 64px, (max-width: 1280px) 80px, 96px"
+                  quality={75}
                   suppressHydrationWarning
                 />
                 <span className="text-nav-primary font-heading arabic-optimized">

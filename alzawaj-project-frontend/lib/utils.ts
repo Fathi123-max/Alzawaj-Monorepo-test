@@ -31,13 +31,15 @@ export function formatTimeAgo(date: Date | string): string {
   }
 
   // Days
-  if (diffInSeconds < 2592000) { // 30 days
+  if (diffInSeconds < 2592000) {
+    // 30 days
     const days = Math.floor(diffInSeconds / 86400);
     return `منذ ${days} يوم`;
   }
 
   // Weeks
-  if (diffInSeconds < 31536000) { // ~1 year
+  if (diffInSeconds < 31536000) {
+    // ~1 year
     const weeks = Math.floor(diffInSeconds / 604800);
     return `منذ ${weeks} أسبوع`;
   }

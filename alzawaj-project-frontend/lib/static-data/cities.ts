@@ -22,7 +22,7 @@ export const cities: City[] = [
     value: "جدة",
     label: "جدة",
     country: "السعودية",
-    countryLabel: "المملكة العربية السعودية"
+    countryLabel: "المملكة العربية السعودية",
   },
   {
     value: "مكة المكرمة",
@@ -144,7 +144,7 @@ export const cities: City[] = [
     value: "دبي",
     label: "دبي",
     country: "الإمارات",
-    countryLabel: "دولة الإمارات العربية المتحدة"
+    countryLabel: "دولة الإمارات العربية المتحدة",
   },
   {
     value: "أبوظبي",
@@ -200,7 +200,7 @@ export const cities: City[] = [
     value: "القاهرة",
     label: "القاهرة",
     country: "مصر",
-    countryLabel: "جمهورية مصر العربية"
+    countryLabel: "جمهورية مصر العربية",
   },
   {
     value: "الإسكندرية",
@@ -212,31 +212,31 @@ export const cities: City[] = [
     value: "الجيزة",
     label: "الجيزة",
     country: "مصر",
-    countryLabel: "جمهورية مصر العربية"
+    countryLabel: "جمهورية مصر العربية",
   },
   {
     value: "الأقصر",
     label: "الأقصر",
     country: "مصر",
-    countryLabel: "جمهورية مصر العربية"
+    countryLabel: "جمهورية مصر العربية",
   },
   {
     value: "أسوان",
     label: "أسوان",
     country: "مصر",
-    countryLabel: "جمهورية مصر العربية"
+    countryLabel: "جمهورية مصر العربية",
   },
   {
     value: "المنصورة",
     label: "المنصورة",
     country: "مصر",
-    countryLabel: "جمهورية مصر العربية"
+    countryLabel: "جمهورية مصر العربية",
   },
   {
     value: "طنطا",
     label: "طنطا",
     country: "مصر",
-    countryLabel: "جمهورية مصر العربية"
+    countryLabel: "جمهورية مصر العربية",
   },
   {
     value: "السويس",
@@ -522,7 +522,7 @@ export const cities: City[] = [
     value: "عمان",
     label: "عمان",
     country: "الأردن",
-    countryLabel: "المملكة الأردنية الهاشمية"
+    countryLabel: "المملكة الأردنية الهاشمية",
   },
   {
     value: "الزرقاء",
@@ -614,7 +614,7 @@ export const cities: City[] = [
     value: "بيروت",
     label: "بيروت",
     country: "لبنان",
-    countryLabel: "الجمهورية اللبنانية"
+    countryLabel: "الجمهورية اللبنانية",
   },
   {
     value: "طرابلس",
@@ -706,7 +706,7 @@ export const cities: City[] = [
     value: "دمشق",
     label: "دمشق",
     country: "سوريا",
-    countryLabel: "الجمهورية العربية السورية"
+    countryLabel: "الجمهورية العربية السورية",
   },
   {
     value: "حلب",
@@ -786,7 +786,7 @@ export const cities: City[] = [
     value: "بغداد",
     label: "بغداد",
     country: "العراق",
-    countryLabel: "جمهورية العراق"
+    countryLabel: "جمهورية العراق",
   },
   {
     value: "البصرة",
@@ -878,7 +878,7 @@ export const cities: City[] = [
     value: "تونس",
     label: "تونس",
     country: "تونس",
-    countryLabel: "الجمهورية التونسية"
+    countryLabel: "الجمهورية التونسية",
   },
   {
     value: "صفاقس",
@@ -24496,7 +24496,7 @@ export const cities: City[] = [
     label: "سيما",
     country: "جزر القمر",
     countryLabel: "الاتحاد القمري",
-  }
+  },
 ];
 
 /**
@@ -24539,5 +24539,3 @@ export const getCitiesGroupedByCountry = (): Record<string, City[]> => {
 export const getCityByValue = (value: string): City | undefined => {
   return cities.find((city) => city.value === value);
 };
-
-

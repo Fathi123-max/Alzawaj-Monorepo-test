@@ -288,18 +288,15 @@ import { ChatInterface } from "@/components/chat/chat-interface";
 ## Future Enhancements
 
 1. **Media Messages**
-
    - Image preview and upload
    - Video messages
    - Document sharing
 
 2. **Message Reactions**
-
    - Emoji reactions
    - Quick reactions bar
 
 3. **Advanced Features**
-
    - Message search
    - Message forwarding
    - Voice messages
@@ -307,7 +304,6 @@ import { ChatInterface } from "@/components/chat/chat-interface";
    - Thread replies
 
 4. **Performance**
-
    - Virtual scrolling for long conversations
    - Message pagination
    - Image lazy loading

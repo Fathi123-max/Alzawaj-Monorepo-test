@@ -1,12 +1,12 @@
 // app/notifications-provider-client.tsx
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { listenForForegroundMessages } from '@/lib/services/notification-service'; // This refers to the .tsx file
+import { useEffect } from "react";
+import { listenForForegroundMessages } from "@/lib/services/notification-service"; // This refers to the .tsx file
 
 // Client-side component to initialize notification system
 export default function NotificationsProviderClient({
-  children
+  children,
 }: {
   children: React.ReactNode;
 }) {
@@ -15,7 +15,7 @@ export default function NotificationsProviderClient({
 
   useEffect(() => {
     // Only set up foreground message listening if we have Firebase app initialized
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       // Delay the foreground message setup slightly to avoid conflicts with auth flow
       const timer = setTimeout(() => {
         listenForForegroundMessages();
