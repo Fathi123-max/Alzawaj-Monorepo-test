@@ -3,7 +3,6 @@
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { ChatList } from "@/components/chat/chat-list";
-import { ChatInterface } from "@/components/chat/chat-interface";
 import { ChatInterfaceRedesigned } from "@/components/chat/chat-interface-redesigned";
 
 function ChatPageContent() {
@@ -15,9 +14,9 @@ function ChatPageContent() {
   if (chatRoomId) {
     return (
       <div className="h-full">
-        <ChatInterface
-          requestId={requestId || undefined}
+        <ChatInterfaceRedesigned
           chatRoomId={chatRoomId}
+          requestId={requestId || undefined}
         />
       </div>
     );

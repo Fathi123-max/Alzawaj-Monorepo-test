@@ -255,9 +255,9 @@ export const chatApi = {
   sendMessage: (data: SendMessageFormData) =>
     ApiClient.post<Message>(API_ENDPOINTS.CHAT.SEND_MESSAGE, data),
   markMessagesAsRead: (chatRoomId: string) =>
-    ApiClient.patch(`${API_ENDPOINTS.CHAT.GET_ROOMS}/${chatRoomId}/read`),
+    ApiClient.post(`/chat/read/${chatRoomId}`),
   sendGuardianInfo: (chatRoomId: string) =>
-    ApiClient.post<Message>("/chat/send-guardian-info", { chatRoomId }),
+    ApiClient.post<Message>(API_ENDPOINTS.CHAT.SEND_GUARDIAN_INFO, { chatRoomId }),
   getChatLimits: () => ApiClient.get<ChatLimits>(API_ENDPOINTS.CHAT.GET_LIMITS),
 };
 
