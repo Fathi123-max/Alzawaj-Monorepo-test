@@ -465,14 +465,17 @@ export const initializeSocketHandlers = (io: Server) => {
           isDeleted: false,
         })
         .populate('sender', 'firstname lastname')
-        .sort({ createdAt: 1 })
+        .sort({ createdAt: -1 }) // Descending order (newest first)
         .limit(data.limit || 50)
         .skip(data.skip || 0);
+
+        // Reverse messages to show oldest to newest
+        const sortedMessages = messages.reverse();
 
         // Emit the chat history back to the requesting user
         socket.emit('chatHistory', {
           chatRoomId: data.chatRoomId,
-          messages: messages.map(msg => ({
+          messages: sortedMessages.map(msg => ({
             id: (msg._id as any).toString(),
             chatRoomId: data.chatRoomId,
             senderId: (msg.sender as any)._id || msg.sender,

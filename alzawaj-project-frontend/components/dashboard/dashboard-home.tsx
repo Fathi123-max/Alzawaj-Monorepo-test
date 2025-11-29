@@ -14,7 +14,7 @@ import { Profile, mockCurrentUser } from "@/lib/mock-data/profiles";
 import { Eye, Users, MessageCircle } from "lucide-react";
 
 export function DashboardHome() {
-  const user = getUserFromLocalStorage();
+  const [user, setUser] = useState<any>(null);
   const [stats, setStats] = useState<DashboardStats>({
     profileViews: 0,
     totalRequests: 0,
@@ -29,6 +29,12 @@ export function DashboardHome() {
   const [recentProfiles, setRecentProfiles] = useState<Profile[]>([]);
   const [onlineProfiles, setOnlineProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setUser(getUserFromLocalStorage());
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     // Load dashboard data - try API first, fallback to service
@@ -295,7 +301,7 @@ export function DashboardHome() {
       <div className="text-center sm:text-right px-1">
         <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-900 mb-2">
           مرحباً،
-          {user?.firstname} {user?.lastname}
+          {mounted && user ? ` ${user.firstname} ${user.lastname}` : ""}
           👋
         </h1>
         {/* <p className="text-xs sm:text-sm lg:text-base text-gray-600 max-w-2xl mx-auto sm:mx-0 leading-relaxed">

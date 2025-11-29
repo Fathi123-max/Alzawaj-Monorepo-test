@@ -38,8 +38,8 @@ interface ChatInterfaceProps {
   chatRoomId: string;
 }
 
-interface ChatMessage extends Message {
-  sender?: Profile;
+interface ChatMessage extends Omit<Message, 'sender'> {
+  sender?: Profile | { _id: string; id?: string; firstname?: string; lastname?: string; email?: string };
   isCurrentUser?: boolean;
 }
 
@@ -57,9 +57,15 @@ export function ChatInterfaceRedesigned({
     sendMessage,
     setActiveRoom,
     canMakeSocketRequests,
+    messages: globalMessages,
   } = useChat();
 
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // Derive messages from global state
+  const messages: ChatMessage[] = (globalMessages[chatRoomId] || []).map((msg) => ({
+    ...msg,
+    isCurrentUser: msg.senderId === user?.id || (typeof msg.sender === 'object' && (msg.sender._id === user?.id || msg.sender.id === user?.id)),
+  }));
+
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -74,52 +80,58 @@ export function ChatInterfaceRedesigned({
 
   // Load chat data
   useEffect(() => {
-    if (user?.id && canMakeSocketRequests) {
-      const fetchData = async () => {
-        setIsLoading(true);
-        try {
-          const chatRoomData = await fetchChatRoomById(chatRoomId);
-          if (chatRoomData) {
-            setChatRoom(chatRoomData);
+    if (!user?.id) return;
+    
+    // Check if we can make socket requests at the time of execution
+    if (!canMakeSocketRequests()) {
+      console.log("[ChatInterface] Socket not ready, skipping data fetch");
+      return;
+    }
+    
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const chatRoomData = await fetchChatRoomById(chatRoomId);
+        if (chatRoomData) {
+          setChatRoom(chatRoomData);
 
-            // Set as active room in the context
-            setActiveRoom(chatRoomData);
+          // Set as active room in the context
+          setActiveRoom(chatRoomData);
 
-            const otherParticipant = chatRoomData.participants.find(
-              (p: any) => {
-                const userId =
-                  typeof p === "string"
-                    ? p
-                    : p.user?._id || p.user?.id || p.user;
-                return userId !== user?.id;
-              },
-            );
+          const otherParticipant = chatRoomData.participants.find(
+            (p: any) => {
+              const userId =
+                typeof p === "string"
+                  ? p
+                  : p.user?._id || p.user?.id || p.user;
+              return userId !== user?.id;
+            },
+          );
 
-            if (otherParticipant && typeof otherParticipant !== "string") {
-              const participantUser = otherParticipant.user;
-              if (typeof participantUser !== "string") {
-                setOtherUser({
-                  id: participantUser._id || participantUser.id,
-                  name: getUserFullName(participantUser),
-                  profilePicture: (participantUser as any).profilePicture,
-                } as Profile);
-              }
+          if (otherParticipant && typeof otherParticipant !== "string") {
+            const participantUser = otherParticipant.user;
+            if (typeof participantUser !== "string") {
+              setOtherUser({
+                id: participantUser._id || participantUser.id,
+                name: getUserFullName(participantUser),
+                profilePicture: (participantUser as any).profilePicture,
+              } as Profile);
             }
           }
-
-          // Load messages via Socket.IO
-          await fetchMessages(chatRoomId);
-        } catch (error) {
-          console.error("Failed to load chat data:", error);
-          showToast.error("خطأ في تحميل بيانات المحادثة");
-        } finally {
-          setIsLoading(false);
         }
-      };
 
-      fetchData();
-    }
-  }, [chatRoomId, user?.id, canMakeSocketRequests]);
+        // Load messages via Socket.IO
+        await fetchMessages(chatRoomId);
+      } catch (error) {
+        console.error("Failed to load chat data:", error);
+        showToast.error("خطأ في تحميل بيانات المحادثة");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [chatRoomId, user?.id, fetchChatRoomById, setActiveRoom, fetchMessages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -281,7 +293,7 @@ export function ChatInterfaceRedesigned({
                     متصل
                   </span>
                 )}
-                {chatRoom?.settings?.guardianSupervision?.isRequired && (
+                {(chatRoom as any)?.settings?.guardianSupervision?.isRequired && (
                   <Badge variant="outline" className="text-xs">
                     <Shield className="mr-1 h-3 w-3" />
                     محادثة محمية
@@ -345,19 +357,17 @@ export function ChatInterfaceRedesigned({
                   isCurrentUser ? "justify-end" : "justify-start",
                 )}
               >
-                {!isCurrentUser && (
                   <Avatar
                     className={cn(
                       "h-8 w-8 flex-shrink-0",
                       !showAvatar && "invisible",
                     )}
                   >
-                    <AvatarImage src={message.sender?.profilePicture} />
+                    <AvatarImage src={(message.sender as any)?.profilePicture} />
                     <AvatarFallback className="bg-secondary-100 text-secondary-700 text-xs">
-                      {getInitials(message.sender?.name || "م")}
+                      {getInitials((message.sender as any)?.name || (message.sender as any)?.firstname || "م")}
                     </AvatarFallback>
                   </Avatar>
-                )}
 
                 <div
                   className={cn(
@@ -436,7 +446,7 @@ export function ChatInterfaceRedesigned({
                     </p>
                   ) : (
                     <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                      {message.content?.text || message.content}
+                      {typeof message.content === 'string' ? message.content : message.content?.text || ''}
                     </p>
                   )}
 
@@ -591,7 +601,7 @@ export function ChatInterfaceRedesigned({
           </Button>
         </div>
 
-        {chatRoom?.settings?.guardianSupervision?.isRequired && (
+        {(chatRoom as any)?.settings?.guardianSupervision?.isRequired && (
           <p className="mt-2 text-xs text-text-secondary flex items-center gap-1">
             <Shield className="h-3 w-3" />
             هذه المحادثة تحت إشراف ولي الأمر
@@ -603,7 +613,9 @@ export function ChatInterfaceRedesigned({
       {showChatMenu && (
         <ChatMenu
           chatRoomId={chatRoomId}
+          isOpen={showChatMenu}
           onClose={() => setShowChatMenu(false)}
+          otherUserName={otherUser?.name || "مستخدم"}
         />
       )}
     </div>
