@@ -571,13 +571,8 @@ const useRegistration = (): UseRegistrationResult => {
         validationErrors.push("الاسم الأول واسم العائلة مطلوبان");
       }
 
-      // Validate location fields
-      if (!regData.location?.country?.trim())
-        validationErrors.push("اسم الدولة مطلوب");
-      if (!regData.location?.city?.trim())
-        validationErrors.push("اسم المدينة مطلوب");
-      if (!regData.location?.nationality?.trim())
-        validationErrors.push("الجنسية مطلوبة");
+      // The location validation should not happen here since we're already checking these fields above
+      // The location object will be built in the backendData format section below
 
       // Validate required text fields
       if (!regData.marriageGoals?.trim())

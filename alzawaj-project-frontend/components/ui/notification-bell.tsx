@@ -4,9 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import { Bell, X, Check, SquareCheckBig } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useNotifications } from "@/providers/notification-provider";
+import { useNotificationCount } from "@/lib/hooks/use-notifications";
 import { formatTimeAgo } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { useNotifications } from "@/providers/notification-provider";
 
 interface NotificationItem {
   id: string;
@@ -26,17 +27,11 @@ interface NotificationItem {
 export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const {
-    notifications,
-    unreadCount,
-    isLoading,
-    fetchNotifications,
-    markAsRead,
-    markAllAsRead,
-  } = useNotifications();
+  const { notifications, unreadCount, isLoading, hasUnread } = useNotificationCount();
+  const { fetchNotifications, markAsRead, markAllAsRead } = useNotifications();
   const router = useRouter();
 
-  // Fetch notifications when component mounts
+  // Fetch notifications when component mounts or when opening the dropdown
   useEffect(() => {
     if (isOpen) {
       fetchNotifications();
@@ -88,7 +83,7 @@ export function NotificationBell() {
         aria-label="الإشعارات"
       >
         <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
-        {unreadCount > 0 && (
+        {hasUnread && (
           <span className="absolute -top-1 -right-1 flex h-4 w-4">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
             <span className="relative inline-flex items-center justify-center rounded-full h-4 w-4 bg-red-500 text-xs text-white">

@@ -15,6 +15,7 @@ import { useAuth } from "./auth-provider";
 import { useNotifications } from "./notification-provider";
 import { showToast } from "@/components/ui/toaster";
 import { STORAGE_KEYS } from "@/lib/constants";
+import { ChatStatsService } from "@/lib/services/chat-stats-service";
 
 interface ChatContextType {
   socket: Socket | null;
@@ -465,9 +466,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
               return {
                 ...room,
                 // Update fields that exist in the ChatRoom interface
+                lastMessage: updatedRoomData.lastMessage || room.lastMessage,
+                lastMessageAt: updatedRoomData.lastMessageAt || room.lastMessageAt,
                 updatedAt: updatedRoomData.updatedAt || room.updatedAt,
-                // If we need to update other room properties, we would do it here
-                // For now, we'll just update the generic fields that exist in the interface
+                unreadCount: updatedRoomData.unreadCount !== undefined ? updatedRoomData.unreadCount : room.unreadCount,
               };
             }
             return room;

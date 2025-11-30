@@ -181,7 +181,7 @@ export const register = async (
       city: location?.city || "Unknown",
       nationality: location?.nationality || "Unknown",
       maritalStatus: (basicInfo as any)?.maritalStatus || "single",
-      education: education?.education || "bachelor",
+      education: education?.education && ["primary", "secondary", "high-school", "diploma", "bachelor", "master", "doctorate", "other"].includes(education.education) ? education.education : "bachelor",
       occupation: professional?.occupation || education?.occupation || "",
       religiousLevel: religiousInfo?.religiousLevel || "moderate",
       isPrayerRegular: religiousInfo?.isPrayerRegular ?? true,
@@ -191,6 +191,18 @@ export const register = async (
       skinColor: personalInfo?.skinColor || "medium",
       bodyType: personalInfo?.bodyType || "average",
       smokingStatus: lifestyle?.smokingStatus || "never",
+      // Personal information fields that were missing
+      marriageGoals: personalInfo?.marriageGoals,
+      personalityDescription: personalInfo?.personalityDescription,
+      familyPlans: personalInfo?.familyPlans,
+      relocationPlans: personalInfo?.relocationPlans,
+      marriageTimeline: personalInfo?.marriageTimeline,
+      // Interests are already an array from the frontend
+      interests: personalInfo?.interests || [],
+      // Family information fields that were missing
+      areParentsAlive: religiousInfo?.areParentsAlive,
+      parentRelationship: religiousInfo?.parentRelationship,
+      wantsChildren: religiousInfo?.wantsChildren,
       // Gender-specific fields for males
       hasBeard: gender === "m" ? basicInfo.hasBeard : undefined,
       financialSituation: gender === "m" ? basicInfo.financialSituation : undefined,

@@ -654,30 +654,6 @@ export function PublicProfileView({
                 </Badge>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border">
-                <span className="text-sm text-gray-600 block mb-1">
-                  مكان الصلاة
-                </span>
-                <span className="text-sm font-medium">
-                  {profile.prayingLocation === "mosque"
-                    ? "🕌 في المسجد"
-                    : profile.prayingLocation === "home"
-                      ? "🏠 في البيت"
-                      : "🕌🏠 في المسجد والبيت"}
-                </span>
-              </div>
-
-              <div className="bg-white p-4 rounded-lg border">
-                <span className="text-sm text-gray-600 block mb-1">
-                  الانتظام في المسجد
-                </span>
-                <Badge
-                  variant={profile.isRegularAtMosque ? "success" : "secondary"}
-                  className="text-sm"
-                >
-                  {profile.isRegularAtMosque ? "✓ منتظم" : "أحياناً"}
-                </Badge>
-              </div>
 
               <div className="bg-white p-4 rounded-lg border">
                 <span className="text-sm text-gray-600 block mb-1">
@@ -760,14 +736,6 @@ export function PublicProfileView({
                       </span>
                     </div>
                   )}
-                  {profile.monthlyIncome && (
-                    <div>
-                      <span className="text-gray-600 block">الدخل الشهري</span>
-                      <span className="font-semibold">
-                        {profile.monthlyIncome.toLocaleString()} ريال
-                      </span>
-                    </div>
-                  )}
                 </div>
               </div>
             )}
@@ -795,15 +763,6 @@ export function PublicProfileView({
                 </Badge>
               </div>
 
-              <div className="bg-white p-4 rounded-lg border">
-                <span className="text-sm text-gray-600 block mb-1">النقاب</span>
-                <Badge
-                  variant={profile.wearNiqab ? "success" : "secondary"}
-                  className="text-sm"
-                >
-                  {profile.wearNiqab ? "👤 ترتدي النقاب" : "لا ترتدي النقاب"}
-                </Badge>
-              </div>
 
               <div className="bg-white p-4 rounded-lg border">
                 <span className="text-sm text-gray-600 block mb-1">
@@ -876,19 +835,6 @@ export function PublicProfileView({
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
-      )}
-      {/* Bio */}
-      {profile.bio && (
-        <Card>
-          <CardHeader>
-            <h3 className="text-xl font-semibold">نبذة شخصية</h3>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">
-              {profile.bio}
-            </p>
           </CardContent>
         </Card>
       )}

@@ -1087,19 +1087,6 @@ export function ProfileView() {
                     </p>
                   </div>
 
-                  <div className="bg-white p-4 rounded-lg border">
-                    <label className="text-sm font-medium text-gray-600 block mb-2">
-                      الانتظام في المسجد
-                    </label>
-                    <Badge
-                      variant={
-                        profile.isRegularAtMosque ? "success" : "secondary"
-                      }
-                      className="text-sm"
-                    >
-                      {profile.isRegularAtMosque ? "✓ منتظم" : "أحياناً"}
-                    </Badge>
-                  </div>
 
                   <div className="bg-white p-4 rounded-lg border">
                     <label className="text-sm font-medium text-gray-600 block mb-2">
@@ -1177,16 +1164,6 @@ export function ProfileView() {
                             : "👨‍👩‍👧‍👦 ملك العائلة"}
                       </p>
                     </div>
-                    {profile.monthlyIncome && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600 block mb-1">
-                          الدخل الشهري
-                        </label>
-                        <p className="text-sm font-semibold">
-                          {profile.monthlyIncome.toLocaleString()} ريال
-                        </p>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -1215,19 +1192,6 @@ export function ProfileView() {
                     </Badge>
                   </div>
 
-                  <div className="bg-white p-4 rounded-lg border">
-                    <label className="text-sm font-medium text-gray-600 block mb-2">
-                      النقاب
-                    </label>
-                    <Badge
-                      variant={profile.wearNiqab ? "success" : "secondary"}
-                      className="text-sm"
-                    >
-                      {profile.wearNiqab
-                        ? "👤 ترتدي النقاب"
-                        : "لا ترتدي النقاب"}
-                    </Badge>
-                  </div>
 
                   <div className="bg-white p-4 rounded-lg border">
                     <label className="text-sm font-medium text-gray-600 block mb-2">
@@ -1454,23 +1418,6 @@ export function ProfileView() {
               )}
             </div>
 
-            {/* Bio */}
-            <div>
-              <label className="text-sm font-medium text-gray-600">
-                نبذة شخصية
-              </label>
-              {!isEditing ? (
-                <p className="text-gray-800 mt-1">{profile?.bio}</p>
-              ) : (
-                <Textarea
-                  value={editData.bio || ""}
-                  onChange={(e) =>
-                    setEditData({ ...editData, bio: e.target.value })
-                  }
-                  rows={4}
-                />
-              )}
-            </div>
           </div>
         </CardContent>
       </Card>

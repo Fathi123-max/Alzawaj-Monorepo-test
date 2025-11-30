@@ -11,6 +11,8 @@ import { searchService, DashboardStats } from "@/lib/services/search-service";
 import { searchApiService } from "@/lib/services/search-api-service";
 import { ProfileCard } from "@/components/search/profile-card";
 import { Profile, mockCurrentUser } from "@/lib/mock-data/profiles";
+import { requestsApi } from "@/lib/api";
+import { useChatStats } from "@/lib/hooks/use-chat-stats";
 import { Eye, Users, MessageCircle } from "lucide-react";
 
 export function DashboardHome() {
@@ -105,22 +107,12 @@ export function DashboardHome() {
 
         // Handle stats
         try {
-          // Fetch stats, pending requests, and active chats in parallel
-          const [searchStatsRes, receivedRequestsRes, chatRoomsRes] =
+          // Fetch stats and pending requests in parallel, get active chats from context
+          const [searchStatsRes, receivedRequestsRes] =
             await Promise.allSettled([
               searchApiService.getSearchStats(),
-              // Fetch received requests to get pending count
-              fetch("/api/requests/received?page=1&limit=100", {
-                headers: {
-                  Authorization: `Bearer ${getStoredToken()}`,
-                },
-              }).then((res) => res.json()),
-              // Fetch chat rooms to get active chats count
-              fetch("/api/chat/rooms", {
-                headers: {
-                  Authorization: `Bearer ${getStoredToken()}`,
-                },
-              }).then((res) => res.json()),
+              // Fetch received requests to get pending count using the proper API function
+              requestsApi.getReceivedRequests(1, 100),
             ]);
 
           // Handle search stats
@@ -129,16 +121,15 @@ export function DashboardHome() {
             searchStatsRes.value?.success
           ) {
             const searchData = searchStatsRes.value.data as any;
-            setStats({
+            setStats(prev => ({
+              ...prev,
               profileViews: searchData?.totalViews || 0,
               totalRequests: searchData?.totalMatches || 0,
               totalProfiles: searchData?.totalProfiles || 0,
               onlineProfiles: searchData?.onlineProfiles || 0,
               todayViews: searchData?.todayViews || 0,
               newMatches: searchData?.newMatches || 0,
-              pendingRequests: 0,
-              activeChats: 0,
-            });
+            }));
           }
 
           // Handle pending requests
@@ -156,21 +147,12 @@ export function DashboardHome() {
             }));
           }
 
-          // Handle active chats
-          if (
-            chatRoomsRes.status === "fulfilled" &&
-            chatRoomsRes.value?.success
-          ) {
-            const chatRooms = chatRoomsRes.value.data || [];
-            // Calculate total unread messages
-            const totalUnread = chatRooms.reduce((sum: number, room: any) => {
-              return sum + (room.unreadCount || 0);
-            }, 0);
-            setStats((prev) => ({
-              ...prev,
-              activeChats: totalUnread,
-            }));
-          }
+          // Calculate active chats (total unread messages) from context
+          // The actual updating of unread count will be handled by the useChatStats hook
+          setStats((prev) => ({
+            ...prev,
+            activeChats: 0, // This will be updated by the useEffect below
+          }));
 
           apiDataFetched = true;
         } catch (statsError) {
@@ -223,6 +205,16 @@ export function DashboardHome() {
 
     loadDashboardData();
   }, []);
+
+  const { totalUnread } = useChatStats();
+
+  // Update active chats count when chat stats change
+  useEffect(() => {
+    setStats(prev => ({
+      ...prev,
+      activeChats: totalUnread,
+    }));
+  }, [totalUnread]);
 
   const handleSendRequest = async (profileId: string): Promise<void> => {
     try {
@@ -282,7 +274,7 @@ export function DashboardHome() {
       gradient: "from-green-500 to-emerald-600",
       bgColor: "bg-gradient-to-br from-green-50 to-emerald-100",
       hoverColor: "hover:from-green-100 hover:to-emerald-200",
-      badge: stats.activeChats > 0 ? stats.activeChats.toString() : undefined,
+      badge: stats.activeChats > 0 ? "•" : undefined, // Show a simple indicator dot when there are unread messages
     },
     {
       title: "الملف الشخصي",
