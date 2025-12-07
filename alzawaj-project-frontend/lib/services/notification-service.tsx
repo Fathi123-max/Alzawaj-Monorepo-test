@@ -71,7 +71,10 @@ export const requestNotificationPermission = async (): Promise<
 const registerTokenWithBackend = async (token: string): Promise<void> => {
   try {
     // Get the auth token from localStorage directly to ensure it's available
-    const authToken = typeof window !== 'undefined' ? localStorage.getItem("zawaj_auth_token") : null;
+    const authToken =
+      typeof window !== "undefined"
+        ? localStorage.getItem("zawaj_auth_token")
+        : null;
 
     if (!authToken) {
       throw new Error("No auth token available for FCM token registration");
@@ -82,14 +85,16 @@ const registerTokenWithBackend = async (token: string): Promise<void> => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${authToken}`,
+        Authorization: `Bearer ${authToken}`,
       },
       body: JSON.stringify({ token }),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(`Failed to register token: ${response.status} ${response.statusText}, ${JSON.stringify(errorData)}`);
+      throw new Error(
+        `Failed to register token: ${response.status} ${response.statusText}, ${JSON.stringify(errorData)}`,
+      );
     }
 
     const data = await response.json();
@@ -101,8 +106,13 @@ const registerTokenWithBackend = async (token: string): Promise<void> => {
   } catch (error: any) {
     console.error("Error registering token with backend:", error);
     // Enhanced error logging to track 401 errors specifically
-    if (error.message?.includes("401") || error.message?.includes("Unauthorized")) {
-      console.error("Authentication error when registering FCM token - token may not be properly stored");
+    if (
+      error.message?.includes("401") ||
+      error.message?.includes("Unauthorized")
+    ) {
+      console.error(
+        "Authentication error when registering FCM token - token may not be properly stored",
+      );
     }
     throw error; // Re-throw to be handled by the calling function
   }

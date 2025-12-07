@@ -654,7 +654,6 @@ export function PublicProfileView({
                 </Badge>
               </div>
 
-
               <div className="bg-white p-4 rounded-lg border">
                 <span className="text-sm text-gray-600 block mb-1">
                   التدخين
@@ -762,7 +761,6 @@ export function PublicProfileView({
                   {profile.wearHijab ? "🧕 ترتدي الحجاب" : "لا ترتدي الحجاب"}
                 </Badge>
               </div>
-
 
               <div className="bg-white p-4 rounded-lg border">
                 <span className="text-sm text-gray-600 block mb-1">

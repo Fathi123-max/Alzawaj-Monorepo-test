@@ -12,7 +12,7 @@ export interface Message {
   senderName: string;
   timestamp: Date;
   read: boolean;
-  type: 'text' | 'image' | 'file';
+  type: "text" | "image" | "file";
 }
 
 export interface ChatRoom {

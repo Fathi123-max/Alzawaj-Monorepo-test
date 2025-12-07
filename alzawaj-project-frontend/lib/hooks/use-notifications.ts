@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { useNotifications } from '@/providers/notification-provider';
+import { useEffect } from "react";
+import { useNotifications } from "@/providers/notification-provider";
 
 /**
  * Custom hook to set up real-time notification listeners
@@ -13,7 +13,7 @@ export const useRealTimeNotifications = () => {
     // Fetch notifications when component mounts
     fetchNotifications();
   }, [fetchNotifications]);
-  
+
   // Currently, the real-time functionality is handled by the chat provider
   // which listens to Socket.IO events and updates the notification context
   // This hook provides a clean interface for components to ensure notifications
@@ -26,7 +26,7 @@ export const useRealTimeNotifications = () => {
  */
 export const useNotificationCount = () => {
   const { notifications, unreadCount, isLoading } = useNotifications();
-  
+
   return {
     notifications,
     unreadCount,

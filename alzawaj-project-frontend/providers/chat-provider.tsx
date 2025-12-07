@@ -86,22 +86,29 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize socket connection only when auth is fully initialized and token is available
   useEffect(() => {
-    if (authState.isInitialized && authState.isAuthenticated && authState.user) {
+    if (
+      authState.isInitialized &&
+      authState.isAuthenticated &&
+      authState.user
+    ) {
       // Check if token is available before attempting socket connection
       const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
       if (!token) {
-        console.warn("No authentication token available, delaying socket connection");
+        console.warn(
+          "No authentication token available, delaying socket connection",
+        );
         // Retry connection after a short delay to allow auth to initialize
         const retryConnection = setTimeout(() => {
           // Trigger a re-render to try connecting again
-          setReconnectTrigger(prev => prev + 1);
+          setReconnectTrigger((prev) => prev + 1);
         }, 1000);
 
         return () => clearTimeout(retryConnection);
       }
 
       // Determine the proper socket URL based on the NEXT_PUBLIC_BACKEND_URL
-      const backendUrl = process.env["NEXT_PUBLIC_BACKEND_URL"] || "http://localhost:5001";
+      const backendUrl =
+        process.env["NEXT_PUBLIC_BACKEND_URL"] || "http://localhost:5001";
       let socketUrl = "http://localhost:5001"; // default fallback
 
       if (backendUrl) {
@@ -110,16 +117,19 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           const backendUrlObj = new URL(backendUrl);
           socketUrl = `${backendUrlObj.protocol}//${backendUrlObj.host}`;
         } catch (error) {
-          console.warn("Invalid NEXT_PUBLIC_BACKEND_URL, using default socket URL:", socketUrl);
+          console.warn(
+            "Invalid NEXT_PUBLIC_BACKEND_URL, using default socket URL:",
+            socketUrl,
+          );
         }
       }
 
       const newSocket = io(socketUrl, {
         auth: {
-          token: token
+          token: token,
         },
         extraHeaders: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         transports: ["websocket", "polling"],
         // Add reconnection settings
@@ -138,7 +148,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
         // Retry authentication by emitting authenticate event manually if needed
         const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-        console.log('[ChatProvider] Manual auth attempt - token available:', token ? '***present***' : 'missing');
+        console.log(
+          "[ChatProvider] Manual auth attempt - token available:",
+          token ? "***present***" : "missing",
+        );
         if (token) {
           console.log("Attempting manual authentication...");
           newSocket.emit("authenticate", { token });
@@ -185,7 +198,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         isSocketAuthenticatedRef.current = true;
 
         // Clear any pending authentication timeouts
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           const authTimeoutKey = `authTimeout_${newSocket.id}`;
           const existingTimeout = localStorage.getItem(authTimeoutKey);
           if (existingTimeout) {
@@ -216,22 +229,30 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       // Listen for errors from Socket.IO
       newSocket.on("error", (error) => {
         console.error("[ChatProvider] Socket.IO error:", error);
-        
+
         // Check if it's an authentication error
-        if (error && (error.message === 'Authentication required' || error.message?.includes('jwt'))) {
-          console.log("[ChatProvider] Authentication required error detected, invalidating auth state");
+        if (
+          error &&
+          (error.message === "Authentication required" ||
+            error.message?.includes("jwt"))
+        ) {
+          console.log(
+            "[ChatProvider] Authentication required error detected, invalidating auth state",
+          );
           setIsSocketAuthenticated(false);
           isSocketAuthenticatedRef.current = false;
           // Don't show toast for auth errors - they're handled by retry logic
           return;
         }
-        
+
         showToast.error("حدث خطأ في الاتصال بخادم المحادثة");
       });
 
       // Listen for reconnection events
       newSocket.on("reconnect", (attemptNumber) => {
-        console.log(`[ChatProvider] Reconnected to chat server on attempt ${attemptNumber}`);
+        console.log(
+          `[ChatProvider] Reconnected to chat server on attempt ${attemptNumber}`,
+        );
         // Try to authenticate again after reconnection
         const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
         if (token) {
@@ -240,7 +261,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       });
 
       newSocket.on("reconnect_attempt", (attemptNumber) => {
-        console.log(`[ChatProvider] Attempting to reconnect to chat server - attempt ${attemptNumber}`);
+        console.log(
+          `[ChatProvider] Attempting to reconnect to chat server - attempt ${attemptNumber}`,
+        );
       });
 
       newSocket.on("reconnect_error", (error) => {
@@ -467,9 +490,13 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                 ...room,
                 // Update fields that exist in the ChatRoom interface
                 lastMessage: updatedRoomData.lastMessage || room.lastMessage,
-                lastMessageAt: updatedRoomData.lastMessageAt || room.lastMessageAt,
+                lastMessageAt:
+                  updatedRoomData.lastMessageAt || room.lastMessageAt,
                 updatedAt: updatedRoomData.updatedAt || room.updatedAt,
-                unreadCount: updatedRoomData.unreadCount !== undefined ? updatedRoomData.unreadCount : room.unreadCount,
+                unreadCount:
+                  updatedRoomData.unreadCount !== undefined
+                    ? updatedRoomData.unreadCount
+                    : room.unreadCount,
               };
             }
             return room;
@@ -557,7 +584,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }
 
     return () => {};
-  }, [authState.isInitialized, authState.isAuthenticated, authState.user, addNotification]); // Removed activeRoom - it causes infinite loops
+  }, [
+    authState.isInitialized,
+    authState.isAuthenticated,
+    authState.user,
+    addNotification,
+  ]); // Removed activeRoom - it causes infinite loops
 
   const canMakeSocketRequests = useCallback(() => {
     const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
@@ -568,13 +600,21 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     try {
       // Wait for socket to be connected and authenticated before proceeding
       if (!isConnected || !isSocketAuthenticated) {
-        console.log("[ChatProvider] Waiting for socket connection and authentication to fetch chat rooms...");
+        console.log(
+          "[ChatProvider] Waiting for socket connection and authentication to fetch chat rooms...",
+        );
 
         // Wait for both connection and authentication
         await new Promise<void>((resolve, reject) => {
           const timeout = setTimeout(() => {
-            console.log("[ChatProvider] Timeout waiting for socket connection and authentication");
-            reject(new Error("Timeout waiting for socket connection and authentication"));
+            console.log(
+              "[ChatProvider] Timeout waiting for socket connection and authentication",
+            );
+            reject(
+              new Error(
+                "Timeout waiting for socket connection and authentication",
+              ),
+            );
           }, 15000); // 15 second timeout
 
           const checkConnectionAndAuth = () => {
@@ -644,40 +684,45 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             "[ChatProvider] Error handling Socket.IO chat rooms response:",
             error,
           );
-          
+
           // If authentication error OR timeout, try to re-authenticate and retry once
           if (
-            error?.message === 'Authentication required' || 
-            error?.message?.includes('jwt') ||
-            error?.message?.includes('Timeout')
+            error?.message === "Authentication required" ||
+            error?.message?.includes("jwt") ||
+            error?.message?.includes("Timeout")
           ) {
-             console.log("[ChatProvider] Auth error or timeout in fetchChatRooms, attempting to re-authenticate and retry...");
-             const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-             if (token) {
-               // Emit authenticate event
-               socket.emit("authenticate", { token });
-               
-               // Wait for 'authenticated' event with timeout
-               try {
-                 await new Promise<void>((resolve, reject) => {
-                   const authTimeout = setTimeout(() => {
-                     socket.off("authenticated", handleAuthSuccess);
-                     reject(new Error("Timeout waiting for re-authentication"));
-                   }, 5000);
-                   
-                   const handleAuthSuccess = () => {
-                     clearTimeout(authTimeout);
-                     socket.off("authenticated", handleAuthSuccess);
-                     resolve();
-                   };
-                   
-                   socket.once("authenticated", handleAuthSuccess);
-                 });
-                 
-                 console.log("[ChatProvider] Re-authentication successful, retrying fetchChatRooms...");
-                 
-                 // Retry the request
-                 const retryResponse: any = await new Promise((resolve, reject) => {
+            console.log(
+              "[ChatProvider] Auth error or timeout in fetchChatRooms, attempting to re-authenticate and retry...",
+            );
+            const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+            if (token) {
+              // Emit authenticate event
+              socket.emit("authenticate", { token });
+
+              // Wait for 'authenticated' event with timeout
+              try {
+                await new Promise<void>((resolve, reject) => {
+                  const authTimeout = setTimeout(() => {
+                    socket.off("authenticated", handleAuthSuccess);
+                    reject(new Error("Timeout waiting for re-authentication"));
+                  }, 5000);
+
+                  const handleAuthSuccess = () => {
+                    clearTimeout(authTimeout);
+                    socket.off("authenticated", handleAuthSuccess);
+                    resolve();
+                  };
+
+                  socket.once("authenticated", handleAuthSuccess);
+                });
+
+                console.log(
+                  "[ChatProvider] Re-authentication successful, retrying fetchChatRooms...",
+                );
+
+                // Retry the request
+                const retryResponse: any = await new Promise(
+                  (resolve, reject) => {
                     const retryTimeoutId = setTimeout(() => {
                       reject(new Error("Timeout retrying fetch chat rooms"));
                     }, 10000);
@@ -690,16 +735,17 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
                     socket.on("chatRoomsList", handleRetrySuccess);
                     socket.emit("requestChatRooms", { token });
-                 });
+                  },
+                );
 
-                 if (retryResponse.rooms) {
-                    setChatRooms(retryResponse.rooms);
-                    return; // Return early if retry worked
-                 }
-               } catch (retryError) {
-                  console.error("[ChatProvider] Retry failed:", retryError);
-               }
-             }
+                if (retryResponse.rooms) {
+                  setChatRooms(retryResponse.rooms);
+                  return; // Return early if retry worked
+                }
+              } catch (retryError) {
+                console.error("[ChatProvider] Retry failed:", retryError);
+              }
+            }
           }
           throw error;
         }
@@ -718,7 +764,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     async (roomId: string) => {
       // Prevent multiple simultaneous requests for the same room
       if (ongoingRequests.current[`room_${roomId}`]) {
-        console.log("[ChatProvider] Room fetch already in progress for room:", roomId, "skipping duplicate request");
+        console.log(
+          "[ChatProvider] Room fetch already in progress for room:",
+          roomId,
+          "skipping duplicate request",
+        );
         return;
       }
 
@@ -734,7 +784,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           console.log("[ChatProvider] Waiting for socket authentication...");
           await new Promise<void>((resolve, reject) => {
             const timeout = setTimeout(() => {
-              console.log("[ChatProvider] Timeout waiting for socket authentication");
+              console.log(
+                "[ChatProvider] Timeout waiting for socket authentication",
+              );
               reject(new Error("Timeout waiting for socket authentication"));
             }, 15000); // 15 second timeout waiting for socket authentication
 
@@ -825,63 +877,79 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
               "[ChatProvider] Error handling Socket.IO chat room response:",
               error,
             );
-            
-            // If authentication error, try to re-authenticate and retry once
-            if (error?.message === 'Authentication required' || error?.message?.includes('jwt')) {
-               console.log("[ChatProvider] Authentication failed, attempting to re-authenticate and retry...");
-               const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-               if (token) {
-                 socket.emit("authenticate", { token });
-                 
-                 // Wait for 'authenticated' event with timeout
-                 try {
-                   await new Promise<void>((resolve, reject) => {
-                     const authTimeout = setTimeout(() => {
-                       socket.off("authenticated", handleAuthSuccess);
-                       reject(new Error("Timeout waiting for re-authentication"));
-                     }, 5000);
-                     
-                     const handleAuthSuccess = () => {
-                       clearTimeout(authTimeout);
-                       socket.off("authenticated", handleAuthSuccess);
-                       resolve();
-                     };
-                     
-                     socket.once("authenticated", handleAuthSuccess);
-                   });
-                   
-                   console.log("[ChatProvider] Re-authentication successful, retrying fetchChatRoomById...");
 
-                   // Retry the request
-                   return new Promise((resolve, reject) => {
-                      const retryTimeoutId = setTimeout(() => {
-                        reject(new Error("Timeout retrying fetch chat room"));
-                      }, 10000);
-  
-                      const handleRetrySuccess = (data: any) => {
-                        clearTimeout(retryTimeoutId);
-                        socket.off("chatRoomDetail", handleRetrySuccess);
-                        if (data.room) {
-                           setChatRooms((prevRooms) => {
-                              const roomExists = prevRooms.some((r) => r.id === data.room.id);
-                              return roomExists 
-                                ? prevRooms.map((r) => r.id === data.room.id ? data.room : r)
-                                : [...prevRooms, data.room];
-                           });
-                           resolve(data.room);
-                        } else {
-                           resolve(null);
-                        }
-                      };
-  
-                      socket.on("chatRoomDetail", handleRetrySuccess);
-                      socket.emit("requestChatRoomById", { chatRoomId: roomId, token });
-                   });
-                 } catch (retryError) {
-                    console.error("[ChatProvider] Retry failed:", retryError);
-                    throw error; // Throw original error if retry fails
-                 }
-               }
+            // If authentication error, try to re-authenticate and retry once
+            if (
+              error?.message === "Authentication required" ||
+              error?.message?.includes("jwt")
+            ) {
+              console.log(
+                "[ChatProvider] Authentication failed, attempting to re-authenticate and retry...",
+              );
+              const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+              if (token) {
+                socket.emit("authenticate", { token });
+
+                // Wait for 'authenticated' event with timeout
+                try {
+                  await new Promise<void>((resolve, reject) => {
+                    const authTimeout = setTimeout(() => {
+                      socket.off("authenticated", handleAuthSuccess);
+                      reject(
+                        new Error("Timeout waiting for re-authentication"),
+                      );
+                    }, 5000);
+
+                    const handleAuthSuccess = () => {
+                      clearTimeout(authTimeout);
+                      socket.off("authenticated", handleAuthSuccess);
+                      resolve();
+                    };
+
+                    socket.once("authenticated", handleAuthSuccess);
+                  });
+
+                  console.log(
+                    "[ChatProvider] Re-authentication successful, retrying fetchChatRoomById...",
+                  );
+
+                  // Retry the request
+                  return new Promise((resolve, reject) => {
+                    const retryTimeoutId = setTimeout(() => {
+                      reject(new Error("Timeout retrying fetch chat room"));
+                    }, 10000);
+
+                    const handleRetrySuccess = (data: any) => {
+                      clearTimeout(retryTimeoutId);
+                      socket.off("chatRoomDetail", handleRetrySuccess);
+                      if (data.room) {
+                        setChatRooms((prevRooms) => {
+                          const roomExists = prevRooms.some(
+                            (r) => r.id === data.room.id,
+                          );
+                          return roomExists
+                            ? prevRooms.map((r) =>
+                                r.id === data.room.id ? data.room : r,
+                              )
+                            : [...prevRooms, data.room];
+                        });
+                        resolve(data.room);
+                      } else {
+                        resolve(null);
+                      }
+                    };
+
+                    socket.on("chatRoomDetail", handleRetrySuccess);
+                    socket.emit("requestChatRoomById", {
+                      chatRoomId: roomId,
+                      token,
+                    });
+                  });
+                } catch (retryError) {
+                  console.error("[ChatProvider] Retry failed:", retryError);
+                  throw error; // Throw original error if retry fails
+                }
+              }
             }
             throw error;
           }
@@ -940,7 +1008,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     async (roomId: string) => {
       // Prevent multiple simultaneous requests for the same room
       if (ongoingRequests.current[`messages_${roomId}`]) {
-        console.log("[ChatProvider] Message fetch already in progress for room:", roomId, "skipping duplicate request");
+        console.log(
+          "[ChatProvider] Message fetch already in progress for room:",
+          roomId,
+          "skipping duplicate request",
+        );
         return;
       }
 
@@ -955,7 +1027,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const isReady = await waitForSocketAuth();
 
         if (isReady && socket) {
-          console.log("[ChatProvider] Attempting to fetch messages via Socket.IO for room:", roomId);
+          console.log(
+            "[ChatProvider] Attempting to fetch messages via Socket.IO for room:",
+            roomId,
+          );
 
           // Create a unique ID for this request
           const requestId = `fetch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -1022,36 +1097,43 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
             // If authentication error OR timeout, try to re-authenticate and retry once
             if (
-              socketError?.message === 'Authentication required' || 
-              socketError?.message?.includes('jwt') ||
-              socketError?.message?.includes('Timeout')
+              socketError?.message === "Authentication required" ||
+              socketError?.message?.includes("jwt") ||
+              socketError?.message?.includes("Timeout")
             ) {
-               console.log("[ChatProvider] Auth error or timeout in fetchMessages, attempting to re-authenticate and retry...");
-               const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-               if (token) {
-                 socket.emit("authenticate", { token });
-                 
-                 // Wait for 'authenticated' event with timeout
-                 try {
-                   await new Promise<void>((resolve, reject) => {
-                     const authTimeout = setTimeout(() => {
-                       socket.off("authenticated", handleAuthSuccess);
-                       reject(new Error("Timeout waiting for re-authentication"));
-                     }, 5000);
-                     
-                     const handleAuthSuccess = () => {
-                       clearTimeout(authTimeout);
-                       socket.off("authenticated", handleAuthSuccess);
-                       resolve();
-                     };
-                     
-                     socket.once("authenticated", handleAuthSuccess);
-                   });
-                   
-                   console.log("[ChatProvider] Re-authentication successful, retrying fetchMessages...");
-                   
-                   // Retry the request
-                   const retryResponse: any = await new Promise((resolve, reject) => {
+              console.log(
+                "[ChatProvider] Auth error or timeout in fetchMessages, attempting to re-authenticate and retry...",
+              );
+              const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+              if (token) {
+                socket.emit("authenticate", { token });
+
+                // Wait for 'authenticated' event with timeout
+                try {
+                  await new Promise<void>((resolve, reject) => {
+                    const authTimeout = setTimeout(() => {
+                      socket.off("authenticated", handleAuthSuccess);
+                      reject(
+                        new Error("Timeout waiting for re-authentication"),
+                      );
+                    }, 5000);
+
+                    const handleAuthSuccess = () => {
+                      clearTimeout(authTimeout);
+                      socket.off("authenticated", handleAuthSuccess);
+                      resolve();
+                    };
+
+                    socket.once("authenticated", handleAuthSuccess);
+                  });
+
+                  console.log(
+                    "[ChatProvider] Re-authentication successful, retrying fetchMessages...",
+                  );
+
+                  // Retry the request
+                  const retryResponse: any = await new Promise(
+                    (resolve, reject) => {
                       const retryTimeoutId = setTimeout(() => {
                         reject(new Error("Timeout retrying fetch messages"));
                       }, 10000);
@@ -1063,34 +1145,45 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                       };
 
                       socket.on("chatHistory", handleRetrySuccess);
-                      socket.emit("requestChatHistory", { 
-                        chatRoomId: roomId, 
-                        limit: 50, 
-                        skip: 0, 
-                        token 
+                      socket.emit("requestChatHistory", {
+                        chatRoomId: roomId,
+                        limit: 50,
+                        skip: 0,
+                        token,
                       });
-                   });
+                    },
+                  );
 
-                   if (retryResponse.messages) {
-                      console.log("[ChatProvider] Retry successful, extracted messages:", retryResponse.messages.length);
-                      setMessages((prev) => ({
-                        ...prev,
-                        [roomId]: retryResponse.messages,
-                      }));
-                      return; // Return early if retry worked
-                   }
-                 } catch (retryError) {
-                    console.error("[ChatProvider] Retry failed:", retryError);
-                 }
-               }
+                  if (retryResponse.messages) {
+                    console.log(
+                      "[ChatProvider] Retry successful, extracted messages:",
+                      retryResponse.messages.length,
+                    );
+                    setMessages((prev) => ({
+                      ...prev,
+                      [roomId]: retryResponse.messages,
+                    }));
+                    return; // Return early if retry worked
+                  }
+                } catch (retryError) {
+                  console.error("[ChatProvider] Retry failed:", retryError);
+                }
+              }
             }
           }
         } else {
-          console.log("[ChatProvider] Socket not ready for room:", roomId, "using REST API");
+          console.log(
+            "[ChatProvider] Socket not ready for room:",
+            roomId,
+            "using REST API",
+          );
         }
 
         // Fallback to REST API if Socket.IO fails or is not ready
-        console.log("[ChatProvider] Falling back to REST API for fetching messages for room:", roomId);
+        console.log(
+          "[ChatProvider] Falling back to REST API for fetching messages for room:",
+          roomId,
+        );
         const response = await chatApi.getMessages(roomId);
 
         if (
@@ -1104,21 +1197,29 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             "[ChatProvider] REST API messages response for room:",
             roomId,
             "count:",
-            response.data.messages.length
+            response.data.messages.length,
           );
           setMessages((prev) => ({
             ...prev,
             [roomId]: response.data?.messages || [],
           }));
         } else {
-          console.log("[ChatProvider] No messages data in REST response for room:", roomId);
+          console.log(
+            "[ChatProvider] No messages data in REST response for room:",
+            roomId,
+          );
           setMessages((prev) => ({
             ...prev,
             [roomId]: [],
           }));
         }
       } catch (error: any) {
-        console.error("[ChatProvider] Error fetching messages for room:", roomId, "error:", error);
+        console.error(
+          "[ChatProvider] Error fetching messages for room:",
+          roomId,
+          "error:",
+          error,
+        );
         showToast.error(error.message || "خطأ في تحميل الرسائل");
         setMessages((prev) => ({
           ...prev,
@@ -1129,13 +1230,16 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         ongoingRequests.current[`messages_${roomId}`] = false;
       }
     },
-    [socket, waitForSocketAuth, chatApi],  // Updated dependency array for fetchMessages
+    [socket, waitForSocketAuth, chatApi], // Updated dependency array for fetchMessages
   );
 
   const sendMessage = useCallback(
     async (content: string) => {
       if (!activeRoom) {
-        console.log("[ChatProvider] No active room, cannot send message:", content);
+        console.log(
+          "[ChatProvider] No active room, cannot send message:",
+          content,
+        );
         showToast.error("لا توجد غرفة محادثة نشطة");
         return;
       }
@@ -1144,7 +1248,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         content,
         activeRoomId: activeRoom.id,
         user: user?.id,
-        canMakeSocketRequests: canMakeSocketRequests()
+        canMakeSocketRequests: canMakeSocketRequests(),
       });
 
       // Optimistically update UI with the outgoing message
@@ -1185,13 +1289,13 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           },
         } as unknown as Message;
 
-        console.log("[ChatProvider] Adding optimistic message:", optimisticMessageId);
+        console.log(
+          "[ChatProvider] Adding optimistic message:",
+          optimisticMessageId,
+        );
         setMessages((prev) => ({
           ...prev,
-          [activeRoom.id]: [
-            ...(prev[activeRoom.id] || []),
-            optimisticMessage,
-          ],
+          [activeRoom.id]: [...(prev[activeRoom.id] || []), optimisticMessage],
         }));
 
         // Try Socket.IO first
@@ -1222,12 +1326,18 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
           // Set a timeout to handle potential failures
           const failureTimeout = setTimeout(() => {
-            console.log("[ChatProvider] Socket.IO send timeout, attempting REST API fallback for message:", messageAttemptId);
+            console.log(
+              "[ChatProvider] Socket.IO send timeout, attempting REST API fallback for message:",
+              messageAttemptId,
+            );
 
             // Try sending via REST API as fallback
             const sendViaRest = async () => {
               try {
-                console.log("[ChatProvider] Using REST API fallback for message:", content);
+                console.log(
+                  "[ChatProvider] Using REST API fallback for message:",
+                  content,
+                );
                 const response = await chatApi.sendMessage({
                   chatRoomId: activeRoom.id,
                   content: content,
@@ -1235,7 +1345,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                 });
 
                 if (response.success && response.data) {
-                  console.log("[ChatProvider] Message sent via REST API fallback successfully:", response.data);
+                  console.log(
+                    "[ChatProvider] Message sent via REST API fallback successfully:",
+                    response.data,
+                  );
 
                   // Replace the optimistic message with the actual one
                   setMessages((prev) => {
@@ -1249,7 +1362,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                             id: user?.id || "",
                             firstname: user?.firstname || "",
                             lastname: user?.lastname || "",
-                          }
+                          },
                         } as unknown as Message;
                       }
                       return msg;
@@ -1260,7 +1373,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                     };
                   });
                 } else {
-                  console.log("[ChatProvider] REST API fallback failed, response:", response);
+                  console.log(
+                    "[ChatProvider] REST API fallback failed, response:",
+                    response,
+                  );
                   // Mark as failed if REST API also fails
                   setMessages((prev) => {
                     const roomMessages = prev[activeRoom.id] || [];
@@ -1281,7 +1397,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                   showToast.error("فشل إرسال الرسالة");
                 }
               } catch (restError) {
-                console.error("[ChatProvider] REST API fallback failed:", restError);
+                console.error(
+                  "[ChatProvider] REST API fallback failed:",
+                  restError,
+                );
                 // Mark as failed if REST API also fails
                 setMessages((prev) => {
                   const roomMessages = prev[activeRoom.id] || [];
@@ -1310,14 +1429,19 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           messageTimeoutRefs.current[messageAttemptId] = failureTimeout;
           messageSent = true;
         } else {
-          console.log("[ChatProvider] Socket.IO not available, canMakeSocketRequests returned false");
+          console.log(
+            "[ChatProvider] Socket.IO not available, canMakeSocketRequests returned false",
+          );
         }
 
         // If Socket.IO failed to send, try REST API directly
         if (!messageSent) {
           console.log("[ChatProvider] Socket.IO not available, using REST API");
           try {
-            console.log("[ChatProvider] Sending message via REST API:", content);
+            console.log(
+              "[ChatProvider] Sending message via REST API:",
+              content,
+            );
             const response = await chatApi.sendMessage({
               chatRoomId: activeRoom.id,
               content: content,
@@ -1325,7 +1449,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             });
 
             if (response.success && response.data) {
-              console.log("[ChatProvider] Message sent via REST API successfully:", response.data);
+              console.log(
+                "[ChatProvider] Message sent via REST API successfully:",
+                response.data,
+              );
 
               // Replace the optimistic message with the actual one
               setMessages((prev) => {
@@ -1339,7 +1466,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                         id: user?.id || "",
                         firstname: user?.firstname || "",
                         lastname: user?.lastname || "",
-                      }
+                      },
                     } as unknown as Message;
                   }
                   return msg;
@@ -1350,7 +1477,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                 };
               });
             } else {
-              console.log("[ChatProvider] REST API failed, response:", response);
+              console.log(
+                "[ChatProvider] REST API failed, response:",
+                response,
+              );
               // Mark as failed
               setMessages((prev) => {
                 const roomMessages = prev[activeRoom.id] || [];
@@ -1399,7 +1529,6 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
         console.log("[ChatProvider] Message sent successfully");
         showToast.success("تم إرسال الرسالة بنجاح");
-
       } catch (error: any) {
         console.error("[ChatProvider] Send message error:", error); // Debug log
         // Mark message as failed
@@ -1466,15 +1595,23 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           const markReadAttemptId = `markRead_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
           const failureTimeout = setTimeout(() => {
-            console.log("[ChatProvider] Socket.IO markAsRead timeout, falling back to REST API");
+            console.log(
+              "[ChatProvider] Socket.IO markAsRead timeout, falling back to REST API",
+            );
 
             // Fallback to REST API
-            chatApi.markMessagesAsRead(roomId)
+            chatApi
+              .markMessagesAsRead(roomId)
               .then(() => {
-                console.log("[ChatProvider] Messages marked as read via REST API fallback");
+                console.log(
+                  "[ChatProvider] Messages marked as read via REST API fallback",
+                );
               })
               .catch((error) => {
-                console.error("[ChatProvider] REST API fallback for markAsRead failed:", error);
+                console.error(
+                  "[ChatProvider] REST API fallback for markAsRead failed:",
+                  error,
+                );
                 showToast.error("فشل في تعليم الرسائل كمقروءة");
               });
           }, 5000); // 5 second timeout before fallback
@@ -1486,7 +1623,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
         // If Socket.IO wasn't used, use REST API directly
         if (!markedAsRead) {
-          console.log("[ChatProvider] Socket.IO not available, using REST API for mark as read");
+          console.log(
+            "[ChatProvider] Socket.IO not available, using REST API for mark as read",
+          );
           await chatApi.markMessagesAsRead(roomId);
         }
 

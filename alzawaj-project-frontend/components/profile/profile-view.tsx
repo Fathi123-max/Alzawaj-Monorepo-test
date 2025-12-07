@@ -1087,7 +1087,6 @@ export function ProfileView() {
                     </p>
                   </div>
 
-
                   <div className="bg-white p-4 rounded-lg border">
                     <label className="text-sm font-medium text-gray-600 block mb-2">
                       التدخين
@@ -1191,7 +1190,6 @@ export function ProfileView() {
                         : "لا ترتدي الحجاب"}
                     </Badge>
                   </div>
-
 
                   <div className="bg-white p-4 rounded-lg border">
                     <label className="text-sm font-medium text-gray-600 block mb-2">
@@ -1417,7 +1415,6 @@ export function ProfileView() {
                 />
               )}
             </div>
-
           </div>
         </CardContent>
       </Card>

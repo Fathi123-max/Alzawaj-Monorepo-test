@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { useChat } from '@/providers/chat-provider';
-import { ChatStatsService } from '@/lib/services/chat-stats-service';
+import { useEffect, useState } from "react";
+import { useChat } from "@/providers/chat-provider";
+import { ChatStatsService } from "@/lib/services/chat-stats-service";
 
 /**
  * Custom hook for accessing chat statistics

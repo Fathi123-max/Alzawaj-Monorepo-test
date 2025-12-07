@@ -121,7 +121,7 @@ export function DashboardHome() {
             searchStatsRes.value?.success
           ) {
             const searchData = searchStatsRes.value.data as any;
-            setStats(prev => ({
+            setStats((prev) => ({
               ...prev,
               profileViews: searchData?.totalViews || 0,
               totalRequests: searchData?.totalMatches || 0,
@@ -210,7 +210,7 @@ export function DashboardHome() {
 
   // Update active chats count when chat stats change
   useEffect(() => {
-    setStats(prev => ({
+    setStats((prev) => ({
       ...prev,
       activeChats: totalUnread,
     }));

@@ -38,8 +38,16 @@ interface ChatInterfaceProps {
   chatRoomId: string;
 }
 
-interface ChatMessage extends Omit<Message, 'sender'> {
-  sender?: Profile | { _id: string; id?: string; firstname?: string; lastname?: string; email?: string };
+interface ChatMessage extends Omit<Message, "sender"> {
+  sender?:
+    | Profile
+    | {
+        _id: string;
+        id?: string;
+        firstname?: string;
+        lastname?: string;
+        email?: string;
+      };
   isCurrentUser?: boolean;
 }
 
@@ -61,10 +69,15 @@ export function ChatInterfaceRedesigned({
   } = useChat();
 
   // Derive messages from global state
-  const messages: ChatMessage[] = (globalMessages[chatRoomId] || []).map((msg) => ({
-    ...msg,
-    isCurrentUser: msg.senderId === user?.id || (typeof msg.sender === 'object' && (msg.sender._id === user?.id || msg.sender.id === user?.id)),
-  }));
+  const messages: ChatMessage[] = (globalMessages[chatRoomId] || []).map(
+    (msg) => ({
+      ...msg,
+      isCurrentUser:
+        msg.senderId === user?.id ||
+        (typeof msg.sender === "object" &&
+          (msg.sender._id === user?.id || msg.sender.id === user?.id)),
+    }),
+  );
 
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -81,13 +94,13 @@ export function ChatInterfaceRedesigned({
   // Load chat data
   useEffect(() => {
     if (!user?.id) return;
-    
+
     // Check if we can make socket requests at the time of execution
     if (!canMakeSocketRequests()) {
       console.log("[ChatInterface] Socket not ready, skipping data fetch");
       return;
     }
-    
+
     const fetchData = async () => {
       setIsLoading(true);
       try {
@@ -98,15 +111,11 @@ export function ChatInterfaceRedesigned({
           // Set as active room in the context
           setActiveRoom(chatRoomData);
 
-          const otherParticipant = chatRoomData.participants.find(
-            (p: any) => {
-              const userId =
-                typeof p === "string"
-                  ? p
-                  : p.user?._id || p.user?.id || p.user;
-              return userId !== user?.id;
-            },
-          );
+          const otherParticipant = chatRoomData.participants.find((p: any) => {
+            const userId =
+              typeof p === "string" ? p : p.user?._id || p.user?.id || p.user;
+            return userId !== user?.id;
+          });
 
           if (otherParticipant && typeof otherParticipant !== "string") {
             const participantUser = otherParticipant.user;
@@ -293,7 +302,8 @@ export function ChatInterfaceRedesigned({
                     متصل
                   </span>
                 )}
-                {(chatRoom as any)?.settings?.guardianSupervision?.isRequired && (
+                {(chatRoom as any)?.settings?.guardianSupervision
+                  ?.isRequired && (
                   <Badge variant="outline" className="text-xs">
                     <Shield className="mr-1 h-3 w-3" />
                     محادثة محمية
@@ -357,17 +367,21 @@ export function ChatInterfaceRedesigned({
                   isCurrentUser ? "justify-end" : "justify-start",
                 )}
               >
-                  <Avatar
-                    className={cn(
-                      "h-8 w-8 flex-shrink-0",
-                      !showAvatar && "invisible",
+                <Avatar
+                  className={cn(
+                    "h-8 w-8 flex-shrink-0",
+                    !showAvatar && "invisible",
+                  )}
+                >
+                  <AvatarImage src={(message.sender as any)?.profilePicture} />
+                  <AvatarFallback className="bg-secondary-100 text-secondary-700 text-xs">
+                    {getInitials(
+                      (message.sender as any)?.name ||
+                        (message.sender as any)?.firstname ||
+                        "م",
                     )}
-                  >
-                    <AvatarImage src={(message.sender as any)?.profilePicture} />
-                    <AvatarFallback className="bg-secondary-100 text-secondary-700 text-xs">
-                      {getInitials((message.sender as any)?.name || (message.sender as any)?.firstname || "م")}
-                    </AvatarFallback>
-                  </Avatar>
+                  </AvatarFallback>
+                </Avatar>
 
                 <div
                   className={cn(
@@ -446,7 +460,9 @@ export function ChatInterfaceRedesigned({
                     </p>
                   ) : (
                     <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                      {typeof message.content === 'string' ? message.content : message.content?.text || ''}
+                      {typeof message.content === "string"
+                        ? message.content
+                        : message.content?.text || ""}
                     </p>
                   )}
 

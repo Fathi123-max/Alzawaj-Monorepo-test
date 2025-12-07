@@ -17,7 +17,8 @@ export class ChatStatsService {
 
     return chatRooms.reduce((total, room) => {
       // Ensure unreadCount is a valid number before adding
-      const unreadCount = typeof room.unreadCount === 'number' ? room.unreadCount : 0;
+      const unreadCount =
+        typeof room.unreadCount === "number" ? room.unreadCount : 0;
       return total + Math.max(0, unreadCount);
     }, 0);
   }
@@ -32,8 +33,9 @@ export class ChatStatsService {
       return 0;
     }
 
-    return chatRooms.filter(room => {
-      const unreadCount = typeof room.unreadCount === 'number' ? room.unreadCount : 0;
+    return chatRooms.filter((room) => {
+      const unreadCount =
+        typeof room.unreadCount === "number" ? room.unreadCount : 0;
       return unreadCount > 0;
     }).length;
   }
@@ -56,7 +58,8 @@ export class ChatStatsService {
  * Cache for chat statistics to prevent unnecessary recalculations
  */
 export class ChatStatsCache {
-  private static cache: Map<string, { value: number; timestamp: number }> = new Map();
+  private static cache: Map<string, { value: number; timestamp: number }> =
+    new Map();
   private static TTL = 30000; // 30 seconds
 
   /**

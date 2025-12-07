@@ -27,7 +27,8 @@ interface NotificationItem {
 export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { notifications, unreadCount, isLoading, hasUnread } = useNotificationCount();
+  const { notifications, unreadCount, isLoading, hasUnread } =
+    useNotificationCount();
   const { fetchNotifications, markAsRead, markAllAsRead } = useNotifications();
   const router = useRouter();
 

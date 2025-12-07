@@ -233,12 +233,14 @@ Multi-step registration with state persistence:
 ### Authentication Flow
 
 1. **Login** (app/auth/login/page.tsx)
+
    - User submits email/password
    - `useAuth` hook calls `/auth/login`
    - Token stored in localStorage (key: `zawaj_auth_token`)
    - Redirected to `/dashboard`
 
 2. **Token Management** (lib/api/client.ts:21-160)
+
    - Token automatically added to all API requests
    - On 401, attempts refresh via `/auth/refresh-token`
    - Refresh token stored separately (key: `zawaj_refresh_token`)
