@@ -15,10 +15,10 @@ export class AdminService {
     try {
       // Get user stats
       const userStats = await User.getActiveUsersStats();
-      
+
       // Get profile stats
       const profileStats = await Profile.getProfileStats();
-      
+
       // Get request stats
       const requestStats = await MarriageRequest.aggregate([
         {
@@ -37,7 +37,7 @@ export class AdminService {
           },
         },
       ]);
-      
+
       // Get message stats
       const messageStats = await Message.aggregate([
         {
@@ -59,13 +59,14 @@ export class AdminService {
           },
         },
       ]);
-      
+
       // Get report stats
       const reportStats = await Report.getStatistics();
 
       // Get notification stats
       const unreadNotifications = await AdminNotification.getUnreadCount();
-      const unreadImportantNotifications = await AdminNotification.getUnreadImportantCount();
+      const unreadImportantNotifications =
+        await AdminNotification.getUnreadImportantCount();
 
       return {
         users: {
@@ -132,7 +133,11 @@ export class AdminService {
     }
   ): Promise<any> {
     try {
-      console.log('[AdminService] getUsers called with:', { page, limit, filters });
+      console.log("[AdminService] getUsers called with:", {
+        page,
+        limit,
+        filters,
+      });
 
       // Build query
       const query: any = {};
@@ -154,7 +159,10 @@ export class AdminService {
         ];
       }
 
-      console.log('[AdminService] MongoDB query:', JSON.stringify(query, null, 2));
+      console.log(
+        "[AdminService] MongoDB query:",
+        JSON.stringify(query, null, 2)
+      );
 
       // Calculate pagination
       const skip = (page - 1) * limit;
@@ -169,13 +177,14 @@ export class AdminService {
 
       const users = await usersQuery.exec();
 
-      console.log('[AdminService] Found users:', users.length);
+      console.log("[AdminService] Found users:", users.length);
 
       // Filter by gender if specified
       let filteredUsers = users;
       if (filters?.gender) {
-        filteredUsers = users.filter(user => 
-          user.profile && (user.profile as any).gender === filters.gender
+        filteredUsers = users.filter(
+          (user) =>
+            user.profile && (user.profile as any).gender === filters.gender
         );
       }
 
@@ -183,7 +192,7 @@ export class AdminService {
       const totalUsers = await User.countDocuments(query);
       const totalPages = Math.ceil(totalUsers / limit);
 
-      console.log('[AdminService] Total users matching query:', totalUsers);
+      console.log("[AdminService] Total users matching query:", totalUsers);
 
       return {
         users: filteredUsers,
@@ -195,7 +204,7 @@ export class AdminService {
         },
       };
     } catch (error: any) {
-      console.error('[AdminService] Error in getUsers:', error);
+      console.error("[AdminService] Error in getUsers:", error);
       throw new Error(`Error getting users: ${error.message}`);
     }
   }
@@ -210,7 +219,7 @@ export class AdminService {
     reason?: string
   ): Promise<any> {
     try {
-      const user = await User.findById(userId).populate('profile');
+      const user = await User.findById(userId).populate("profile");
       if (!user) {
         throw new Error("User not found");
       }
@@ -236,29 +245,31 @@ export class AdminService {
           await user.softDelete();
           break;
         case "verify":
-          console.log('[AdminService] Verifying user:', userId);
+          console.log("[AdminService] Verifying user:", userId);
           user.isEmailVerified = true;
           user.emailVerifiedAt = new Date();
-          
+
           // Update profile verification
           if (user.profile) {
-            console.log('[AdminService] User has profile:', user.profile);
+            console.log("[AdminService] User has profile:", user.profile);
             const profile = await Profile.findById(user.profile);
             if (profile) {
-              console.log('[AdminService] Profile found, updating verification');
+              console.log(
+                "[AdminService] Profile found, updating verification"
+              );
               if (!profile.verification) {
                 (profile as any).verification = {};
               }
               profile.verification!.isVerified = true;
               profile.verification!.verifiedAt = new Date();
-              profile.verification!.verificationMethod = 'admin';
+              profile.verification!.verificationMethod = "admin";
               await profile.save();
-              console.log('[AdminService] Profile verification saved');
+              console.log("[AdminService] Profile verification saved");
             } else {
-              console.log('[AdminService] Profile not found in database');
+              console.log("[AdminService] Profile not found in database");
             }
           } else {
-            console.log('[AdminService] User has no profile');
+            console.log("[AdminService] User has no profile");
           }
           break;
       }
@@ -302,6 +313,85 @@ export class AdminService {
       return settings;
     } catch (error: any) {
       throw new Error(`Error updating admin settings: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get profiles pending approval
+   */
+  static async getPendingProfiles(
+    page: number = 1,
+    limit: number = 20,
+    filters?: {
+      gender?: string;
+      search?: string;
+    }
+  ): Promise<any> {
+    try {
+      console.log("[AdminService] getPendingProfiles called with:", {
+        page,
+        limit,
+        filters,
+      });
+
+      // Build query for pending profiles
+      const query: any = {
+        "verification.isVerified": { $ne: true }, // Not verified
+      };
+
+      // Add gender filter if specified
+      if (filters?.gender) {
+        query.gender = filters.gender;
+      }
+
+      // Add search filter if specified
+      if (filters?.search) {
+        query.$or = [
+          { name: { $regex: filters.search, $options: "i" } },
+          { country: { $regex: filters.search, $options: "i" } },
+          { city: { $regex: filters.search, $options: "i" } },
+          { nationality: { $regex: filters.search, $options: "i" } },
+        ];
+      }
+
+      console.log(
+        "[AdminService] MongoDB query for pending profiles:",
+        JSON.stringify(query, null, 2)
+      );
+
+      // Calculate pagination
+      const skip = (page - 1) * limit;
+
+      // Get pending profiles with user data
+      const profiles = await Profile.find(query)
+        .populate("userId", "firstname lastname email phone createdAt")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+
+      console.log("[AdminService] Found pending profiles:", profiles.length);
+
+      // Get total count
+      const totalProfiles = await Profile.countDocuments(query);
+      const totalPages = Math.ceil(totalProfiles / limit);
+
+      console.log(
+        "[AdminService] Total pending profiles matching query:",
+        totalProfiles
+      );
+
+      return {
+        profiles,
+        pagination: {
+          page,
+          limit,
+          total: totalProfiles,
+          totalPages,
+        },
+      };
+    } catch (error: any) {
+      console.error("[AdminService] Error in getPendingProfiles:", error);
+      throw new Error(`Error getting pending profiles: ${error.message}`);
     }
   }
 }

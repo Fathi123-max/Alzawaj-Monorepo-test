@@ -19,6 +19,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, logout, isInitialized } = useAuth();
 
+  // Ensure children is properly rendered
+  const renderChildren = () => {
+    if (!children) return null;
+    return children;
+  };
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -89,7 +95,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <nav className="hidden md:flex sm:space-x-4 sm:space-x-reverse">
               {navigation.map((item) => (
                 <Link
-                  key={item.name}
+                  key={`desktop-${item.name}`}
                   href={item.href}
                   className={`text-nav-secondary font-medium transition-colors pb-2 pt-0 px-1 border-b-2 arabic-optimized ${
                     isActive(item.href)
@@ -203,7 +209,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex-1 overflow-y-auto p-4">
               <ul className="space-y-2">
                 {navigation.map((item) => (
-                  <li key={item.name}>
+                  <li key={`mobile-${item.name}`}>
                     <Link
                       href={item.href}
                       onClick={toggleMobileMenu}
@@ -336,7 +342,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <nav className="flex-1 p-4 pt-6">
               <ul className="space-y-2">
                 {navigation.map((item) => (
-                  <li key={item.name}>
+                  <li key={`sidebar-${item.name}`}>
                     <Link
                       href={item.href}
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 transform hover:scale-105 ${
@@ -462,7 +468,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Main content */}
         <main className="flex-1 overflow-auto pb-20 md:pb-0">
-          <div className="p-4 sm:p-6 lg:p-8">{children}</div>
+          <div className="p-4 sm:p-6 lg:p-8">{renderChildren()}</div>
         </main>
       </div>
 

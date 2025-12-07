@@ -257,7 +257,7 @@ const toast = {
 function SearchPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isInitialized, isAuthenticated } = useAuth();
   const [showFilters, setShowFilters] = useState(false);
   const [searchResult, setSearchResult] = useState<SearchResponse["data"]>({
     profiles: [],

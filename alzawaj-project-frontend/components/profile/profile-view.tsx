@@ -54,6 +54,7 @@ import {
   getFinancialSituationLabel,
 } from "@/lib/constants/profile-options";
 import { useSelectorData } from "@/lib/hooks/use-selector-data";
+import { useAuth } from "@/providers/auth-provider";
 
 export function ProfileView() {
   const [profile, setProfile] = useState<ApiProfile | null>(null);
@@ -67,6 +68,9 @@ export function ProfileView() {
 
   // Load selector data for dropdowns
   const { data: selectorData, loading: selectorLoading } = useSelectorData();
+
+  // Get auth state
+  const { user, isInitialized, isAuthenticated } = useAuth();
 
   const handlePhotoUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -100,15 +104,20 @@ export function ProfileView() {
 
   useEffect(() => {
     loadProfile();
-  }, []);
+  }, [isInitialized, isAuthenticated, user]);
 
   const loadProfile = async () => {
     setLoading(true);
     setError(null);
     try {
+      // Wait for authentication to be initialized
+      if (!isInitialized) {
+        console.log("ProfileView: Auth not initialized yet, waiting...");
+        return;
+      }
+
       // Check if user is authenticated
-      const token = localStorage.getItem("zawaj_auth_token");
-      if (!token) {
+      if (!isAuthenticated || !user) {
         setError("AUTH_REQUIRED");
         setLoading(false);
         return;
@@ -1421,7 +1430,7 @@ export function ProfileView() {
     );
   };
 
-  if (loading) {
+  if (!isInitialized || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

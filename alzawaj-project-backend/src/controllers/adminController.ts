@@ -1012,10 +1012,117 @@ export const sendAdminMessage = async (
   }
 };
 
+/**
+ * Get profiles pending approval
+ */
+export const getPendingProfiles = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { page = 1, limit = 20, gender, search } = req.query as any;
+
+    const filters: any = {};
+    if (gender) filters.gender = gender;
+    if (search) filters.search = search;
+
+    const result = await AdminService.getPendingProfiles(
+      Number(page),
+      Number(limit),
+      filters
+    );
+
+    res.json(createSuccessResponse("تم جلب الملفات الشخصية المعلقة بنجاح", result));
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Approve a user profile
+ */
+export const approveProfile = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { profileId } = req.params;
+    const adminId = req.user?._id?.toString();
+
+    if (!adminId) {
+      res.status(401).json(createErrorResponse("غير مصرح لك بهذا الإجراء"));
+      return;
+    }
+
+    // @ts-ignore - adminId is checked to be non-null above
+    const profile = await AdminService.approveProfile(profileId, adminId);
+
+    res.json(
+      createSuccessResponse("تم اعتماد الملف الشخصي بنجاح", {
+        profile,
+      })
+    );
+  } catch (error: any) {
+    if (error.message === "Profile not found") {
+      res.status(404).json(createErrorResponse("الملف الشخصي غير موجود"));
+      return;
+    }
+    if (error.message === "Profile is already approved") {
+      res.status(400).json(createErrorResponse("الملف الشخصي معتمد بالفعل"));
+      return;
+    }
+    next(error);
+  }
+};
+
+/**
+ * Reject a user profile
+ */
+export const rejectProfile = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { profileId } = req.params;
+    const { reason } = req.body;
+    const adminId = req.user?._id?.toString();
+
+    if (!adminId) {
+      res.status(401).json(createErrorResponse("غير مصرح لك بهذا الإجراء"));
+      return;
+    }
+
+    // @ts-ignore - adminId is checked to be non-null above
+    const profile = await AdminService.rejectProfile(profileId, adminId, reason);
+
+    res.json(
+      createSuccessResponse("تم رفض الملف الشخصي بنجاح", {
+        profile,
+      })
+    );
+  } catch (error: any) {
+    if (error.message === "Profile not found") {
+      res.status(404).json(createErrorResponse("الملف الشخصي غير موجود"));
+      return;
+    }
+    if (error.message === "Profile is already not approved") {
+      res.status(400).json(createErrorResponse("الملف الشخصي مرفوض بالفعل"));
+      return;
+    }
+    next(error);
+  }
+};
+
 export default {
   getAdminStats,
   getUsers,
   userAction,
+  getPendingProfiles,
+  approveProfile,
+  rejectProfile,
   getMarriageRequests,
   approveMarriageRequest,
   rejectMarriageRequest,

@@ -103,8 +103,9 @@ export const protect = asyncHandler(
     }
 
     console.log("Auth middleware - Token:", token ? `${token.substring(0, 20)}...` : "No token");
-    
+
     if (!token) {
+      console.log("Auth middleware - No token provided");
       throw createAuthError("لم يتم توفير رمز المصادقة", "NO_TOKEN");
     }
 
@@ -112,17 +113,21 @@ export const protect = asyncHandler(
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
       console.log("Auth middleware - Decoded token:", decoded);
+      console.log("Auth middleware - Decoded user ID:", decoded.id);
 
       // Get user from token
       const user = await User.findById(decoded.id).select("-password");
       console.log("Auth middleware - User found:", !!user);
-      
+      console.log("Auth middleware - Looking for user ID:", decoded.id);
+
       if (user) {
         console.log("Auth middleware - User details:", {
-          id: user._id,
-          email: user.email,
-          status: user.status
+          id: (user as any)._id?.toString(),
+          email: (user as any).email,
+          status: (user as any).status
         });
+      } else {
+        console.log("Auth middleware - User not found in database");
       }
 
       if (!user) {

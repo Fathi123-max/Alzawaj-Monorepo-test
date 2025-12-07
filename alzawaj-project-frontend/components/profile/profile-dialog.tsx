@@ -14,6 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Heart, MessageCircle } from "lucide-react";
 import { PublicProfileView } from "./public-profile-view";
 import { showToast } from "@/components/ui/toaster";
+import { useAuth } from "@/providers/auth-provider";
+import { STORAGE_KEYS } from "@/lib/constants";
 
 interface ContactInfo {
   phone?: string;
@@ -42,6 +44,7 @@ export function ProfileDialog({
   hideMarriageRequest = false,
   showPhotos = false,
 }: ProfileDialogProps) {
+  const { user, isAuthenticated } = useAuth();
   const [currentTab, setCurrentTab] = useState("profile");
   const [message, setMessage] = useState("");
   const [phone, setPhone] = useState(userPhone || "");
@@ -101,7 +104,25 @@ export function ProfileDialog({
   };
 
   const handleSendRequest = async () => {
+    // Check authentication first
+    if (!isAuthenticated || !user) {
+      showToast.error("يجب تسجيل الدخول أولاً");
+      return;
+    }
+
+    // Check if user profile is approved and complete
+    if (user.profile && !user.profile.isApproved) {
+      showToast.error("يجب الموافقة على ملفك الشخصي أولاً قبل إرسال طلبات");
+      return;
+    }
+
     if (!validateForm()) return;
+
+    // Don't allow sending request to self
+    if (userId === user.id) {
+      showToast.error("لا يمكن إرسال طلب لنفسك");
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -112,12 +133,20 @@ export function ProfileDialog({
       if (phone.trim()) contactInfo.phone = phone;
       if (email.trim()) contactInfo.email = email;
 
-      // Use the correct API endpoint structure
+      // Get token from storage using the proper method
+      const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN) ||
+                   sessionStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+
+      if (!token) {
+        showToast.error("انتهت صلاحية جلستك، يرجى إعادة تسجيل الدخول");
+        return;
+      }
+
       const response = await fetch("/api/requests/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("zawaj_auth_token")}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           receiverId: userId,
@@ -136,7 +165,9 @@ export function ProfileDialog({
         setCurrentTab("profile");
         setMessage("");
         setErrors([]);
+        onOpenChange(false); // Close dialog on success
       } else {
+        console.error("Send request failed:", result);
         showToast.error(result.message || "فشل في إرسال الطلب");
       }
     } catch (error: any) {

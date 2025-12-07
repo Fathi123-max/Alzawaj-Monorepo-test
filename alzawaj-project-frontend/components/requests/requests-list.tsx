@@ -10,6 +10,7 @@ import { requestsApi, chatApi } from "@/lib/api";
 import { requestsApiService } from "@/lib/services/requests-api-service";
 import { showToast } from "@/components/ui/toaster";
 import { useChat } from "@/providers/chat-provider";
+import { useAuth } from "@/providers/auth-provider";
 import { CheckCircle, X, Clock, User } from "lucide-react";
 import { ProfileDialog } from "@/components/profile/profile-dialog";
 
@@ -51,6 +52,9 @@ function RequestCard({
   };
 
   const handleResponse = async (status: "accepted" | "rejected") => {
+    console.log(`🎯 Responding to request ${request.id} with status: ${status}`);
+    console.log(`👤 Request details - Sender: ${request.sender?.id}, Receiver: ${request.receiver?.id}, Current type: ${type}`);
+
     setIsLoading(true);
     try {
       const responseMessage =
@@ -278,12 +282,20 @@ function RequestCard({
 }
 
 export function RequestsList() {
+  const { user, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<"received" | "sent">("received");
   const [receivedRequests, setReceivedRequests] = useState<MarriageRequest[]>(
     [],
   );
   const [sentRequests, setSentRequests] = useState<MarriageRequest[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Debug: Log user authentication status
+  console.log("👤 RequestsList - User auth status:", {
+    isAuthenticated,
+    userId: user?.id,
+    userEmail: user?.email
+  });
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
@@ -307,6 +319,21 @@ export function RequestsList() {
 
       console.log("📥 Received requests response:", receivedResponse);
       console.log("📤 Sent requests response:", sentResponse);
+
+      // Debug: Log request details to identify authorization issues
+      if (receivedResponse.success && receivedResponse.data?.requests) {
+        console.log("🔍 Received requests details:");
+        receivedResponse.data.requests.forEach((req, index) => {
+          console.log(`  ${index + 1}. ID: ${req.id}, Sender: ${req.sender?.id}, Receiver: ${req.receiver?.id}, Status: ${req.status}`);
+        });
+      }
+
+      if (sentResponse.success && sentResponse.data?.requests) {
+        console.log("🔍 Sent requests details:");
+        sentResponse.data.requests.forEach((req, index) => {
+          console.log(`  ${index + 1}. ID: ${req.id}, Sender: ${req.sender?.id}, Receiver: ${req.receiver?.id}, Status: ${req.status}`);
+        });
+      }
 
       if (receivedResponse.success && receivedResponse.data) {
         setReceivedRequests(receivedResponse.data.requests || []);

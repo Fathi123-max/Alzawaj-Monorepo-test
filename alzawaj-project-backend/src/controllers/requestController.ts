@@ -258,11 +258,19 @@ export const getReceivedRequests = async (
     const sortOptions: any = {};
     sortOptions[sortBy as string] = sortOrder === "desc" ? -1 : 1;
 
-    // Get requests with sender profiles
+    // Get requests with sender and receiver profiles
     const [requests, totalCount] = await Promise.all([
       MarriageRequest.find(query)
         .populate({
           path: "sender",
+          populate: {
+            path: "profile",
+            select:
+              "basicInfo location education professional photos verification",
+          },
+        })
+        .populate({
+          path: "receiver",
           populate: {
             path: "profile",
             select:
@@ -437,6 +445,13 @@ export const acceptRequest = async (
     const { requestId } = req.params;
     const { message } = req.body;
 
+    console.log('[acceptRequest] Starting request acceptance:', {
+      requestId,
+      userId: userId?.toString(),
+      hasUser: !!req.user,
+      userEmail: req.user?.email
+    });
+
     const marriageRequest = await MarriageRequest.findById(requestId)
       .populate({
         path: "sender",
@@ -448,17 +463,40 @@ export const acceptRequest = async (
       });
 
     if (!marriageRequest) {
+      console.log('[acceptRequest] Request not found:', requestId);
       res.status(404).json(createErrorResponse("طلب الزواج غير موجود"));
       return;
     }
 
-    // Check if user is the receiver
-    if (marriageRequest.receiver._id.toString() !== userId) {
+    console.log('[acceptRequest] Auth check:', {
+      requestId,
+      userId: userId?.toString(),
+      userIdType: typeof userId,
+      requestReceiverId: marriageRequest.receiver._id?.toString(),
+      requestSenderId: marriageRequest.sender._id?.toString(),
+      requestStatus: marriageRequest.status,
+      isReceiverMatch: marriageRequest.receiver._id?.toString() === userId?.toString()
+    });
+
+    // Check if userId is valid
+    if (!userId) {
+      console.log('[acceptRequest] Authorization failed - userId is undefined/null');
       res
         .status(403)
         .json(createErrorResponse("ليس لديك صلاحية لقبول هذا الطلب"));
       return;
     }
+
+    // Check if user is the receiver
+    if (marriageRequest.receiver._id.toString() !== userId.toString()) {
+      console.log('[acceptRequest] Authorization failed - user is not receiver');
+      res
+        .status(403)
+        .json(createErrorResponse("ليس لديك صلاحية لقبول هذا الطلب"));
+      return;
+    }
+
+    console.log('[acceptRequest] Authorization passed - user can accept request');
 
     // Check if request is still pending
     if (marriageRequest.status !== "pending") {
