@@ -78,7 +78,6 @@ const initialState: RegistrationState = {
     housingLocation: "الرياض",
     housingOwnership: "owned",
     housingType: "شقة",
-    monthlyIncome: 12000,
     providerView: "أحب توفير احتياجات الأسرة",
     householdChores: "أساعد في الأعمال المنزلية",
     // Female-specific
@@ -618,9 +617,6 @@ const useRegistration = (): UseRegistrationResult => {
           )
         )
           validationErrors.push("نوع السكن مطلوب للذكور");
-        if (regData.monthlyIncome === undefined || regData.monthlyIncome < 0) {
-          validationErrors.push("الدخل الشهري مطلوب للذكور");
-        }
       }
 
       if (validationErrors.length > 0) {
@@ -676,7 +672,6 @@ const useRegistration = (): UseRegistrationResult => {
         },
         professional: {
           occupation: regData.occupation?.trim() || "",
-          monthlyIncome: regData.monthlyIncome || 0,
         },
         religiousInfo: {
           religiousLevel: regData.religiousLevel || "basic",

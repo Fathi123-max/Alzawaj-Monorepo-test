@@ -271,7 +271,6 @@ export interface MaleRegisterRequest extends BaseRegisterRequest {
   financialSituation: "excellent" | "good" | "average" | "struggling";
   housingOwnership: "owned" | "rented" | "family";
   currentLivingArrangement: "independent" | "with-family" | "shared";
-  monthlyIncome?: number;
 
   // Male-specific questions
   maleLeadershipVision: string;
@@ -373,7 +372,6 @@ export interface MaleProfile extends BaseProfile {
   isRegularAtMosque?: boolean;
   housingLocation?: string;
   housingOwnership?: "owned" | "rented" | "family-owned";
-  monthlyIncome?: number;
   providerView?: string;
   householdChores?: string;
 }
@@ -421,7 +419,6 @@ export interface ApiProfile {
   smokes?: boolean;
   housingType?: "family" | "with-family" | "alone" | "shared";
   housingLocation?: string;
-  monthlyIncome?: number;
   wearHijab?: boolean;
   wearNiqab?: boolean;
   clothingStyle?:
@@ -789,7 +786,6 @@ export interface BackendRegisterRequest {
   };
   professional: {
     occupation: string;
-    monthlyIncome: number;
   };
   religiousInfo: {
     religiousLevel: "basic" | "practicing" | "very-religious" | "moderate";
@@ -883,7 +879,6 @@ export interface FlatBackendRegisterRequest {
   smokes?: boolean | undefined;
   financialSituation: "excellent" | "good" | "average" | "struggling";
   housingOwnership: "owned" | "rented" | "family-owned";
-  monthlyIncome: number;
   guardianName?: string | undefined;
   guardianPhone?: string | undefined;
   guardianEmail?: string | undefined;

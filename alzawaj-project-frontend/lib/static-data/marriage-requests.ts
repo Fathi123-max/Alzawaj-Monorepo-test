@@ -126,7 +126,6 @@ const createProfile = (profileData: Partial<Profile>): Profile => {
       housingLocation: (profileData as any).housingLocation || "family home",
       housingOwnership: (profileData as any).housingOwnership || "family-owned",
       housingType: (profileData as any).housingType || "with-family",
-      monthlyIncome: (profileData as any).monthlyIncome || 5000,
       providerView: (profileData as any).providerView || "sole provider",
       householdChores: (profileData as any).householdChores || "willing",
     };

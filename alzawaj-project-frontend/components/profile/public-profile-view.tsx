@@ -708,11 +708,10 @@ export function PublicProfileView({
 
             {/* Housing Details */}
             {(profile.housingLocation ||
-              profile.housingOwnership ||
-              profile.monthlyIncome) && (
+              profile.housingOwnership) && (
               <div className="bg-white p-4 rounded-lg border">
                 <h4 className="font-medium text-gray-800 mb-3">
-                  تفاصيل السكن والدخل
+                  تفاصيل السكن
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   {profile.housingLocation && (

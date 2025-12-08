@@ -1019,16 +1019,6 @@ export function UsersManagement() {
                                         </p>
                                       </div>
                                     )}
-                                    {selectedUser.profile.monthlyIncome && (
-                                      <div>
-                                        <label className="text-sm font-medium text-gray-700">
-                                          الدخل الشهري:
-                                        </label>
-                                        <p className="text-sm text-gray-900">
-                                          {selectedUser.profile.monthlyIncome}
-                                        </p>
-                                      </div>
-                                    )}
                                     {selectedUser.profile.isComplete !==
                                       undefined && (
                                       <div>

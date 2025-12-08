@@ -130,12 +130,6 @@ export const registrationStepMaleFinancialSchema = z.object({
   financialStatus: z.enum(["excellent", "very-good", "good", "moderate"], {
     required_error: "الوضع المالي مطلوب",
   }),
-  monthlyIncome: z.enum(
-    ["under-3000", "3000-5000", "5000-10000", "10000-15000", "above-15000"],
-    {
-      required_error: "الدخل الشهري مطلوب",
-    },
-  ),
   housingType: z.enum(["own-house", "own-apartment", "family-house", "rent"], {
     required_error: "نوع السكن مطلوب",
   }),

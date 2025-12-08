@@ -278,9 +278,6 @@ export function ProfileView() {
       if (editData.financialSituation && editData.financialSituation.trim()) {
         updateData.financialSituation = editData.financialSituation;
       }
-      if (editData.monthlyIncome) {
-        updateData.monthlyIncome = editData.monthlyIncome;
-      }
       if (editData.housingType && editData.housingType.trim()) {
         updateData.housingType = editData.housingType;
       }
@@ -1660,16 +1657,6 @@ export function ProfileView() {
                       : "مشترك"}
                 </p>
               </div>
-              {profile.monthlyIncome && (
-                <div>
-                  <label className="text-sm font-medium text-gray-600">
-                    الدخل الشهري
-                  </label>
-                  <p className="text-lg">
-                    {profile.monthlyIncome.toLocaleString()} جنيه
-                  </p>
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>

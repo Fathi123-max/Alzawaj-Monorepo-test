@@ -437,7 +437,6 @@ export interface RegistrationData {
   housingLocation?: string;
   housingOwnership?: "owned" | "rented" | "family-owned";
   housingType?: string;
-  monthlyIncome?: number;
   providerView?: string;
   householdChores?: string;
 }

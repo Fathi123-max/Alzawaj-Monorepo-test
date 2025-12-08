@@ -80,9 +80,6 @@ const createMaleProfile = (profileData: Partial<MaleProfile>): MaleProfile => {
     housingLocation: profileData.housingLocation || "family home",
     housingOwnership: profileData.housingOwnership || "family-owned",
     housingType: profileData.housingType || "family",
-    ...(profileData.monthlyIncome !== undefined && {
-      monthlyIncome: profileData.monthlyIncome,
-    }),
     providerView: profileData.providerView || "sole provider",
     householdChores: profileData.householdChores || "willing",
   };

@@ -148,8 +148,6 @@ export async function updateProfileFlat(
       structuredData.professional.education = profileData["education"];
     if (profileData["occupation"])
       structuredData.professional.occupation = profileData["occupation"];
-    if (profileData["monthlyIncome"])
-      structuredData.professional.income = String(profileData["monthlyIncome"]);
 
     // Map Preferences (if any exist in flat data)
     if (profileData["preferences"])
@@ -178,8 +176,6 @@ export async function updateProfileFlat(
       structuredData.financialSituation = profileData["financialSituation"];
     if (profileData["housingOwnership"])
       structuredData.housingOwnership = profileData["housingOwnership"];
-    if (profileData["monthlyIncome"])
-      structuredData.monthlyIncome = Number(profileData["monthlyIncome"]);
 
     // Female specific top-level
     if (profileData["wearHijab"] !== undefined)

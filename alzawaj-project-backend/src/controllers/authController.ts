@@ -227,6 +227,7 @@ export const register = async (
         showOnlineStatus: privacy?.showOnlineStatus ?? false,
         allowNearbySearch: privacy?.allowNearbySearch ?? true,
       },
+      isApproved: true, // Approve profile by default on registration
     });
 
     await newProfile.save();
@@ -737,6 +738,16 @@ export const verifyEmail = async (
     delete user.emailVerificationExpires;
     await user.save();
 
+    // Optionally update profile approval timestamp
+    if (user.profile) {
+      const profile = await Profile.findById(user.profile);
+      if (profile) {
+        // Update approvedAt to reflect when user completed verification
+        profile.approvedAt = new Date();
+        await profile.save();
+      }
+    }
+
     res.json(createSuccessResponse("تم تأكيد البريد الإلكتروني بنجاح"));
   } catch (error) {
     next(error);
@@ -818,6 +829,16 @@ export const verifyPhone = async (
     delete user.phoneVerificationOTP;
     delete user.phoneVerificationExpires;
     await user.save();
+
+    // Optionally update profile approval timestamp
+    if (user.profile) {
+      const profile = await Profile.findById(user.profile);
+      if (profile) {
+        // Update approvedAt to reflect when user completed verification
+        profile.approvedAt = new Date();
+        await profile.save();
+      }
+    }
 
     res.json(createSuccessResponse("تم تأكيد رقم الهاتف بنجاح"));
   } catch (error) {
