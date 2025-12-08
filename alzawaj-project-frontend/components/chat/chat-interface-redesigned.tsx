@@ -2,27 +2,21 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   ArrowLeft,
   Send,
   MoreVertical,
   Shield,
   Clock,
-  User,
   MessageCircle,
   Check,
   CheckCheck,
-  Image as ImageIcon,
-  Paperclip,
-  Smile,
-  Phone,
-  Video,
   Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tooltip } from "@/components/ui/tooltip";
 import { Message, ChatRoom, Profile } from "@/lib/types";
 import { useChat } from "@/providers/chat-provider";
 import { useAuth } from "@/providers/auth-provider";
@@ -30,12 +24,41 @@ import { showToast } from "@/components/ui/toaster";
 import { ChatMenu } from "./chat-menu";
 import { TypingIndicator } from "./typing-indicator";
 import { getUserFullName, getInitials } from "@/lib/utils/chat-helpers";
-import { chatApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 interface ChatInterfaceProps {
   requestId?: string;
   chatRoomId: string;
+}
+
+interface ChatParticipant {
+  user?: ChatUser | string;
+  joinedAt: string;
+  lastSeen: string;
+  isActive: boolean;
+  role: string;
+  _id?: string;
+  id: string;
+}
+
+interface ChatUser {
+  _id: string;
+  id?: string;
+  firstname?: string;
+  lastname?: string;
+  fullName?: string;
+  profilePicture?: string;
+  name?: string;
+}
+
+interface ChatRoomSettings {
+  guardianSupervision?: {
+    isRequired: boolean;
+  };
+}
+
+interface ExtendedChatRoom extends ChatRoom {
+  settings?: ChatRoomSettings;
 }
 
 interface ChatMessage extends Omit<Message, "sender"> {
@@ -51,15 +74,11 @@ interface ChatMessage extends Omit<Message, "sender"> {
   isCurrentUser?: boolean;
 }
 
-export function ChatInterfaceRedesigned({
-  requestId,
-  chatRoomId,
-}: ChatInterfaceProps) {
+export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
   const router = useRouter();
   const { user } = useAuth();
   const {
     isConnected,
-    fetchChatRooms,
     fetchMessages,
     fetchChatRoomById,
     sendMessage,
@@ -76,15 +95,15 @@ export function ChatInterfaceRedesigned({
         msg.senderId === user?.id ||
         (typeof msg.sender === "object" &&
           (msg.sender._id === user?.id || msg.sender.id === user?.id)),
-    }),
+    })
   );
 
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  const [chatRoom, setChatRoom] = useState<ChatRoom | null>(null);
+  const [chatRoom, setChatRoom] = useState<ExtendedChatRoom | null>(null);
   const [otherUser, setOtherUser] = useState<Profile | null>(null);
-  const [isTyping, setIsTyping] = useState(false);
+  const [isTyping] = useState(false);
   const [showChatMenu, setShowChatMenu] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -111,19 +130,27 @@ export function ChatInterfaceRedesigned({
           // Set as active room in the context
           setActiveRoom(chatRoomData);
 
-          const otherParticipant = chatRoomData.participants.find((p: any) => {
-            const userId =
-              typeof p === "string" ? p : p.user?._id || p.user?.id || p.user;
-            return userId !== user?.id;
-          });
+          const otherParticipant = chatRoomData.participants.find(
+            (p: string | ChatParticipant) => {
+              const userId =
+                typeof p === "string" ? p : p.user?._id || p.user?.id || p.user;
+              return userId !== user?.id;
+            }
+          );
 
           if (otherParticipant && typeof otherParticipant !== "string") {
             const participantUser = otherParticipant.user;
             if (typeof participantUser !== "string") {
+              // Try to get profile picture from participant data or fetch full profile
+              const profilePicture = (participantUser as ChatUser)
+                .profilePicture;
+              const userId = participantUser._id || participantUser.id;
+
               setOtherUser({
-                id: participantUser._id || participantUser.id,
+                id: userId,
                 name: getUserFullName(participantUser),
-                profilePicture: (participantUser as any).profilePicture,
+                profilePicture:
+                  profilePicture || `/api/users/${userId}/profile-picture`,
               } as Profile);
             }
           }
@@ -140,7 +167,14 @@ export function ChatInterfaceRedesigned({
     };
 
     fetchData();
-  }, [chatRoomId, user?.id, fetchChatRoomById, setActiveRoom, fetchMessages]);
+  }, [
+    chatRoomId,
+    user?.id,
+    fetchChatRoomById,
+    setActiveRoom,
+    fetchMessages,
+    canMakeSocketRequests,
+  ]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -158,10 +192,11 @@ export function ChatInterfaceRedesigned({
 
       // Clear the input field
       setNewMessage("");
-      showToast.success("تم إرسال الرسالة");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to send message:", error);
-      showToast.error(error.message || "خطأ في إرسال الرسالة");
+      const errorMessage =
+        error instanceof Error ? error.message : "خطأ في إرسال الرسالة";
+      showToast.error(errorMessage);
     } finally {
       setIsSending(false);
     }
@@ -244,7 +279,7 @@ export function ChatInterfaceRedesigned({
   };
 
   const renderStatusIcon = (
-    statusData: { icon: React.ReactNode; tooltip: string } | null,
+    statusData: { icon: React.ReactNode; tooltip: string } | null
   ) => {
     if (!statusData) return null;
     return (
@@ -266,25 +301,76 @@ export function ChatInterfaceRedesigned({
   }
 
   return (
-    <div className="flex h-full flex-col bg-gradient-to-b from-background to-background-secondary">
-      {/* Header */}
-      <div className="border-b border-border bg-card shadow-sm">
+    <div className="flex h-screen flex-col bg-gradient-to-b from-background to-background-secondary overflow-hidden">
+      {/* Header - Fixed */}
+      <div className="flex-shrink-0 border-b border-border bg-card shadow-sm">
         <div className="flex items-center justify-between px-4 py-3 sm:px-6">
+          {/* Left side: Menu buttons */}
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.back()}
-              className="hover:bg-primary-subtle"
-              aria-label="العودة"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hover:bg-primary-subtle h-8 w-8 cursor-pointer"
+                aria-label="معلومات"
+                onClick={() => {
+                  if (otherUser?.id) {
+                    router.push(
+                      `/profile/${otherUser.id}?fromChat=true&showPhotos=true`
+                    );
+                  }
+                }}
+                title="اضغط لعرض الملف الشخصي"
+              >
+                <Info className="h-4 w-4" />
+              </Button>
+              <span
+                className="text-xs text-text-secondary cursor-pointer hover:text-primary-600"
+                onClick={() => {
+                  if (otherUser?.id) {
+                    router.push(
+                      `/profile/${otherUser.id}?fromChat=true&showPhotos=true`
+                    );
+                  }
+                }}
+              >
+                الملف
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowChatMenu(!showChatMenu)}
+                className="hover:bg-primary-subtle h-8 w-8"
+                aria-label="المزيد"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+              <span className="text-xs text-text-secondary">الخيارات</span>
+            </div>
+          </div>
 
-            <Avatar className="h-10 w-10 border-2 border-primary-200">
+          {/* Center: User info */}
+          <div className="flex items-center gap-3">
+            <Avatar
+              className="h-10 w-10 border-2 border-primary-200 cursor-pointer hover:opacity-80 hover:border-primary-400 transition-all hover:scale-105"
+              onClick={() => {
+                if (otherUser?.id) {
+                  router.push(
+                    `/profile/${otherUser.id}?fromChat=true&showPhotos=true`
+                  );
+                }
+              }}
+              title="اضغط لعرض الملف الشخصي"
+            >
               <AvatarImage
                 src={otherUser?.profilePicture}
                 alt={otherUser?.name}
+                onError={(e) => {
+                  // Hide the broken image and show fallback
+                  e.currentTarget.style.display = "none";
+                }}
               />
               <AvatarFallback className="bg-primary-100 text-primary-700 font-medium">
                 {getInitials(otherUser?.name || "مستخدم")}
@@ -292,7 +378,17 @@ export function ChatInterfaceRedesigned({
             </Avatar>
 
             <div className="flex-1">
-              <h2 className="text-base font-semibold text-text">
+              <h2
+                className="text-base font-semibold text-text cursor-pointer hover:text-primary-600 hover:underline transition-colors"
+                onClick={() => {
+                  if (otherUser?.id) {
+                    router.push(
+                      `/profile/${otherUser.id}?fromChat=true&showPhotos=true`
+                    );
+                  }
+                }}
+                title="اضغط لعرض الملف الشخصي"
+              >
                 {otherUser?.name || "مستخدم"}
               </h2>
               <div className="flex items-center gap-2">
@@ -302,8 +398,7 @@ export function ChatInterfaceRedesigned({
                     متصل
                   </span>
                 )}
-                {(chatRoom as any)?.settings?.guardianSupervision
-                  ?.isRequired && (
+                {chatRoom?.settings?.guardianSupervision?.isRequired && (
                   <Badge variant="outline" className="text-xs">
                     <Shield className="mr-1 h-3 w-3" />
                     محادثة محمية
@@ -313,25 +408,16 @@ export function ChatInterfaceRedesigned({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:bg-primary-subtle"
-              aria-label="معلومات"
-            >
-              <Info className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowChatMenu(!showChatMenu)}
-              className="hover:bg-primary-subtle"
-              aria-label="المزيد"
-            >
-              <MoreVertical className="h-5 w-5" />
-            </Button>
-          </div>
+          {/* Right side: Back button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.back()}
+            className="hover:bg-primary-subtle"
+            aria-label="العودة"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
         </div>
       </div>
 
@@ -339,7 +425,7 @@ export function ChatInterfaceRedesigned({
       <div
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto px-4 py-6 space-y-4"
-        style={{ scrollBehavior: "smooth" }}
+        style={{ scrollBehavior: "smooth", paddingBottom: "100px" }}
       >
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center">
@@ -364,21 +450,38 @@ export function ChatInterfaceRedesigned({
                 key={message.id || index}
                 className={cn(
                   "flex gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300",
-                  isCurrentUser ? "justify-end" : "justify-start",
+                  isCurrentUser ? "justify-end" : "justify-start"
                 )}
               >
                 <Avatar
                   className={cn(
                     "h-8 w-8 flex-shrink-0",
                     !showAvatar && "invisible",
+                    !isCurrentUser &&
+                      showAvatar &&
+                      "cursor-pointer hover:opacity-80 transition-opacity"
                   )}
+                  onClick={() => {
+                    if (!isCurrentUser && message.sender?._id) {
+                      const senderId =
+                        (message.sender as ChatUser)._id ||
+                        (message.sender as ChatUser).id;
+                      if (senderId && senderId !== user?.id) {
+                        router.push(
+                          `/profile/${senderId}?fromChat=true&showPhotos=true`
+                        );
+                      }
+                    }
+                  }}
                 >
-                  <AvatarImage src={(message.sender as any)?.profilePicture} />
+                  <AvatarImage
+                    src={(message.sender as ChatUser)?.profilePicture}
+                  />
                   <AvatarFallback className="bg-secondary-100 text-secondary-700 text-xs">
                     {getInitials(
-                      (message.sender as any)?.name ||
-                        (message.sender as any)?.firstname ||
-                        "م",
+                      (message.sender as ChatUser)?.name ||
+                        (message.sender as ChatUser)?.firstname ||
+                        "م"
                     )}
                   </AvatarFallback>
                 </Avatar>
@@ -388,7 +491,7 @@ export function ChatInterfaceRedesigned({
                     "group relative max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm transition-all hover:shadow-md",
                     isCurrentUser
                       ? "bg-primary-500 text-white rounded-br-sm"
-                      : "bg-card text-text rounded-bl-sm border border-border",
+                      : "bg-card text-text rounded-bl-sm border border-border"
                   )}
                 >
                   {/* Reply Preview */}
@@ -398,7 +501,7 @@ export function ChatInterfaceRedesigned({
                         "rounded-lg px-2 py-1 mb-2 text-xs border-r-2",
                         isCurrentUser
                           ? "bg-white/20 border-white/50"
-                          : "bg-gray-100 border-gray-400",
+                          : "bg-gray-100 border-gray-400"
                       )}
                     >
                       <span
@@ -426,7 +529,7 @@ export function ChatInterfaceRedesigned({
                     <div
                       className={cn(
                         "rounded-lg px-2 py-1 mb-2 text-xs border-r-2",
-                        "bg-yellow-50 border-yellow-400 text-yellow-700",
+                        "bg-yellow-50 border-yellow-400 text-yellow-700"
                       )}
                     >
                       <span>⏳ قيد المراجعة</span>
@@ -441,7 +544,7 @@ export function ChatInterfaceRedesigned({
                           "rounded-lg px-2 py-1 mb-2 text-xs border-r-2",
                           isCurrentUser
                             ? "bg-yellow-500/30 border-yellow-300"
-                            : "bg-yellow-50 border-yellow-400 text-yellow-700",
+                            : "bg-yellow-50 border-yellow-400 text-yellow-700"
                         )}
                       >
                         <span>⚠️ محتوى مشكوك فيه</span>
@@ -453,7 +556,7 @@ export function ChatInterfaceRedesigned({
                     <p
                       className={cn(
                         "text-sm italic",
-                        isCurrentUser ? "opacity-70" : "text-gray-400",
+                        isCurrentUser ? "opacity-70" : "text-gray-400"
                       )}
                     >
                       تم حذف هذه الرسالة
@@ -470,9 +573,12 @@ export function ChatInterfaceRedesigned({
                   {message.content?.media && !message.isDeleted && (
                     <div className="mt-2">
                       {message.content.media.type === "image" && (
-                        <img
+                        <Image
                           src={message.content.media.url}
                           alt={message.content.media.filename}
+                          width={0}
+                          height={0}
+                          sizes="100vw"
                           className="rounded-lg max-w-full max-h-64 object-cover cursor-pointer hover:opacity-90 transition-opacity"
                           onClick={() =>
                             window.open(message.content.media?.url, "_blank")
@@ -488,7 +594,7 @@ export function ChatInterfaceRedesigned({
                             "flex items-center gap-2 rounded-lg px-3 py-2 transition-colors",
                             isCurrentUser
                               ? "bg-white/20 hover:bg-white/30"
-                              : "bg-gray-100 hover:bg-gray-200",
+                              : "bg-gray-100 hover:bg-gray-200"
                           )}
                         >
                           <span>📄</span>
@@ -501,7 +607,7 @@ export function ChatInterfaceRedesigned({
                                 "text-[10px]",
                                 isCurrentUser
                                   ? "text-white/70"
-                                  : "text-gray-500",
+                                  : "text-gray-500"
                               )}
                             >
                               {(message.content.media.size / 1024).toFixed(1)}{" "}
@@ -516,9 +622,7 @@ export function ChatInterfaceRedesigned({
                   <div
                     className={cn(
                       "mt-1 flex items-center gap-1 text-xs",
-                      isCurrentUser
-                        ? "text-primary-100"
-                        : "text-text-secondary",
+                      isCurrentUser ? "text-primary-100" : "text-text-secondary"
                     )}
                   >
                     <span>{getRelativeTime(message.createdAt)}</span>
@@ -526,7 +630,7 @@ export function ChatInterfaceRedesigned({
                       <span
                         className={cn(
                           "text-[9px]",
-                          isCurrentUser ? "text-white/70" : "text-gray-400",
+                          isCurrentUser ? "text-white/70" : "text-gray-400"
                         )}
                         title={`معدلة في ${formatTime(message.editedAt || message.updatedAt)}`}
                       >
@@ -543,7 +647,7 @@ export function ChatInterfaceRedesigned({
                       "absolute bottom-0 h-4 w-4",
                       isCurrentUser
                         ? "-right-1 bg-primary-500"
-                        : "-left-1 bg-card border-l border-b border-border",
+                        : "-left-1 bg-card border-l border-b border-border"
                     )}
                     style={{
                       clipPath: isCurrentUser
@@ -559,7 +663,16 @@ export function ChatInterfaceRedesigned({
 
         {isTyping && (
           <div className="flex gap-2 animate-in fade-in slide-in-from-bottom-2">
-            <Avatar className="h-8 w-8">
+            <Avatar
+              className="h-8 w-8 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => {
+                if (otherUser?.id) {
+                  router.push(
+                    `/profile/${otherUser.id}?fromChat=true&showPhotos=true`
+                  );
+                }
+              }}
+            >
               <AvatarImage src={otherUser?.profilePicture} />
               <AvatarFallback className="bg-secondary-100 text-secondary-700 text-xs">
                 {getInitials(otherUser?.name || "م")}
@@ -574,17 +687,17 @@ export function ChatInterfaceRedesigned({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="border-t border-border bg-card px-4 py-4 shadow-lg">
-        <div className="flex items-end gap-2">
-          <div className="flex-1 relative">
+      {/* Input Area - Fixed */}
+      <div className="flex-shrink-0 border-t border-border bg-card px-4 py-4 shadow-lg">
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
             <textarea
               ref={inputRef}
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="اكتب رسالتك..."
-              className="w-full resize-none rounded-2xl border border-border bg-background px-4 py-3 pr-12 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all"
+              className="w-full resize-none rounded-2xl border border-border bg-background px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all"
               rows={1}
               style={{
                 minHeight: "44px",
@@ -593,20 +706,12 @@ export function ChatInterfaceRedesigned({
               disabled={isSending}
               aria-label="رسالة جديدة"
             />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute left-2 top-1/2 -translate-y-1/2 hover:bg-primary-subtle"
-              aria-label="إضافة ملف"
-            >
-              <Paperclip className="h-5 w-5 text-text-secondary" />
-            </Button>
           </div>
 
           <Button
             onClick={handleSendMessage}
             disabled={!newMessage.trim() || isSending}
-            className="h-11 w-11 rounded-full bg-primary-500 hover:bg-primary-hover shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="h-11 w-11 rounded-full bg-primary-500 hover:bg-primary-hover shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
             aria-label="إرسال"
           >
             {isSending ? (
@@ -617,7 +722,7 @@ export function ChatInterfaceRedesigned({
           </Button>
         </div>
 
-        {(chatRoom as any)?.settings?.guardianSupervision?.isRequired && (
+        {chatRoom?.settings?.guardianSupervision?.isRequired && (
           <p className="mt-2 text-xs text-text-secondary flex items-center gap-1">
             <Shield className="h-3 w-3" />
             هذه المحادثة تحت إشراف ولي الأمر
