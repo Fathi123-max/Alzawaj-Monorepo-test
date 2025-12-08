@@ -6,7 +6,7 @@ import { extractUserFromToken, isAdmin } from "@/lib/utils/jwt.utils";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: { id: string } }
 ) {
   try {
     console.log("⚡ Admin report action endpoint called");
@@ -22,7 +22,7 @@ export async function POST(
           message: "غير مصرح لك بالوصول",
           error: "Authentication required",
         },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
@@ -36,25 +36,44 @@ export async function POST(
           message: "غير مصرح لك بالوصول إلى لوحة الإدارة",
           error: "Admin access required",
         },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
     // Get report ID from params
     const reportId = params.id;
 
+    console.log("🔍 Report ID received:", reportId);
+    console.log("🔍 Report ID type:", typeof reportId);
+    console.log("🔍 Report ID length:", reportId?.length);
+
+    // Validate report ID
+    if (!reportId || reportId === "undefined" || reportId === "null") {
+      console.log("❌ Invalid report ID:", reportId);
+      return NextResponse.json(
+        {
+          success: false,
+          message: "معرف التقرير غير صحيح",
+          error: "Invalid report ID",
+        },
+        { status: 400 }
+      );
+    }
+
     // Parse request body
     const body = await request.json();
     const { action, notes } = body;
 
-    if (!action) {
+    // Validate action
+    const validActions = ["suspend_user", "warn_user", "delete_profile"];
+    if (!validActions.includes(action)) {
       return NextResponse.json(
         {
           success: false,
-          message: "الإجراء مطلوب",
-          error: "Missing required field: action",
+          message: "إجراء غير صالح",
+          error: "Invalid action",
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -92,7 +111,7 @@ export async function POST(
           message: responseData.message || "حدث خطأ أثناء تنفيذ الإجراء",
           error: responseData.error,
         },
-        { status: backendResponse.status },
+        { status: backendResponse.status }
       );
     }
 
@@ -111,7 +130,7 @@ export async function POST(
         message: "حدث خطأ في الخادم",
         error: error.message,
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

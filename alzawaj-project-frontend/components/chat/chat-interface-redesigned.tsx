@@ -3,6 +3,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { z } from "zod";
+import { reportSchema } from "@/lib/validation";
+import { getStoredToken } from "@/lib/utils/auth.utils";
+// Report API will be called directly to our Next.js API route
 import {
   ArrowLeft,
   Send,
@@ -108,6 +112,10 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
   const [isTyping] = useState(false);
   const [showChatMenu, setShowChatMenu] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDescription, setReportDescription] = useState("");
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -221,9 +229,61 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
     setShowReportDialog(false);
   };
 
-  const handleReportSubmit = () => {
-    setShowReportDialog(false);
-    showToast.success("تم إرسال البلاغ بنجاح");
+  const handleReportSubmit = async () => {
+    try {
+      setReportError(null);
+      setIsSubmittingReport(true);
+
+      if (!otherUser?._id && !otherUser?.id) {
+        throw new Error("تعذر تحديد المستخدم للإبلاغ عنه");
+      }
+
+      // Prepare report data
+      const reportData = {
+        reportedUserId: otherUser?._id || otherUser?.id,
+        reason: reportReason,
+        description: reportDescription || undefined,
+      };
+
+      // Validate against schema
+      const validatedData = reportSchema.parse(reportData);
+
+      // Submit the report using the API route
+      const token = getStoredToken();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const response = await fetch("/api/reports", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(validatedData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "فشل في إرسال البلاغ");
+      }
+
+      showToast.success(result.message || "تم إرسال البلاغ بنجاح");
+      setShowReportDialog(false);
+      // Reset form
+      setReportReason("");
+      setReportDescription("");
+    } catch (error) {
+      console.error("Error submitting report:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "حدث خطأ أثناء إرسال البلاغ";
+      setReportError(errorMessage);
+      showToast.error(errorMessage);
+    } finally {
+      setIsSubmittingReport(false);
+    }
   };
 
   const formatTime = (dateString: string | undefined) => {
@@ -776,52 +836,117 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
                   size="sm"
                   onClick={handleReportDialogClose}
                   className="p-2"
+                  disabled={isSubmittingReport}
                 >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                سيتم مراجعة بلاغك من قبل الفريق المختص
+              </p>
             </CardHeader>
-            <CardContent className="space-y-4 pb-6">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  نوع المشكلة
-                </label>
-                <select className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
-                  <option value="">اختر نوع المشكلة</option>
-                  <option value="inappropriate">محتوى غير لائق</option>
-                  <option value="spam">رسائل مزعجة</option>
-                  <option value="harassment">تحرش</option>
-                  <option value="fake">حساب مزيف</option>
-                  <option value="other">أخرى</option>
-                </select>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label
+                    htmlFor="reason"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    سبب الإبلاغ <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="reason"
+                    value={reportReason}
+                    onChange={(e) => setReportReason(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    disabled={isSubmittingReport}
+                  >
+                    <option value="">اختر سبب الإبلاغ</option>
+                    <option value="inappropriate-content">
+                      محتوى غير لائق
+                    </option>
+                    <option value="harassment">تحرش</option>
+                    <option value="fake-profile">حساب مزيف</option>
+                    <option value="spam">رسائل مزعجة</option>
+                    <option value="abusive-language">لغة مسيئة</option>
+                    <option value="religious-violations">مخالفات دينية</option>
+                    <option value="scam">احتيال</option>
+                    <option value="other">أخرى</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label
+                    htmlFor="description"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    تفاصيل المشكلة
+                  </label>
+                  <textarea
+                    id="description"
+                    placeholder="يرجى وصف المشكلة بالتفصيل..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-[100px]"
+                    value={reportDescription}
+                    onChange={(e) => setReportDescription(e.target.value)}
+                    disabled={isSubmittingReport}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    اشرح المشكلة بشكل مفصل لمساعدتنا في حلها
+                  </p>
+                </div>
+
+                {reportError && (
+                  <div className="text-sm text-red-500 bg-red-50 p-2 rounded-md">
+                    {reportError}
+                  </div>
+                )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  تفاصيل المشكلة
-                </label>
-                <textarea
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  rows={3}
-                  placeholder="اكتب وصفاً مفصلاً للمشكلة..."
-                  maxLength={500}
-                />
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
-                <Button
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
+                <button
                   onClick={handleReportSubmit}
-                  className="w-full sm:flex-1 bg-red-600 hover:bg-red-700 text-white py-3 sm:py-2"
+                  disabled={isSubmittingReport || !reportReason}
+                  className={`w-full flex-1 py-2 px-4 rounded-md text-white font-medium ${
+                    isSubmittingReport || !reportReason
+                      ? "bg-red-400 cursor-not-allowed"
+                      : "bg-red-600 hover:bg-red-700"
+                  }`}
                 >
-                  إرسال البلاغ
-                </Button>
-                <Button
-                  variant="outline"
+                  {isSubmittingReport ? (
+                    <span className="flex items-center justify-center">
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      جاري الإرسال...
+                    </span>
+                  ) : (
+                    "إرسال البلاغ"
+                  )}
+                </button>
+                <button
                   onClick={handleReportDialogClose}
-                  className="w-full sm:flex-1 py-3 sm:py-2"
+                  disabled={isSubmittingReport}
+                  className="w-full flex-1 py-2 px-4 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
                 >
                   إلغاء
-                </Button>
+                </button>
               </div>
             </CardContent>
           </Card>

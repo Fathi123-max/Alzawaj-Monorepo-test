@@ -185,7 +185,7 @@ export function ChatOverviewPanel() {
               <div className="text-2xl font-bold text-orange-600">
                 {
                   chats.filter(
-                    (c) => c.expiresAt && new Date(c.expiresAt) < new Date(),
+                    (c) => c.expiresAt && new Date(c.expiresAt) < new Date()
                   ).length
                 }
               </div>
@@ -274,7 +274,7 @@ export function ChatOverviewPanel() {
                             getTimeRemaining(chat.expiresAt).includes("منتهي")
                               ? "text-red-600"
                               : getTimeRemaining(chat.expiresAt).includes(
-                                    "اليوم",
+                                    "اليوم"
                                   )
                                 ? "text-orange-600"
                                 : "text-gray-600"
@@ -323,16 +323,6 @@ export function ChatOverviewPanel() {
                               </Button>
                             </>
                           )}
-                          {!chat.archivedBy.includes("admin") && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleArchive(chat._id || chat.id)}
-                              title="أرشفة"
-                            >
-                              أرشيف
-                            </Button>
-                          )}
                         </div>
                       </td>
                     </tr>
@@ -373,7 +363,7 @@ export function ChatOverviewPanel() {
                       <strong>تاريخ الانضمام:</strong>{" "}
                       {selectedChat.participants[0]?.joinedAt
                         ? new Date(
-                            selectedChat.participants[0].joinedAt,
+                            selectedChat.participants[0].joinedAt
                           ).toLocaleDateString("ar-SA")
                         : "غير محدد"}
                     </div>
@@ -381,7 +371,7 @@ export function ChatOverviewPanel() {
                       <strong>آخر ظهور:</strong>{" "}
                       {selectedChat.participants[0]?.lastSeen
                         ? new Date(
-                            selectedChat.participants[0].lastSeen,
+                            selectedChat.participants[0].lastSeen
                           ).toLocaleDateString("ar-SA")
                         : "غير محدد"}
                     </div>
@@ -399,7 +389,7 @@ export function ChatOverviewPanel() {
                       <strong>تاريخ الانضمام:</strong>{" "}
                       {selectedChat.participants[1]?.joinedAt
                         ? new Date(
-                            selectedChat.participants[1].joinedAt,
+                            selectedChat.participants[1].joinedAt
                           ).toLocaleDateString("ar-SA")
                         : "غير محدد"}
                     </div>
@@ -407,7 +397,7 @@ export function ChatOverviewPanel() {
                       <strong>آخر ظهور:</strong>{" "}
                       {selectedChat.participants[1]?.lastSeen
                         ? new Date(
-                            selectedChat.participants[1].lastSeen,
+                            selectedChat.participants[1].lastSeen
                           ).toLocaleDateString("ar-SA")
                         : "غير محدد"}
                     </div>
@@ -421,13 +411,13 @@ export function ChatOverviewPanel() {
                   <div>
                     <strong>تاريخ الإنشاء:</strong>{" "}
                     {new Date(selectedChat.createdAt).toLocaleDateString(
-                      "ar-SA",
+                      "ar-SA"
                     )}
                   </div>
                   <div>
                     <strong>آخر تحديث:</strong>{" "}
                     {new Date(selectedChat.updatedAt).toLocaleDateString(
-                      "ar-SA",
+                      "ar-SA"
                     )}
                   </div>
                   {selectedChat.expiresAt && (
@@ -435,7 +425,7 @@ export function ChatOverviewPanel() {
                       <div>
                         <strong>تاريخ الانتهاء:</strong>{" "}
                         {new Date(selectedChat.expiresAt).toLocaleDateString(
-                          "ar-SA",
+                          "ar-SA"
                         )}
                       </div>
                       <div>
@@ -443,11 +433,11 @@ export function ChatOverviewPanel() {
                         <span
                           className={`font-medium ${
                             getTimeRemaining(selectedChat.expiresAt).includes(
-                              "منتهي",
+                              "منتهي"
                             )
                               ? "text-red-600"
                               : getTimeRemaining(
-                                    selectedChat.expiresAt,
+                                    selectedChat.expiresAt
                                   ).includes("اليوم")
                                 ? "text-orange-600"
                                 : "text-green-600"
@@ -488,7 +478,7 @@ export function ChatOverviewPanel() {
                       <strong>التاريخ:</strong>{" "}
                       {selectedChat.lastMessage.timestamp
                         ? new Date(
-                            selectedChat.lastMessage.timestamp,
+                            selectedChat.lastMessage.timestamp
                           ).toLocaleDateString("ar-SA")
                         : "غير محدد"}
                     </div>

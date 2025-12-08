@@ -4,12 +4,9 @@ import { useState, useEffect } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  adminApiService,
-  AdminReport,
-  handleApiError,
-} from "@/lib/services/admin-api-service";
 import { showToast } from "@/components/ui/toaster";
+import { AdminReport, adminApiService } from "@/lib/services/admin-api-service";
+import { getStoredToken } from "@/lib/utils/auth.utils";
 import {
   FileText,
   Eye,
@@ -18,15 +15,19 @@ import {
   XCircle,
   AlertTriangle,
   Clock,
+  UserX,
 } from "lucide-react";
 
 export function ReportTable() {
+  console.log("ReportTable component mounted!");
+
   const [reports, setReports] = useState<AdminReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReport, setSelectedReport] = useState<AdminReport | null>(
-    null,
+    null
   );
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [suspendedUsers, setSuspendedUsers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadReports();
@@ -35,50 +36,103 @@ export function ReportTable() {
   const loadReports = async () => {
     setLoading(true);
     try {
-      const response = await adminApiService.getReports();
+      console.log("Loading reports...");
+      const token = getStoredToken();
+      const headers: Record<string, string> = {};
 
-      if (response.success && response.data) {
-        setReports(response.data.reports);
-      } else {
-        throw new Error("Failed to load reports");
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
       }
-    } catch (error: any) {
-      console.error("Error loading reports:", error);
-      const errorMessage = handleApiError(error);
-      showToast.error(errorMessage);
 
-      // Set empty array instead of mock data
+      const response = await fetch("/api/reports", {
+        headers,
+      });
+      const data = await response.json();
+
+      console.log("API response:", data);
+
+      if (response.ok && data.success) {
+        console.log("Reports loaded:", data.data.reports);
+        setReports(data.data.reports || []);
+      } else {
+        throw new Error(data.message || "Failed to load reports");
+      }
+    } catch (error: unknown) {
+      console.error("Error loading reports:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to load reports";
+      showToast.error(errorMessage);
       setReports([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleReportAction = async (
+  const handleAction = async (
     reportId: string,
-    action: "assign" | "resolve" | "dismiss",
-    notes?: string,
+    action: "suspend_user" | "delete_profile",
+    notes?: string
   ) => {
+    // Find the report to get the reported user ID
+    const report = reports.find((r) => (r._id || r.id) === reportId);
+    if (!report) {
+      showToast.error("لم يتم العثور على التقرير");
+      return;
+    }
+
+    // Extract the reported user ID
+    const reportedUserId =
+      typeof report.reportedUserId === "object"
+        ? report.reportedUserId._id || report.reportedUserId.id
+        : report.reportedUserId;
+
+    if (!reportedUserId) {
+      showToast.error("لم يتم العثور على معرف المستخدم المبلغ عنه");
+      return;
+    }
+
     setActionLoading(reportId);
     try {
-      const response = await adminApiService.performReportAction(
-        reportId,
-        action,
-        notes,
+      // Map report actions to user actions
+      let userAction: "suspend" | "delete";
+      let actionMessage: string;
+
+      switch (action) {
+        case "suspend_user":
+          userAction = "suspend";
+          actionMessage = "إيقاف المستخدم";
+          break;
+        case "delete_profile":
+          userAction = "delete";
+          actionMessage = "حذف الملف الشخصي";
+          break;
+        default:
+          throw new Error("إجراء غير صالح");
+      }
+
+      const response = await adminApiService.performUserAction(
+        reportedUserId,
+        userAction,
+        notes
       );
 
       if (response.success) {
-        showToast.success(
-          response.message ||
-            `تم ${action === "assign" ? "تعيين" : action === "resolve" ? "حل" : "رفض"} البلاغ بنجاح`,
-        );
-        await loadReports(); // Reload data
+        showToast.success(response.message || `تم ${actionMessage} بنجاح`);
+
+        // Track suspended users for UI feedback
+        if (action === "suspend_user") {
+          setSuspendedUsers((prev) => new Set([...prev, reportedUserId]));
+        }
+
+        // Show success animation then reload
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await loadReports();
       } else {
         throw new Error(response.message || "فشل في تنفيذ العملية");
       }
-    } catch (error: any) {
-      console.error("Error performing report action:", error);
-      const errorMessage = handleApiError(error);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to perform action";
       showToast.error(errorMessage);
     } finally {
       setActionLoading(null);
@@ -88,7 +142,11 @@ export function ReportTable() {
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<
       string,
-      { label: string; className: string; icon: any }
+      {
+        label: string;
+        className: string;
+        icon: React.ComponentType<{ className?: string }>;
+      }
     > = {
       pending: {
         label: "في الانتظار",
@@ -169,6 +227,16 @@ export function ReportTable() {
     return "text-gray-600";
   };
 
+  const isUserSuspended = (
+    reportedUserId: string | { _id?: string; id: string }
+  ) => {
+    const userId =
+      typeof reportedUserId === "object"
+        ? reportedUserId._id || reportedUserId.id
+        : reportedUserId;
+    return suspendedUsers.has(userId);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -220,7 +288,7 @@ export function ReportTable() {
                       "harassment",
                       "abusive-language",
                       "religious-violations",
-                    ].includes(r.reason),
+                    ].includes(r.reason)
                   ).length
                 }
               </p>
@@ -267,15 +335,40 @@ export function ReportTable() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {reports.map((report) => (
-                    <tr key={report.id} className="hover:bg-gray-50">
+                    <tr
+                      key={report._id || report.id}
+                      className={`hover:bg-gray-50 ${
+                        isUserSuspended(report.reportedUserId)
+                          ? "bg-red-50 border-l-4 border-red-500"
+                          : ""
+                      }`}
+                    >
                       <td className="px-6 py-4">
                         <div>
                           <div className="text-sm font-medium text-gray-900">
-                            ID: {report.id}
+                            ID: {report._id || report.id}
                           </div>
                           <div className="text-xs text-gray-500 mb-1">
-                            المبلغ: {report.reporterId} | ضد:{" "}
-                            {report.reportedUserId}
+                            المبلغ:{" "}
+                            {typeof report.reporterId === "object"
+                              ? report.reporterId.fullName ||
+                                report.reporterId.id ||
+                                report.reporterId._id ||
+                                "غير معروف"
+                              : `مستخدم_${report.reporterId?.slice(-8) || report.reporterId}`}{" "}
+                            | ضد:{" "}
+                            {typeof report.reportedUserId === "object"
+                              ? report.reportedUserId.fullName ||
+                                report.reportedUserId.id ||
+                                report.reportedUserId._id ||
+                                "غير معروف"
+                              : `مستخدم_${report.reportedUserId?.slice(-8) || report.reportedUserId}`}
+                            {isUserSuspended(report.reportedUserId) && (
+                              <Badge className="mr-2 bg-red-100 text-red-800 text-xs">
+                                <UserX className="w-3 h-3 ml-1" />
+                                تم إيقافه
+                              </Badge>
+                            )}
                           </div>
                           <div className="text-sm text-gray-700">
                             <strong>السبب:</strong> {report.reason}
@@ -298,7 +391,7 @@ export function ReportTable() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div>
                           {new Date(report.createdAt).toLocaleDateString(
-                            "ar-SA",
+                            "ar-SA"
                           )}
                         </div>
                         <div className="text-xs text-gray-400">
@@ -315,41 +408,46 @@ export function ReportTable() {
                             <Eye className="w-3 h-3 ml-1" />
                             عرض
                           </Button>
-                          {report.status === "pending" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() =>
-                                handleReportAction(
-                                  report.id,
-                                  "assign",
-                                  "تم تعيين المراجع",
-                                )
-                              }
-                              disabled={actionLoading === report.id}
-                              className="text-blue-600 hover:text-blue-800"
-                            >
-                              <UserCheck className="w-3 h-3 ml-1" />
-                              تعيين
-                            </Button>
-                          )}
                           {(report.status === "pending" ||
-                            report.status === "under_review") && (
+                            report.status === "under_review") &&
+                            !isUserSuspended(report.reportedUserId) && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  handleAction(
+                                    report._id || report.id,
+                                    "suspend_user",
+                                    "تم إيقاف المستخدم بسبب مخالفة"
+                                  )
+                                }
+                                disabled={
+                                  actionLoading === (report._id || report.id)
+                                }
+                                className="text-red-600 hover:text-red-800"
+                              >
+                                <XCircle className="w-3 h-3 ml-1" />
+                                إيقاف المستخدم المبلغ عنه
+                              </Button>
+                            )}
+                          {report.status === "resolved" && (
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() =>
-                                handleReportAction(
-                                  report.id,
-                                  "resolve",
-                                  "تم حل البلاغ",
+                                handleAction(
+                                  report._id || report.id,
+                                  "delete_profile",
+                                  "تم حذف الملف الشخصي للمخالفات المتكررة"
                                 )
                               }
-                              disabled={actionLoading === report.id}
-                              className="text-green-600 hover:text-green-800"
+                              disabled={
+                                actionLoading === (report._id || report.id)
+                              }
+                              className="text-red-700 hover:text-red-900"
                             >
-                              <UserCheck className="w-3 h-3 ml-1" />
-                              حل
+                              <XCircle className="w-3 h-3 ml-1" />
+                              حذف الملف الشخصي
                             </Button>
                           )}
                         </div>
@@ -385,7 +483,9 @@ export function ReportTable() {
                   <label className="text-sm font-medium text-gray-700">
                     معرف البلاغ
                   </label>
-                  <p className="text-sm text-gray-900">{selectedReport.id}</p>
+                  <p className="text-sm text-gray-900">
+                    {selectedReport._id || selectedReport.id}
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700">
@@ -404,7 +504,12 @@ export function ReportTable() {
                     المبلغ
                   </label>
                   <p className="text-sm text-gray-900">
-                    {selectedReport.reporterId}
+                    {typeof selectedReport.reporterId === "object"
+                      ? selectedReport.reporterId.fullName ||
+                        selectedReport.reporterId.id ||
+                        selectedReport.reporterId._id ||
+                        "غير معروف"
+                      : `مستخدم_${selectedReport.reporterId?.slice(-8) || selectedReport.reporterId}`}
                   </p>
                 </div>
                 <div>
@@ -412,7 +517,12 @@ export function ReportTable() {
                     المبلغ ضده
                   </label>
                   <p className="text-sm text-gray-900">
-                    {selectedReport.reportedUserId}
+                    {typeof selectedReport.reportedUserId === "object"
+                      ? selectedReport.reportedUserId.fullName ||
+                        selectedReport.reportedUserId.id ||
+                        selectedReport.reportedUserId._id ||
+                        "غير معروف"
+                      : `مستخدم_${selectedReport.reportedUserId?.slice(-8) || selectedReport.reportedUserId}`}
                   </p>
                 </div>
                 <div>
@@ -458,40 +568,49 @@ export function ReportTable() {
               <div className="flex justify-between items-center pt-4">
                 <div className="flex gap-2">
                   {(selectedReport.status === "pending" ||
-                    selectedReport.status === "under_review") && (
-                    <>
-                      <Button
-                        onClick={() => {
-                          handleReportAction(
-                            selectedReport.id,
-                            "resolve",
-                            "تم حل البلاغ بواسطة المشرف",
-                          );
-                          setSelectedReport(null);
-                        }}
-                        disabled={actionLoading === selectedReport.id}
-                        className="bg-green-600 hover:bg-green-700 text-white"
-                      >
-                        <UserCheck className="w-4 h-4 ml-1" />
-                        حل البلاغ
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          handleReportAction(
-                            selectedReport.id,
-                            "dismiss",
-                            "بلاغ غير مؤكد",
-                          );
-                          setSelectedReport(null);
-                        }}
-                        disabled={actionLoading === selectedReport.id}
-                        className="text-gray-600 hover:text-gray-800"
-                      >
-                        <XCircle className="w-4 h-4 ml-1" />
-                        رفض البلاغ
-                      </Button>
-                    </>
+                    selectedReport.status === "under_review") &&
+                    !isUserSuspended(selectedReport.reportedUserId) && (
+                      <>
+                        <Button
+                          onClick={() => {
+                            handleAction(
+                              selectedReport._id || selectedReport.id,
+                              "suspend_user",
+                              "تم إيقاف المستخدم بسبب مخالفة القوانين"
+                            );
+                            setSelectedReport(null);
+                          }}
+                          disabled={
+                            actionLoading ===
+                            (selectedReport._id || selectedReport.id)
+                          }
+                          className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                          <XCircle className="w-4 h-4 ml-1" />
+                          إيقاف المستخدم المبلغ عنه
+                        </Button>
+                      </>
+                    )}
+                  {selectedReport.status === "resolved" && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        handleAction(
+                          selectedReport._id || selectedReport.id,
+                          "delete_profile",
+                          "تم حذف الملف الشخصي للمخالفات المتكررة"
+                        );
+                        setSelectedReport(null);
+                      }}
+                      disabled={
+                        actionLoading ===
+                        (selectedReport._id || selectedReport.id)
+                      }
+                      className="text-red-700 hover:text-red-900"
+                    >
+                      <XCircle className="w-4 h-4 ml-1" />
+                      حذف الملف الشخصي
+                    </Button>
                   )}
                 </div>
                 <Button

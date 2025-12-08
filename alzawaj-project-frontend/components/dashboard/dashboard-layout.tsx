@@ -48,6 +48,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: "المحفوظات", href: "/dashboard/bookmarks", icon: "bookmark" },
     { name: "الطلبات", href: "/dashboard/requests", icon: "heart" },
     { name: "المحادثات", href: "/dashboard/chat", icon: "message-circle" },
+    {
+      name: "الإدارة",
+      href: "/dashboard/admin/reports",
+      icon: "shield",
+      submenu: [
+        { name: "التقارير", href: "/dashboard/admin/reports" },
+        // Add more admin links here as needed
+      ],
+    },
     { name: "الإعدادات", href: "/dashboard/settings", icon: "settings" },
   ];
 

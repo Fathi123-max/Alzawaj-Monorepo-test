@@ -2,7 +2,6 @@
 // Handles all admin-related API calls based on the provided API documentation
 
 import { getStoredToken, getStoredUser } from "@/lib/utils/auth.utils";
-import { User } from "@/lib/types/auth.types";
 import { MarriageRequest as MainMarriageRequest } from "@/lib/types";
 
 export interface AdminStats {
@@ -48,7 +47,7 @@ export interface AdminUser {
   suspendedAt?: string;
   suspendedBy?: string;
   suspensionReason?: string;
-  profile?: string | any; // Can be ID string or populated profile object
+  profile?: string | Record<string, unknown>; // Can be ID string or populated profile object
   __v?: number;
 }
 
@@ -112,9 +111,10 @@ export interface ChatRoom {
 }
 
 export interface AdminReport {
+  _id?: string;
   id: string;
-  reporterId: string;
-  reportedUserId: string;
+  reporterId: string | { _id?: string; id: string; fullName?: string };
+  reportedUserId: string | { _id?: string; id: string; fullName?: string };
   type: string;
   reason: string;
   description: string;
@@ -277,15 +277,15 @@ class AdminApiService {
       if (typeof window !== "undefined") {
         console.log(
           "  - zawaj_user_data:",
-          localStorage.getItem("zawaj_user_data"),
+          localStorage.getItem("zawaj_user_data")
         );
         console.log(
           "  - zawaj_auth_token:",
-          localStorage.getItem("zawaj_auth_token"),
+          localStorage.getItem("zawaj_auth_token")
         );
         console.log(
           "  - zawaj_refresh_token:",
-          localStorage.getItem("zawaj_refresh_token"),
+          localStorage.getItem("zawaj_refresh_token")
         );
       }
       return false;
@@ -300,7 +300,7 @@ class AdminApiService {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {},
+    options: RequestInit = {}
   ): Promise<T> {
     const token = getStoredToken();
 
@@ -308,7 +308,7 @@ class AdminApiService {
     console.log(`🔗 Admin API Request: ${this.baseUrl}${endpoint}`);
     console.log(
       `🔑 Token available:`,
-      token ? `Yes (${token.substring(0, 20)}...)` : "No",
+      token ? `Yes (${token.substring(0, 20)}...)` : "No"
     );
     console.log(`🔍 Token type:`, typeof token);
     console.log(`🔍 Full token:`, token);
@@ -324,11 +324,11 @@ class AdminApiService {
       console.log(`🔐 Authorization header added with token`);
       console.log(
         `🔐 Authorization header value:`,
-        headers["Authorization"].substring(0, 50) + "...",
+        headers["Authorization"].substring(0, 50) + "..."
       );
     } else {
       console.warn(
-        "⚠️ No authentication token available for admin API request",
+        "⚠️ No authentication token available for admin API request"
       );
     }
 
@@ -359,11 +359,11 @@ class AdminApiService {
       // Handle specific authentication errors
       if (response.status === 401 || errorData?.error === "INVALID_TOKEN") {
         console.error(
-          "🚫 Authentication failed - token may be expired or invalid",
+          "🚫 Authentication failed - token may be expired or invalid"
         );
         // You can add token refresh logic here if needed
         throw new Error(
-          errorData?.message || "رمز المصادقة غير صحيح أو منتهي الصلاحية",
+          errorData?.message || "رمز المصادقة غير صحيح أو منتهي الصلاحية"
         );
       }
 
@@ -415,7 +415,7 @@ class AdminApiService {
     page: number = 1,
     limit: number = 10,
     search?: string,
-    status?: string,
+    status?: string
   ): Promise<PaginatedResponse<AdminUser>> {
     const searchParam =
       search && search.trim()
@@ -454,7 +454,7 @@ class AdminApiService {
     console.log("[AdminAPI] response.data.users:", response.data?.users);
     console.log(
       "[AdminAPI] response.data.pagination:",
-      response.data?.pagination,
+      response.data?.pagination
     );
 
     // Transform the response to match our PaginatedResponse interface
@@ -478,7 +478,7 @@ class AdminApiService {
   async performUserAction(
     userId: string,
     action: "suspend" | "activate" | "delete" | "verify",
-    reason?: string,
+    reason?: string
   ): Promise<ApiResponse<null>> {
     return this.request<ApiResponse<null>>("/users/action", {
       method: "POST",
@@ -523,7 +523,7 @@ class AdminApiService {
 
   async rejectMarriageRequest(
     requestId: string,
-    reason?: string,
+    reason?: string
   ): Promise<ApiResponse<null>> {
     return this.request<ApiResponse<null>>(`/requests/${requestId}/reject`, {
       method: "POST",
@@ -557,7 +557,7 @@ class AdminApiService {
   }
 
   async getChatRoomDetails(
-    chatRoomId: string,
+    chatRoomId: string
   ): Promise<ApiResponse<{ chatRoom: ChatRoom }>> {
     const response = await this.request<{
       success: boolean;
@@ -576,7 +576,7 @@ class AdminApiService {
 
   async extendChatRoom(
     chatRoomId: string,
-    days: number = 7,
+    days: number = 7
   ): Promise<ApiResponse<null>> {
     return this.request<ApiResponse<null>>(`/chats/${chatRoomId}/extend`, {
       method: "POST",
@@ -586,7 +586,7 @@ class AdminApiService {
 
   async closeChatRoom(
     chatRoomId: string,
-    reason?: string,
+    reason?: string
   ): Promise<ApiResponse<null>> {
     return this.request<ApiResponse<null>>(`/chats/${chatRoomId}/close`, {
       method: "POST",
@@ -596,7 +596,7 @@ class AdminApiService {
 
   async archiveChatRoom(
     chatRoomId: string,
-    reason?: string,
+    reason?: string
   ): Promise<ApiResponse<null>> {
     return this.request<ApiResponse<null>>(`/chats/${chatRoomId}/archive`, {
       method: "POST",
@@ -609,13 +609,13 @@ class AdminApiService {
     ApiResponse<{ messages: ChatMessage[] }>
   > {
     return this.request<ApiResponse<{ messages: ChatMessage[] }>>(
-      "/messages/pending",
+      "/messages/pending"
     );
   }
 
   async approveMessage(
     messageId: string,
-    reason?: string,
+    reason?: string
   ): Promise<ApiResponse<null>> {
     return this.request<ApiResponse<null>>(`/messages/${messageId}/approve`, {
       method: "POST",
@@ -625,7 +625,7 @@ class AdminApiService {
 
   async rejectMessage(
     messageId: string,
-    reason?: string,
+    reason?: string
   ): Promise<ApiResponse<null>> {
     return this.request<ApiResponse<null>>(`/messages/${messageId}/reject`, {
       method: "POST",
@@ -635,13 +635,15 @@ class AdminApiService {
 
   // Reports Management
   async getReports(): Promise<ApiResponse<{ reports: AdminReport[] }>> {
-    return this.request<ApiResponse<{ reports: AdminReport[] }>>("/reports");
+    return this.request<ApiResponse<{ reports: AdminReport[] }>>(
+      "/api/reports"
+    );
   }
 
   async performReportAction(
     reportId: string,
-    action: "assign" | "resolve" | "dismiss",
-    notes?: string,
+    action: "suspend_user" | "warn_user" | "delete_profile",
+    notes?: string
   ): Promise<ApiResponse<null>> {
     return this.request<ApiResponse<null>>(`/reports/${reportId}/action`, {
       method: "POST",
@@ -651,7 +653,7 @@ class AdminApiService {
 
   // Notifications Management
   async getNotifications(
-    filter?: "all" | "unread" | "important",
+    filter?: "all" | "unread" | "important"
   ): Promise<ApiResponse<{ notifications: AdminNotification[] }>> {
     const params = filter ? `?filter=${filter}` : "";
     const response = await this.request<{
@@ -686,14 +688,14 @@ class AdminApiService {
   }
 
   async markNotificationAsRead(
-    notificationId: string,
+    notificationId: string
   ): Promise<ApiResponse<null>> {
     return this.request<ApiResponse<null>>(
       `/notifications/${notificationId}/read`,
       {
         method: "PATCH",
         body: JSON.stringify({}),
-      },
+      }
     );
   }
 
@@ -731,7 +733,7 @@ class AdminApiService {
   }
 
   async updateAdminSettings(
-    settings: Partial<AdminSettings>,
+    settings: Partial<AdminSettings>
   ): Promise<ApiResponse<null>> {
     return this.request<ApiResponse<null>>("/settings", {
       method: "PUT",
@@ -741,7 +743,7 @@ class AdminApiService {
 
   // Admin Messaging
   async createChatWithUser(
-    userId: string,
+    userId: string
   ): Promise<ApiResponse<{ chatRoom: ChatRoom }>> {
     const response = await this.request<{
       success: boolean;
@@ -766,12 +768,17 @@ class AdminApiService {
   async getChatMessages(
     chatRoomId: string,
     page: number = 1,
-    limit: number = 50,
+    limit: number = 50
   ): Promise<
     ApiResponse<{
       messages: ChatMessage[];
       chatRoom: ChatRoom;
-      pagination: any;
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+      };
     }>
   > {
     console.log("[AdminApiService] getChatMessages called with:", {
@@ -808,7 +815,7 @@ class AdminApiService {
 
   async sendMessageToChat(
     chatRoomId: string,
-    content: string,
+    content: string
   ): Promise<ApiResponse<{ message: ChatMessage }>> {
     const response = await this.request<{
       success: boolean;
@@ -835,12 +842,14 @@ class AdminApiService {
 export const adminApiService = new AdminApiService();
 
 // Helper functions for error handling
-export const handleApiError = (error: any): string => {
-  if (error.message) return error.message;
+export const handleApiError = (error: unknown): string => {
+  if (error instanceof Error && error.message) return error.message;
   if (typeof error === "string") return error;
   return "حدث خطأ غير متوقع";
 };
 
-export const isApiSuccessful = (response: ApiResponse<any>): boolean => {
+export const isApiSuccessful = <T = unknown>(
+  response: ApiResponse<T>
+): boolean => {
   return response.success === true;
 };
