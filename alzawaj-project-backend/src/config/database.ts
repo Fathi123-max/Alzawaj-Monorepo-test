@@ -8,7 +8,10 @@ export const connectDB = async (): Promise<void> => {
         ? process.env.MONGODB_TEST_URI
         : process.env.MONGODB_URI;
 
-    logger.info("Database connection attempt with NODE_ENV:", process.env.NODE_ENV);
+    logger.info(
+      "Database connection. attempt with NODE_ENV:",
+      process.env.NODE_ENV
+    );
     logger.info("MongoDB URI is set:", !!mongoURI);
 
     if (!mongoURI) {
