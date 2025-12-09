@@ -11,6 +11,7 @@ COPY package.json package-lock.json* pnpm-lock.yaml* ./
 
 # Install dependencies
 # Install all dependencies (including dev) for building
+ENV NODE_ENV=development
 RUN pnpm install --ignore-scripts
 
 # Build stage
