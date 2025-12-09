@@ -1,4 +1,6 @@
 FROM node:20-alpine AS base
+# Install pnpm globally for all stages
+RUN npm install -g pnpm@8.15.8
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -9,7 +11,7 @@ COPY package.json package-lock.json* pnpm-lock.yaml* ./
 
 # Install dependencies
 # Install all dependencies (including dev) for building
-RUN npm install --ignore-scripts --no-optional
+RUN pnpm install --ignore-scripts
 
 # Build stage
 FROM base AS builder
@@ -22,10 +24,11 @@ COPY . .
 COPY --from=deps /app/node_modules ./node_modules
 
 # Build the TypeScript application
-RUN npm run build
+ENV NODE_ENV=development
+RUN pnpm run build
 
 # Prune dev dependencies
-RUN npm prune --production
+RUN pnpm prune --prod
 
 # Production stage
 FROM base AS runner
@@ -37,11 +40,11 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
 
-# Copy package files
+# Copy package files and install pnpm dependencies
 COPY package.json package-lock.json* pnpm-lock.yaml* ./
+RUN pnpm install --prod --ignore-scripts
 
-# Copy production dependencies and built app from builder
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
+# Copy built app from builder
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 
 # Change ownership of the app directory
@@ -55,4 +58,4 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD node -e "require('http').get('http://localhost:5000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))" || exit 1
 
-CMD ["npm", "start"]
+CMD ["pnpm", "start"]
