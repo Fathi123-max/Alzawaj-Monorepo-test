@@ -24,7 +24,7 @@ export function ReportTable() {
   const [reports, setReports] = useState<AdminReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReport, setSelectedReport] = useState<AdminReport | null>(
-    null
+    null,
   );
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [suspendedUsers, setSuspendedUsers] = useState<Set<string>>(new Set());
@@ -71,7 +71,7 @@ export function ReportTable() {
   const handleAction = async (
     reportId: string,
     action: "suspend_user" | "delete_profile",
-    notes?: string
+    notes?: string,
   ) => {
     // Find the report to get the reported user ID
     const report = reports.find((r) => (r._id || r.id) === reportId);
@@ -113,7 +113,7 @@ export function ReportTable() {
       const response = await adminApiService.performUserAction(
         reportedUserId,
         userAction,
-        notes
+        notes,
       );
 
       if (response.success) {
@@ -151,27 +151,27 @@ export function ReportTable() {
       pending: {
         label: "في الانتظار",
         className: "bg-yellow-100 text-yellow-800",
-        icon: Clock,
+        icon: Clock as React.ComponentType<{ className?: string }>,
       },
       under_review: {
         label: "قيد المراجعة",
         className: "bg-blue-100 text-blue-800",
-        icon: Eye,
+        icon: Eye as React.ComponentType<{ className?: string }>,
       },
       resolved: {
         label: "تم الحل",
         className: "bg-green-100 text-green-800",
-        icon: UserCheck,
+        icon: UserCheck as React.ComponentType<{ className?: string }>,
       },
       dismissed: {
         label: "مرفوض",
         className: "bg-gray-100 text-gray-800",
-        icon: XCircle,
+        icon: XCircle as React.ComponentType<{ className?: string }>,
       },
       escalated: {
         label: "متصاعد",
         className: "bg-red-100 text-red-800",
-        icon: AlertTriangle,
+        icon: AlertTriangle as React.ComponentType<{ className?: string }>,
       },
     };
 
@@ -228,7 +228,7 @@ export function ReportTable() {
   };
 
   const isUserSuspended = (
-    reportedUserId: string | { _id?: string; id: string }
+    reportedUserId: string | { _id?: string; id: string },
   ) => {
     const userId =
       typeof reportedUserId === "object"
@@ -288,7 +288,7 @@ export function ReportTable() {
                       "harassment",
                       "abusive-language",
                       "religious-violations",
-                    ].includes(r.reason)
+                    ].includes(r.reason),
                   ).length
                 }
               </p>
@@ -391,7 +391,7 @@ export function ReportTable() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div>
                           {new Date(report.createdAt).toLocaleDateString(
-                            "ar-SA"
+                            "ar-SA",
                           )}
                         </div>
                         <div className="text-xs text-gray-400">
@@ -418,7 +418,7 @@ export function ReportTable() {
                                   handleAction(
                                     report._id || report.id,
                                     "suspend_user",
-                                    "تم إيقاف المستخدم بسبب مخالفة"
+                                    "تم إيقاف المستخدم بسبب مخالفة",
                                   )
                                 }
                                 disabled={
@@ -438,7 +438,7 @@ export function ReportTable() {
                                 handleAction(
                                   report._id || report.id,
                                   "delete_profile",
-                                  "تم حذف الملف الشخصي للمخالفات المتكررة"
+                                  "تم حذف الملف الشخصي للمخالفات المتكررة",
                                 )
                               }
                               disabled={
@@ -576,7 +576,7 @@ export function ReportTable() {
                             handleAction(
                               selectedReport._id || selectedReport.id,
                               "suspend_user",
-                              "تم إيقاف المستخدم بسبب مخالفة القوانين"
+                              "تم إيقاف المستخدم بسبب مخالفة القوانين",
                             );
                             setSelectedReport(null);
                           }}
@@ -598,7 +598,7 @@ export function ReportTable() {
                         handleAction(
                           selectedReport._id || selectedReport.id,
                           "delete_profile",
-                          "تم حذف الملف الشخصي للمخالفات المتكررة"
+                          "تم حذف الملف الشخصي للمخالفات المتكررة",
                         );
                         setSelectedReport(null);
                       }}

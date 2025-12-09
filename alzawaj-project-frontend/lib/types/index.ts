@@ -377,6 +377,7 @@ export interface RequestBody {
 }
 
 export interface RegistrationData {
+  _error?: string;
   preferredQualities?: string;
   unpreferredQualities?: string;
   // Common fields

@@ -22,10 +22,10 @@ import {
 } from "@/lib/static-data/comprehensive-admin-mock";
 
 // Use imported mock data
-let mockStats = mockAdminStats;
-let mockUsers = mockAdminUsers;
-let mockReports = mockAdminReports;
-let mockSettings = mockAdminSettings;
+const mockStats = mockAdminStats;
+const mockUsers = mockAdminUsers;
+const mockReports = mockAdminReports;
+const mockSettings = mockAdminSettings;
 
 class AdminApiService {
   private client = ApiClient;

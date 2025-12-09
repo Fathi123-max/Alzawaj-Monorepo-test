@@ -18,7 +18,9 @@ export class ChatStatsService {
     return chatRooms.reduce((total, room) => {
       // Ensure unreadCount is a valid number before adding
       const unreadCount =
-        typeof room.unreadCount === "number" ? room.unreadCount : 0;
+        typeof (room as any).unreadCount === "number"
+          ? (room as any).unreadCount
+          : 0;
       return total + Math.max(0, unreadCount);
     }, 0);
   }
@@ -35,7 +37,9 @@ export class ChatStatsService {
 
     return chatRooms.filter((room) => {
       const unreadCount =
-        typeof room.unreadCount === "number" ? room.unreadCount : 0;
+        typeof (room as any).unreadCount === "number"
+          ? (room as any).unreadCount
+          : 0;
       return unreadCount > 0;
     }).length;
   }
@@ -45,7 +49,7 @@ export class ChatStatsService {
    * @param chatRooms - Array of chat rooms
    * @returns Object containing various chat statistics
    */
-  static getChatStats(chatRooms: ChatRoom[] = {}) {
+  static getChatStats(chatRooms: ChatRoom[] = []) {
     return {
       totalUnread: this.getTotalUnreadCount(chatRooms),
       activeChats: this.getActiveChatRoomsCount(chatRooms),

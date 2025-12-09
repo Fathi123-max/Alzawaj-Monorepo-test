@@ -96,9 +96,9 @@ export function PublicProfileView({
         console.log("Profile Life Goals Data:", {
           marriageGoals: profileData.marriageGoals,
           personalityDescription: profileData.personalityDescription,
-          familyPlans: profileData.familyPlans,
-          relocationPlans: profileData.relocationPlans,
-          marriageTimeline: profileData.marriageTimeline,
+          familyPlans: (profileData as any).familyPlans,
+          relocationPlans: (profileData as any).relocationPlans,
+          marriageTimeline: (profileData as any).marriageTimeline,
         });
         // Call the callback to pass the profile name to parent component
         if (onProfileNameLoad) {
@@ -221,10 +221,10 @@ export function PublicProfileView({
                 <Image
                   src={
                     showPhotos
-                      ? typeof profile.profilePicture === "string"
-                        ? profile.profilePicture
-                        : profile.profilePicture?.url ||
-                          profile.profilePicture?.fileUrl ||
+                      ? typeof (profile as any).profilePicture === "string"
+                        ? (profile as any).profilePicture
+                        : (profile as any).profilePicture?.url ||
+                          (profile as any).profilePicture?.fileUrl ||
                           "/logo.png"
                       : "/logo.png"
                   }
@@ -477,17 +477,17 @@ export function PublicProfileView({
                 </p>
               </div>
             )}
-            {profile.parentRelationship && (
+            {(profile as any).parentRelationship && (
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   العلاقة مع الوالدين
                 </label>
                 <p className="mt-1 text-sm text-gray-900">
-                  {profile.parentRelationship === "excellent"
+                  {(profile as any).parentRelationship === "excellent"
                     ? "ممتازة"
-                    : profile.parentRelationship === "good"
+                    : (profile as any).parentRelationship === "good"
                       ? "جيدة"
-                      : profile.parentRelationship === "average"
+                      : (profile as any).parentRelationship === "average"
                         ? "متوسطة"
                         : "ضعيفة"}
                 </p>
@@ -500,7 +500,7 @@ export function PublicProfileView({
                 </label>
                 <p className="mt-1 text-sm text-gray-900">
                   {profile.hasChildren === "yes"
-                    ? `نعم${profile.childrenCount ? ` (${profile.childrenCount})` : ""}`
+                    ? `نعم${(profile as any).childrenCount ? ` (${(profile as any).childrenCount})` : ""}`
                     : "لا"}
                 </p>
               </div>
@@ -569,9 +569,9 @@ export function PublicProfileView({
       {/* Life Goals & Vision */}
       {(profile.marriageGoals ||
         profile.personalityDescription ||
-        profile.familyPlans ||
-        profile.relocationPlans ||
-        profile.marriageTimeline) && (
+        (profile as any).familyPlans ||
+        (profile as any).relocationPlans ||
+        (profile as any).marriageTimeline) && (
         <Card>
           <CardHeader>
             <h3 className="text-xl font-semibold">
@@ -599,33 +599,33 @@ export function PublicProfileView({
                 </p>
               </div>
             )}
-            {profile.familyPlans && (
+            {(profile as any).familyPlans && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   خطط العائلة
                 </label>
                 <p className="text-sm text-gray-900 whitespace-pre-wrap">
-                  {profile.familyPlans}
+                  {(profile as any).familyPlans}
                 </p>
               </div>
             )}
-            {profile.relocationPlans && (
+            {(profile as any).relocationPlans && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   خطط الانتقال
                 </label>
                 <p className="text-sm text-gray-900 whitespace-pre-wrap">
-                  {profile.relocationPlans}
+                  {(profile as any).relocationPlans}
                 </p>
               </div>
             )}
-            {profile.marriageTimeline && (
+            {(profile as any).marriageTimeline && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   توقيت الزواج
                 </label>
                 <p className="text-sm text-gray-900 whitespace-pre-wrap">
-                  {profile.marriageTimeline}
+                  {(profile as any).marriageTimeline}
                 </p>
               </div>
             )}
@@ -707,12 +707,9 @@ export function PublicProfileView({
             </div>
 
             {/* Housing Details */}
-            {(profile.housingLocation ||
-              profile.housingOwnership) && (
+            {(profile.housingLocation || profile.housingOwnership) && (
               <div className="bg-white p-4 rounded-lg border">
-                <h4 className="font-medium text-gray-800 mb-3">
-                  تفاصيل السكن
-                </h4>
+                <h4 className="font-medium text-gray-800 mb-3">تفاصيل السكن</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   {profile.housingLocation && (
                     <div>
@@ -896,10 +893,10 @@ export function PublicProfileView({
           <div className="relative max-w-4xl max-h-[90vh] w-full h-full">
             <Image
               src={
-                typeof profile.profilePicture === "string"
-                  ? profile.profilePicture
-                  : profile.profilePicture?.url ||
-                    profile.profilePicture?.fileUrl ||
+                typeof (profile as any).profilePicture === "string"
+                  ? (profile as any).profilePicture
+                  : (profile as any).profilePicture?.url ||
+                    (profile as any).profilePicture?.fileUrl ||
                     "/logo.png"
               }
               alt={profile.name}

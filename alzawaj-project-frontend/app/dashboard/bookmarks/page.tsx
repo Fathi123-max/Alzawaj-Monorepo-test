@@ -147,10 +147,16 @@ export default function BookmarksPage() {
             {bookmarks.map((profile) => (
               <ProfileCard
                 key={profile.id}
-                profile={{ ...profile, isSaved: true }}
+                profile={{ ...profile, isSaved: true } as any}
                 onSave={handleSaveProfile}
                 onSendRequest={handleSendRequest}
-                currentUserGender={user?.gender || "male"}
+                currentUserGender={
+                  (user?.gender === "m"
+                    ? "male"
+                    : user?.gender === "f"
+                      ? "female"
+                      : "male") as "male" | "female"
+                }
                 userEmail={user?.email}
                 userPhone={user?.phone}
               />

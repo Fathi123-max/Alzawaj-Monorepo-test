@@ -105,9 +105,8 @@ export const getFCMToken = async (): Promise<string | null> => {
     // Get token - Firebase will use the registered service worker
     let token;
     try {
-      token = await getToken(messaging, {
-        vapidKey: process.env["NEXT_PUBLIC_FIREBASE_VAPID_KEY"] || undefined,
-      });
+      const vapidKey = process.env["NEXT_PUBLIC_FIREBASE_VAPID_KEY"];
+      token = await getToken(messaging, vapidKey ? { vapidKey } : {});
     } catch (tokenError) {
       console.warn("Failed to get FCM token:", tokenError);
       // This commonly fails in development environments (HTTP vs HTTPS, etc.)

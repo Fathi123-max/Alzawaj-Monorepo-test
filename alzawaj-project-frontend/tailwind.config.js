@@ -1,3 +1,6 @@
+import tailwindcssRtl from "tailwindcss-rtl";
+import tailwindcssAnimate from "tailwindcss-animate";
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -310,7 +313,7 @@ module.exports = {
   },
   plugins: [
     // RTL support for Arabic
-    require("tailwindcss-rtl"),
+    tailwindcssRtl,
 
     // Custom plugin for Islamic design utilities
     function ({ addUtilities, addComponents, theme }) {
@@ -398,7 +401,7 @@ module.exports = {
         },
       });
     },
-    require("tailwindcss-animate"),
+    tailwindcssAnimate,
   ],
 
   // Dark mode configuration (disabled for light-mode-only requirement)

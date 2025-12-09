@@ -52,8 +52,12 @@ function RequestCard({
   };
 
   const handleResponse = async (status: "accepted" | "rejected") => {
-    console.log(`🎯 Responding to request ${request.id} with status: ${status}`);
-    console.log(`👤 Request details - Sender: ${request.sender?.id}, Receiver: ${request.receiver?.id}, Current type: ${type}`);
+    console.log(
+      `🎯 Responding to request ${request.id} with status: ${status}`,
+    );
+    console.log(
+      `👤 Request details - Sender: ${request.sender?.id}, Receiver: ${request.receiver?.id}, Current type: ${type}`,
+    );
 
     setIsLoading(true);
     try {
@@ -294,7 +298,7 @@ export function RequestsList() {
   console.log("👤 RequestsList - User auth status:", {
     isAuthenticated,
     userId: user?.id,
-    userEmail: user?.email
+    userEmail: user?.email,
   });
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -324,14 +328,18 @@ export function RequestsList() {
       if (receivedResponse.success && receivedResponse.data?.requests) {
         console.log("🔍 Received requests details:");
         receivedResponse.data.requests.forEach((req, index) => {
-          console.log(`  ${index + 1}. ID: ${req.id}, Sender: ${req.sender?.id}, Receiver: ${req.receiver?.id}, Status: ${req.status}`);
+          console.log(
+            `  ${index + 1}. ID: ${req.id}, Sender: ${req.sender?.id}, Receiver: ${req.receiver?.id}, Status: ${req.status}`,
+          );
         });
       }
 
       if (sentResponse.success && sentResponse.data?.requests) {
         console.log("🔍 Sent requests details:");
         sentResponse.data.requests.forEach((req, index) => {
-          console.log(`  ${index + 1}. ID: ${req.id}, Sender: ${req.sender?.id}, Receiver: ${req.receiver?.id}, Status: ${req.status}`);
+          console.log(
+            `  ${index + 1}. ID: ${req.id}, Sender: ${req.sender?.id}, Receiver: ${req.receiver?.id}, Status: ${req.status}`,
+          );
         });
       }
 

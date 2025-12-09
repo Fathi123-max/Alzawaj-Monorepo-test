@@ -1523,9 +1523,9 @@ export function ProfileView() {
           <div className="flex items-center space-x-4 space-x-reverse">
             <div className="relative">
               <div className="h-20 w-20 rounded-full bg-gradient-to-r from-primary-500 to-secondary-500 sm:flex hidden items-center justify-center overflow-hidden">
-                {profile.profilePicture?.url ? (
+                {(profile as any).profilePicture?.url ? (
                   <img
-                    src={profile.profilePicture.url}
+                    src={(profile as any).profilePicture.url}
                     alt={profile.name}
                     className="h-full w-full object-cover"
                   />

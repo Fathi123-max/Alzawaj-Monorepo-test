@@ -45,7 +45,7 @@ export default function NewStep2AllData({
         clearError();
         updateData({
           ...data,
-          error: "الرجاء اختيار ملف صورة صالح (JPEG, PNG, GIF, إلخ)",
+          _error: "الرجاء اختيار ملف صورة صالح (JPEG, PNG, GIF, إلخ)",
         });
         return;
       }
@@ -55,7 +55,7 @@ export default function NewStep2AllData({
         clearError();
         updateData({
           ...data,
-          error: "الصورة كبيرة جداً. يرجى اختيار صورة أقل من 5 ميغابايت",
+          _error: "الصورة كبيرة جداً. يرجى اختيار صورة أقل من 5 ميغابايت",
         });
         return;
       }
@@ -68,7 +68,7 @@ export default function NewStep2AllData({
       };
       reader.onerror = () => {
         clearError();
-        updateData({ ...data, error: "حدث خطأ أثناء قراءة الملف" });
+        updateData({ ...data, _error: "حدث خطأ أثناء قراءة الملف" });
       };
       reader.readAsDataURL(file);
       // Set the actual file in parent state

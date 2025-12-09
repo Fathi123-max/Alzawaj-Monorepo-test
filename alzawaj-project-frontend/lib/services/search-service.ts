@@ -311,7 +311,7 @@ class SearchService {
   ): Promise<SearchResult> {
     const { keywords, sortBy, ...searchFilters } = filters;
 
-    let result = await this.searchProfiles(searchFilters);
+    const result = await this.searchProfiles(searchFilters);
 
     // Apply keyword search
     if (keywords) {

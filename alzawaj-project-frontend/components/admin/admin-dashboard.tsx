@@ -117,7 +117,7 @@ export function AdminDashboard() {
     // Wait for auth to be initialized before making API calls
     if (!isInitialized) {
       console.log(
-        "🔍 AdminDashboard: Auth not initialized yet, skipping stats load"
+        "🔍 AdminDashboard: Auth not initialized yet, skipping stats load",
       );
       return;
     }
@@ -389,7 +389,7 @@ export function AdminDashboard() {
                           <div className="text-right">
                             <p className="text-3xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
                               {Math.round(
-                                (stats?.data?.activeUsers || 0) * 0.8
+                                (stats?.data?.activeUsers || 0) * 0.8,
                               )}
                             </p>
                             <p className="text-gray-700 text-sm font-medium">
@@ -403,7 +403,7 @@ export function AdminDashboard() {
                                 {Math.round(
                                   (((stats?.data?.activeUsers || 0) * 0.8) /
                                     (stats?.data?.totalUsers || 1)) *
-                                    100
+                                    100,
                                 )}
                                 %
                               </Badge>
@@ -529,7 +529,7 @@ export function AdminDashboard() {
                                       (stats.data.newUsersToday /
                                         stats.data.totalUsers) *
                                         100 *
-                                        100
+                                        100,
                                     ) / 100
                                   : 0}
                                 %

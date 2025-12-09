@@ -1,6 +1,6 @@
 import { getFCMToken } from "./firebase";
 import { notificationsApi } from "../api";
-import { Notification } from "../types";
+import type { Notification } from "../types";
 
 /**
  * Register device token (FCM) for the user

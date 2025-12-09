@@ -82,7 +82,7 @@ export function UsersManagement() {
       );
       setSearchParams((prev) => ({
         ...prev,
-        search: searchInput.trim() || undefined,
+        search: searchInput.trim() || "",
         page: 1,
       }));
     }, 500); // 500ms debounce
@@ -242,7 +242,7 @@ export function UsersManagement() {
   const handleStatusFilter = (status: string) => {
     setSearchParams((prev) => ({
       ...prev,
-      status: status === "all" ? undefined : status,
+      status: status === "all" ? "" : status,
       page: 1,
     }));
   };
@@ -453,8 +453,8 @@ export function UsersManagement() {
                                         تفعيل المستخدم
                                       </Button>
                                     )}
-                                    {!selectedUser.profile?.verification
-                                      ?.isVerified && (
+                                    {!(selectedUser.profile as any)
+                                      ?.verification?.isVerified && (
                                       <Button
                                         variant="outline"
                                         className="w-full"
@@ -516,7 +516,7 @@ export function UsersManagement() {
                               <UserCheck className="w-4 h-4" />
                             </Button>
                           )}
-                          {!user.profile?.verification?.isVerified && (
+                          {!(user.profile as any)?.verification?.isVerified && (
                             <Button
                               size="sm"
                               variant="ghost"
@@ -794,254 +794,334 @@ export function UsersManagement() {
                                         معلومات الملف الشخصي
                                       </h4>
                                     </div>
-                                    {selectedUser.profile.age && (
+                                    {(selectedUser.profile as any).age && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">
                                           العمر:
                                         </label>
                                         <p className="text-sm text-gray-900">
-                                          {selectedUser.profile.age} سنة
+                                          {(selectedUser.profile as any).age}{" "}
+                                          سنة
                                         </p>
                                       </div>
                                     )}
-                                    {selectedUser.profile.gender && (
+                                    {(selectedUser.profile as any).gender && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">
                                           الجنس:
                                         </label>
                                         <p className="text-sm text-gray-900">
-                                          {selectedUser.profile.gender === "m"
+                                          {(selectedUser.profile as any)
+                                            .gender === "m"
                                             ? "ذكر"
                                             : "أنثى"}
                                         </p>
                                       </div>
                                     )}
-                                    {selectedUser.profile.country && (
+                                    {selectedUser.profile["country"] && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">
                                           البلد:
                                         </label>
                                         <p className="text-sm text-gray-900">
-                                          {selectedUser.profile.country}
+                                          {
+                                            selectedUser.profile[
+                                              "country"
+                                            ] as string
+                                          }
                                         </p>
                                       </div>
                                     )}
-                                    {selectedUser.profile.city && (
+                                    {selectedUser.profile["city"] && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">
                                           المدينة:
                                         </label>
                                         <p className="text-sm text-gray-900">
-                                          {selectedUser.profile.city}
+                                          {
+                                            selectedUser.profile[
+                                              "city"
+                                            ] as string
+                                          }
                                         </p>
                                       </div>
                                     )}
-                                    {selectedUser.profile.nationality && (
+                                    {selectedUser.profile["nationality"] && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">
                                           الجنسية:
                                         </label>
                                         <p className="text-sm text-gray-900">
-                                          {selectedUser.profile.nationality}
+                                          {
+                                            selectedUser.profile[
+                                              "nationality"
+                                            ] as string
+                                          }
                                         </p>
                                       </div>
                                     )}
-                                    {selectedUser.profile.maritalStatus && (
+                                    {(selectedUser.profile[
+                                      "maritalStatus"
+                                    ] as string) && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">
                                           الحالة الاجتماعية:
                                         </label>
                                         <p className="text-sm text-gray-900">
-                                          {selectedUser.profile.maritalStatus}
+                                          {
+                                            selectedUser.profile[
+                                              "maritalStatus"
+                                            ] as string
+                                          }
                                         </p>
                                       </div>
                                     )}
-                                    {selectedUser.profile.education && (
+                                    {selectedUser.profile["education"] && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">
                                           التعليم:
                                         </label>
                                         <p className="text-sm text-gray-900">
-                                          {selectedUser.profile.education}
+                                          {
+                                            selectedUser.profile[
+                                              "education"
+                                            ] as string
+                                          }
                                         </p>
                                       </div>
                                     )}
-                                    {selectedUser.profile.occupation && (
+                                    {selectedUser.profile["occupation"] && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">
                                           المهنة:
                                         </label>
                                         <p className="text-sm text-gray-900">
-                                          {selectedUser.profile.occupation}
+                                          {
+                                            selectedUser.profile[
+                                              "occupation"
+                                            ] as string
+                                          }
                                         </p>
                                       </div>
                                     )}
-                                    {selectedUser.profile.height && (
+                                    {selectedUser.profile["height"] && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">
                                           الطول:
                                         </label>
                                         <p className="text-sm text-gray-900">
-                                          {selectedUser.profile.height} سم
+                                          {
+                                            selectedUser.profile[
+                                              "height"
+                                            ] as string
+                                          }{" "}
+                                          سم
                                         </p>
                                       </div>
                                     )}
-                                    {selectedUser.profile.weight && (
+                                    {selectedUser.profile["weight"] && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">
                                           الوزن:
                                         </label>
                                         <p className="text-sm text-gray-900">
-                                          {selectedUser.profile.weight} كجم
+                                          {
+                                            selectedUser.profile[
+                                              "weight"
+                                            ] as string
+                                          }{" "}
+                                          كجم
                                         </p>
                                       </div>
                                     )}
-                                    {selectedUser.profile.religiousLevel && (
+                                    {selectedUser.profile["religiousLevel"] && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">
                                           المستوى الديني:
                                         </label>
                                         <p className="text-sm text-gray-900">
-                                          {selectedUser.profile.religiousLevel}
+                                          {
+                                            selectedUser.profile[
+                                              "religiousLevel"
+                                            ] as string
+                                          }
                                         </p>
                                       </div>
                                     )}
-                                    {selectedUser.profile.financialStatus && (
+                                    {selectedUser.profile[
+                                      "financialStatus"
+                                    ] && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">
                                           الحالة المالية:
                                         </label>
                                         <p className="text-sm text-gray-900">
-                                          {selectedUser.profile.financialStatus}
+                                          {
+                                            selectedUser.profile[
+                                              "financialStatus"
+                                            ] as string
+                                          }
                                         </p>
                                       </div>
                                     )}
-                                    {selectedUser.profile.housingStatus && (
+                                    {selectedUser.profile["housingStatus"] && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">
                                           حالة السكن:
                                         </label>
                                         <p className="text-sm text-gray-900">
-                                          {selectedUser.profile.housingStatus}
+                                          {
+                                            selectedUser.profile[
+                                              "housingStatus"
+                                            ] as string
+                                          }
                                         </p>
                                       </div>
                                     )}
-                                    {selectedUser.profile.hasChildren !==
+                                    {selectedUser.profile["hasChildren"] !==
                                       undefined && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">
                                           لديه أطفال:
                                         </label>
                                         <p className="text-sm text-gray-900">
-                                          {selectedUser.profile.hasChildren ===
-                                          "yes"
+                                          {(selectedUser.profile[
+                                            "hasChildren"
+                                          ] as boolean)
                                             ? "نعم"
                                             : "لا"}
                                         </p>
                                       </div>
                                     )}
-                                    {selectedUser.profile.childrenCount && (
+                                    {selectedUser.profile["childrenCount"] && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">
                                           عدد الأطفال:
                                         </label>
                                         <p className="text-sm text-gray-900">
-                                          {selectedUser.profile.childrenCount}
+                                          {
+                                            selectedUser.profile[
+                                              "childrenCount"
+                                            ] as string
+                                          }
                                         </p>
                                       </div>
                                     )}
-                                    {selectedUser.profile
-                                      .personalityDescription &&
-                                      typeof selectedUser.profile
-                                        .personalityDescription ===
-                                        "string" && (
+                                    {selectedUser.profile[
+                                      "personalityDescription"
+                                    ] &&
+                                      typeof selectedUser.profile[
+                                        "personalityDescription"
+                                      ] === "string" && (
                                         <div>
                                           <label className="text-sm font-medium text-gray-700">
                                             وصف الشخصية:
                                           </label>
                                           <p className="text-sm text-gray-900">
                                             {
-                                              selectedUser.profile
-                                                .personalityDescription
+                                              selectedUser.profile[
+                                                "personalityDescription"
+                                              ] as string
                                             }
                                           </p>
                                         </div>
                                       )}
-                                    {selectedUser.profile.aboutMe &&
-                                      typeof selectedUser.profile.aboutMe ===
+                                    {selectedUser.profile["aboutMe"] &&
+                                      typeof selectedUser.profile["aboutMe"] ===
                                         "string" && (
                                         <div>
                                           <label className="text-sm font-medium text-gray-700">
                                             عني:
                                           </label>
                                           <p className="text-sm text-gray-900">
-                                            {selectedUser.profile.aboutMe}
+                                            {
+                                              selectedUser.profile[
+                                                "aboutMe"
+                                              ] as string
+                                            }
                                           </p>
                                         </div>
                                       )}
-                                    {selectedUser.profile.interests &&
+                                    {selectedUser.profile["interests"] &&
                                       Array.isArray(
-                                        selectedUser.profile.interests,
+                                        selectedUser.profile[
+                                          "interests"
+                                        ] as string[],
                                       ) &&
-                                      selectedUser.profile.interests.length >
-                                        0 && (
+                                      (
+                                        selectedUser.profile[
+                                          "interests"
+                                        ] as string[]
+                                      ).length > 0 && (
                                         <div>
                                           <label className="text-sm font-medium text-gray-700">
                                             الاهتمامات:
                                           </label>
                                           <p className="text-sm text-gray-900">
-                                            {selectedUser.profile.interests.join(
-                                              ", ",
-                                            )}
+                                            {(
+                                              selectedUser.profile[
+                                                "interests"
+                                              ] as string[]
+                                            ).join(", ")}
                                           </p>
                                         </div>
                                       )}
-                                    {selectedUser.profile.smokingStatus && (
+                                    {selectedUser.profile["smokingStatus"] && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">
                                           التدخين:
                                         </label>
                                         <p className="text-sm text-gray-900">
-                                          {selectedUser.profile.smokingStatus}
+                                          {
+                                            selectedUser.profile[
+                                              "smokingStatus"
+                                            ] as string
+                                          }
                                         </p>
                                       </div>
                                     )}
-                                    {selectedUser.profile.hasBeard !==
+                                    {selectedUser.profile["hasBeard"] !==
                                       undefined && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">
                                           لديه لحية:
                                         </label>
                                         <p className="text-sm text-gray-900">
-                                          {selectedUser.profile.hasBeard
+                                          {(selectedUser.profile[
+                                            "hasBeard"
+                                          ] as boolean)
                                             ? "نعم"
                                             : "لا"}
                                         </p>
                                       </div>
                                     )}
-                                    {selectedUser.profile.isComplete !==
+                                    {selectedUser.profile["isComplete"] !==
                                       undefined && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">
                                           الملف مكتمل:
                                         </label>
                                         <p className="text-sm text-gray-900">
-                                          {selectedUser.profile.isComplete
+                                          {(selectedUser.profile[
+                                            "isComplete"
+                                          ] as boolean)
                                             ? "نعم"
                                             : "لا"}
                                         </p>
                                       </div>
                                     )}
-                                    {selectedUser.profile
-                                      .completionPercentage !== undefined && (
+                                    {selectedUser.profile[
+                                      "completionPercentage"
+                                    ] !== undefined && (
                                       <div>
                                         <label className="text-sm font-medium text-gray-700">
                                           نسبة الاكتمال:
                                         </label>
                                         <p className="text-sm text-gray-900">
                                           {
-                                            selectedUser.profile
-                                              .completionPercentage
+                                            selectedUser.profile[
+                                              "completionPercentage"
+                                            ] as number
                                           }
                                           %
                                         </p>
@@ -1089,7 +1169,7 @@ export function UsersManagement() {
                                   تفعيل المستخدم
                                 </Button>
                               )}
-                              {!selectedUser.profile?.verification
+                              {!(selectedUser.profile as any)?.verification
                                 ?.isVerified && (
                                 <Button
                                   variant="outline"

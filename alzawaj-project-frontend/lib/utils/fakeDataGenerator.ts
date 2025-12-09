@@ -177,6 +177,10 @@ export function generateFakeRegistrationData(
       : faker.helpers.arrayElement(occupationsFemale),
     bio: `${firstName} ${lastName}، ${age} سنة، من ${city}. أبحث عن شريك حياة ملتزم بالدين والأخلاق.`,
     acceptDeclaration: true,
+    // Add missing properties with default values
+    hasBeard: false,
+    isRegularAtMosque: false,
+    smokes: false,
   };
 
   if (isMale) {
@@ -198,7 +202,6 @@ export function generateFakeRegistrationData(
         "family-owned",
       ]),
       housingType: faker.helpers.arrayElement(["شقة", "فيلا", "دور"]),
-      monthlyIncome: faker.number.int({ min: 5000, max: 25000 }),
     };
   } else {
     return {
@@ -211,7 +214,7 @@ export function generateFakeRegistrationData(
         "brother",
         "uncle",
       ]),
-      wearHijab: faker.datatype.boolean(0.9),
+      wearHijab: faker.helpers.arrayElement(["none", "hijab", "niqab"]),
       wearNiqab: faker.datatype.boolean(0.3),
       clothingStyle: faker.helpers.arrayElement([
         "niqab-full",

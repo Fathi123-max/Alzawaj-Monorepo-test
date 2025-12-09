@@ -56,12 +56,12 @@ export async function POST(request: NextRequest) {
             message: errorMessage,
             errors: error.errors,
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
       return NextResponse.json(
         { success: false, message: "خطأ في تحليل البيانات المرسلة" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -95,13 +95,13 @@ export async function POST(request: NextRequest) {
       } else {
         const errorData = await response.json();
         throw new Error(
-          `Backend returned ${response.status}: ${errorData.message}`
+          `Backend returned ${response.status}: ${errorData.message}`,
         );
       }
     } catch (backendError) {
       console.log(
         "Backend unavailable, using fallback response:",
-        backendError
+        backendError,
       );
 
       // Fallback response when backend is down
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
     console.error("Error in reports API:", error);
     return NextResponse.json(
       { success: false, message: "حدث خطأ أثناء معالجة الطلب" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -172,7 +172,7 @@ export async function GET(request: NextRequest) {
 
     console.log(
       "Making request to:",
-      `${BACKEND_URL}/reports?page=${page}&limit=${limit}`
+      `${BACKEND_URL}/reports?page=${page}&limit=${limit}`,
     );
 
     let response, data;
@@ -182,7 +182,7 @@ export async function GET(request: NextRequest) {
         {
           method: "GET",
           headers,
-        }
+        },
       );
 
       console.log("Backend response status:", response.status);
@@ -298,7 +298,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching reports:", error);
     return NextResponse.json(
       { success: false, message: "حدث خطأ أثناء جلب التقارير" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

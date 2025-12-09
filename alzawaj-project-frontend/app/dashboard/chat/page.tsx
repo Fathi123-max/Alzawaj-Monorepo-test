@@ -16,7 +16,7 @@ function ChatPageContent() {
       <div className="h-full">
         <ChatInterfaceRedesigned
           chatRoomId={chatRoomId}
-          requestId={requestId || undefined}
+          {...(requestId && { requestId })}
         />
       </div>
     );

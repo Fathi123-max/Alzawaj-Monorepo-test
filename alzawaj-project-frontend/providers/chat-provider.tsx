@@ -489,14 +489,15 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
               return {
                 ...room,
                 // Update fields that exist in the ChatRoom interface
-                lastMessage: updatedRoomData.lastMessage || room.lastMessage,
+                lastMessage:
+                  updatedRoomData.lastMessage || (room as any).lastMessage,
                 lastMessageAt:
-                  updatedRoomData.lastMessageAt || room.lastMessageAt,
+                  updatedRoomData.lastMessageAt || (room as any).lastMessageAt,
                 updatedAt: updatedRoomData.updatedAt || room.updatedAt,
                 unreadCount:
                   updatedRoomData.unreadCount !== undefined
                     ? updatedRoomData.unreadCount
-                    : room.unreadCount,
+                    : (room as any).unreadCount,
               };
             }
             return room;

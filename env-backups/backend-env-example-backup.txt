@@ -1,0 +1,26 @@
+# BACKEND ENV EXAMPLE BACKUP - Created on 2025-12-09
+# Original .env.example file
+
+# Database
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/<dbname>?retryWrites=true&w=majority
+MONGODB_TEST_URI=mongodb://localhost:27017/test
+
+# JWT
+JWT_SECRET=your_jwt_secret_here
+JWT_EXPIRE=7d
+JWT_COOKIE_EXPIRE=7
+
+# Security
+FRONTEND_URL=http://localhost:3000
+CORS_ORIGIN=http://localhost:3000,http://localhost:3001
+
+# ImageKit
+IMAGEKIT_PUBLIC_KEY=your_imagekit_public_key_here
+IMAGEKIT_PRIVATE_KEY=your_imagekit_private_key_here
+IMAGEKIT_ENDPOINT=your_imagekit_endpoint_here
+IMAGEKIT_ROOT_FOLDER=alzawaj-images/
+
+# Other
+NODE_ENV=development
+PORT=5001
+MAX_FILE_SIZE=5242880

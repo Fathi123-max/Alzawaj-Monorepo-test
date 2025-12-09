@@ -6,6 +6,9 @@ const nextConfig = {
     scrollRestoration: true,
   },
 
+  // Output file tracing root for Docker builds
+  outputFileTracingRoot: ".",
+
   // Performance optimizations
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",

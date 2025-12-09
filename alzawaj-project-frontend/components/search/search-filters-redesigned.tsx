@@ -166,7 +166,7 @@ export function SearchFiltersRedesigned({
                         if (!groupedNationalities[nationality.group]) {
                           groupedNationalities[nationality.group] = [];
                         }
-                        groupedNationalities[nationality.group].push(
+                        groupedNationalities[nationality.group]?.push(
                           nationality,
                         );
                       });

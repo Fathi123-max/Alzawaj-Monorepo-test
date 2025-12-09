@@ -169,7 +169,7 @@ const convertToMockProfile = (apiProfile: Profile): MockProfile => {
   }
 
   console.log("🖼️ Profile Picture URL:", {
-    userId: apiProfile._id || apiProfile.id,
+    userId: (apiProfile as any)._id || apiProfile.id,
     profilePicture: profilePicture,
     rawProfilePicture: rawProfilePicture,
     rawType: typeof rawProfilePicture,

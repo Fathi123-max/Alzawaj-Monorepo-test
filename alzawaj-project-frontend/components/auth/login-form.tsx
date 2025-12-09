@@ -15,6 +15,7 @@ import {
 import { loginSchema, type LoginFormData } from "@/lib/validation";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
+import { showToast } from "@/components/ui/toaster";
 
 interface LoginFormProps {
   redirectTo?: string;

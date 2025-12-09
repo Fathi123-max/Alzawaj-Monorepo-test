@@ -42,7 +42,7 @@ export function getInitials(name: string): string {
   if (!name) return "م";
   const words = name.trim().split(" ");
   if (words.length === 1) {
-    return words[0].charAt(0);
+    return words[0]?.charAt(0) || "";
   }
-  return words[0].charAt(0) + words[1].charAt(0);
+  return (words[0]?.charAt(0) || "") + (words[1]?.charAt(0) || "");
 }

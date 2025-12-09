@@ -239,7 +239,9 @@ export function FlaggedList() {
                             من: {message.senderId} في غرفة: {message.chatRoomId}
                           </div>
                           <div className="text-sm text-gray-700 max-w-xs">
-                            {message.content}
+                            {typeof message.content === "string"
+                              ? message.content
+                              : JSON.stringify(message.content)}
                           </div>
                         </div>
                       </td>
@@ -376,7 +378,9 @@ export function FlaggedList() {
                 </label>
                 <div className="mt-1 p-3 bg-gray-50 rounded-lg">
                   <p className="text-sm text-gray-900">
-                    {selectedMessage.content}
+                    {typeof selectedMessage.content === "string"
+                      ? selectedMessage.content
+                      : JSON.stringify(selectedMessage.content)}
                   </p>
                 </div>
               </div>

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Check } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
 import { useNotifications } from "@/providers/notification-provider";
 import { useRouter } from "next/navigation";

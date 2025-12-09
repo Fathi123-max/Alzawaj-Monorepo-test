@@ -391,7 +391,7 @@ const useRegistration = (): UseRegistrationResult => {
         if (state.data.gender === "f") {
           if (
             state.data.wearHijab === undefined ||
-            state.data.wearHijab === ""
+            state.data.wearHijab === null
           ) {
             dispatch({
               type: "SET_ERROR",
@@ -594,7 +594,7 @@ const useRegistration = (): UseRegistrationResult => {
           )
         )
           validationErrors.push("علاقة الولي غير صحيحة للإناث");
-        if (regData.wearHijab === undefined || regData.wearHijab === "")
+        if (regData.wearHijab === undefined || regData.wearHijab === null)
           validationErrors.push("حالة الحجاب مطلوبة للإناث");
         if (regData.wearNiqab === undefined)
           validationErrors.push("حالة النقاب مطلوبة للإناث");

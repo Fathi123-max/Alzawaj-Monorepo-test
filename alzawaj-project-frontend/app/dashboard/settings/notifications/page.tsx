@@ -133,13 +133,17 @@ export default function NotificationSettingsPage() {
 
       if (subCategory === undefined) {
         // Update top-level field
-        (updated as any)[category] = value;
+        (updated as any)[category as keyof typeof updated] = value;
       } else if (field === undefined) {
         // Update category.subCategory
-        (updated as any)[category][subCategory] = value;
+        (updated as any)[category as keyof typeof updated][
+          subCategory as keyof (typeof updated)[keyof typeof updated]
+        ] = value;
       } else {
         // Update category.subCategory.field
-        (updated as any)[category][subCategory][field] = value;
+        (updated as any)[category as keyof typeof updated][
+          subCategory as keyof (typeof updated)[keyof typeof updated]
+        ][field as any] = value;
       }
 
       return updated;
@@ -183,8 +187,11 @@ export default function NotificationSettingsPage() {
                     </div>
                     <Switch
                       checked={
-                        settings[channel.id as keyof NotificationSettings]
-                          .enabled
+                        (
+                          settings[
+                            channel.id as keyof NotificationSettings
+                          ] as any
+                        )?.enabled
                       }
                       onCheckedChange={(checked) =>
                         updateSettings(`${channel.id}.enabled`, checked)
@@ -210,10 +217,11 @@ export default function NotificationSettingsPage() {
                         <Switch
                           id={`${channel.id}-${type.id}`}
                           checked={
-                            settings[channel.id as keyof NotificationSettings]
-                              .notifications[
-                              type.id as keyof typeof settings.email.notifications
-                            ]
+                            (
+                              settings[
+                                channel.id as keyof NotificationSettings
+                              ] as any
+                            )?.notifications?.[type.id]
                           }
                           onCheckedChange={(checked) =>
                             updateSettings(

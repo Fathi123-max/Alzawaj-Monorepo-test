@@ -16,10 +16,13 @@ export function VerificationStatusBanner({ email }: { email: string }) {
     setLoading(true);
     try {
       const res = await verificationApi.status(email);
-      setStatus({
+      const statusData: { verified: boolean; verifiedAt?: string } = {
         verified: !!res.data?.verified,
-        verifiedAt: res.data?.verifiedAt,
-      });
+      };
+      if (res.data?.verifiedAt) {
+        statusData.verifiedAt = res.data.verifiedAt;
+      }
+      setStatus(statusData);
     } catch {
       setMessage("تعذر جلب حالة التحقق حالياً");
     } finally {
@@ -36,7 +39,7 @@ export function VerificationStatusBanner({ email }: { email: string }) {
     if (!email) return;
     setLoading(true);
     try {
-      await verificationApi.request(email);
+      await verificationApi.request({ email });
       setMessage("تم إرسال رابط تأكيد جديد");
     } catch {
       setMessage("تعذر إرسال رابط جديد");

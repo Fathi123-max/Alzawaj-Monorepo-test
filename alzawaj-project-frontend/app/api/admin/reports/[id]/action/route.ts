@@ -6,7 +6,7 @@ import { extractUserFromToken, isAdmin } from "@/lib/utils/jwt.utils";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     console.log("⚡ Admin report action endpoint called");
@@ -22,7 +22,7 @@ export async function POST(
           message: "غير مصرح لك بالوصول",
           error: "Authentication required",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -36,7 +36,7 @@ export async function POST(
           message: "غير مصرح لك بالوصول إلى لوحة الإدارة",
           error: "Admin access required",
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -56,7 +56,7 @@ export async function POST(
           message: "معرف التقرير غير صحيح",
           error: "Invalid report ID",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -73,7 +73,7 @@ export async function POST(
           message: "إجراء غير صالح",
           error: "Invalid action",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -111,7 +111,7 @@ export async function POST(
           message: responseData.message || "حدث خطأ أثناء تنفيذ الإجراء",
           error: responseData.error,
         },
-        { status: backendResponse.status }
+        { status: backendResponse.status },
       );
     }
 
@@ -130,7 +130,7 @@ export async function POST(
         message: "حدث خطأ في الخادم",
         error: error.message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

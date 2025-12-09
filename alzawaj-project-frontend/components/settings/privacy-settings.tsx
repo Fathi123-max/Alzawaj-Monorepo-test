@@ -39,7 +39,7 @@ export function PrivacySettingsComponent({
   useEffect(() => {
     console.log("=== Privacy Settings useEffect Triggered ===");
     console.log("Privacy Settings - Profile data:", profile);
-    console.log("Privacy Settings - Profile._id:", profile?._id);
+    console.log("Privacy Settings - Profile._id:", (profile as any)?._id);
     console.log("Privacy Settings - Profile.privacy:", profile?.privacy);
     console.log(
       "Privacy Settings - Profile.privacySettings:",

@@ -60,7 +60,7 @@ function ChatRoomItem({
           </h4>
         </div>
         <Badge
-          variant={isExpired ? "destructive" : "default"}
+          variant={isExpired ? "error" : "default"}
           className="text-xs flex-shrink-0"
         >
           {isExpired ? "منتهية" : "نشطة"}
@@ -200,7 +200,7 @@ export function ChatList() {
                       key={room.id}
                       room={room}
                       onClick={() => handleSelectChat(room.id)}
-                      currentUserId={user?.id}
+                      {...(user?.id && { currentUserId: user.id })}
                     />
                   ))}
                 </div>

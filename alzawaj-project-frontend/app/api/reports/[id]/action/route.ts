@@ -21,7 +21,7 @@ function getAuthToken(request: NextRequest): string | null {
 // POST /api/reports/[id]/action - Perform action on a report
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     console.log(`POST /api/reports/${params.id}/action called`);
@@ -36,7 +36,7 @@ export async function POST(
     } catch {
       return NextResponse.json(
         { success: false, message: "خطأ في تحليل البيانات المرسلة" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -47,7 +47,7 @@ export async function POST(
     if (!validActions.includes(action)) {
       return NextResponse.json(
         { success: false, message: "إجراء غير صالح" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -65,7 +65,7 @@ export async function POST(
 
     console.log(
       "Making POST request to:",
-      `${BACKEND_URL}/reports/${reportId}/action`
+      `${BACKEND_URL}/reports/${reportId}/action`,
     );
 
     try {
@@ -75,7 +75,7 @@ export async function POST(
           method: "POST",
           headers,
           body: JSON.stringify({ action, notes }),
-        }
+        },
       );
 
       console.log("Backend response status:", response.status);
@@ -87,13 +87,13 @@ export async function POST(
       } else {
         const errorData = await response.json();
         throw new Error(
-          `Backend returned ${response.status}: ${errorData.message}`
+          `Backend returned ${response.status}: ${errorData.message}`,
         );
       }
     } catch (backendError) {
       console.log(
         "Backend unavailable, using fallback response:",
-        backendError
+        backendError,
       );
 
       // Fallback response when backend is down
@@ -113,7 +113,7 @@ export async function POST(
     console.error("Error in report action API:", error);
     return NextResponse.json(
       { success: false, message: "حدث خطأ أثناء معالجة الطلب" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -701,7 +701,7 @@ export const mockSearchApi = {
     await simulateSearchDelay();
 
     // Get all profiles based on gender preference (if any)
-    let allProfiles = staticAllProfiles;
+    const allProfiles = staticAllProfiles;
 
     // Apply filters
     const filteredProfiles = filterProfiles(allProfiles, filters);

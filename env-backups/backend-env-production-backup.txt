@@ -1,0 +1,16 @@
+# BACKEND ENV PRODUCTION BACKUP - Created on 2025-12-09
+# Original .env.production file (before modifications)
+
+API_BASE_URL=
+BCRYPT_ROUNDS=12
+CORS_ORIGIN=https://alzawajalsaeid.vercel.app
+JWT_EXPIRES_IN=1h
+JWT_REFRESH_EXPIRES_IN=30d
+JWT_REFRESH_SECRET=e8a991754cc4e46a88fb06430b7845e3
+JWT_SECRET=474a8a114f876731e662a5f9ee6a3926
+MONGODB_TEST_URI=mongodb://localhost:27017/zawag_test_db
+MONGODB_URI=mongodb+srv://Alzawaj:Alzawaj123@alzawaj.qh7vawi.mongodb.net/
+NODE_ENV=production
+PORT=5001
+RATE_LIMIT_MAX_REQUESTS=100
+RATE_LIMIT_WINDOW_MS=900000

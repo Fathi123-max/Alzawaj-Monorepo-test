@@ -134,8 +134,9 @@ export function ProfileDialog({
       if (email.trim()) contactInfo.email = email;
 
       // Get token from storage using the proper method
-      const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN) ||
-                   sessionStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      const token =
+        localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN) ||
+        sessionStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 
       if (!token) {
         showToast.error("انتهت صلاحية جلستك، يرجى إعادة تسجيل الدخول");

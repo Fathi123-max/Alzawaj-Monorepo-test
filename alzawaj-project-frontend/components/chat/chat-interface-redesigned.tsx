@@ -101,7 +101,7 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
         msg.senderId === user?.id ||
         (typeof msg.sender === "object" &&
           (msg.sender._id === user?.id || msg.sender.id === user?.id)),
-    })
+    }),
   );
 
   const [newMessage, setNewMessage] = useState("");
@@ -144,9 +144,11 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
           const otherParticipant = chatRoomData.participants.find(
             (p: string | ChatParticipant) => {
               const userId =
-                typeof p === "string" ? p : p.user?._id || p.user?.id || p.user;
+                typeof p === "string"
+                  ? p
+                  : (p.user as any)?._id || (p.user as any)?.id || p.user;
               return userId !== user?.id;
-            }
+            },
           );
 
           if (otherParticipant && typeof otherParticipant !== "string") {
@@ -234,13 +236,13 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
       setReportError(null);
       setIsSubmittingReport(true);
 
-      if (!otherUser?._id && !otherUser?.id) {
+      if (!(otherUser as any)?._id && !(otherUser as any)?.id) {
         throw new Error("تعذر تحديد المستخدم للإبلاغ عنه");
       }
 
       // Prepare report data
       const reportData = {
-        reportedUserId: otherUser?._id || otherUser?.id,
+        reportedUserId: (otherUser as any)?._id || (otherUser as any)?.id,
         reason: reportReason,
         description: reportDescription || undefined,
       };
@@ -356,7 +358,7 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
   };
 
   const renderStatusIcon = (
-    statusData: { icon: React.ReactNode; tooltip: string } | null
+    statusData: { icon: React.ReactNode; tooltip: string } | null,
   ) => {
     if (!statusData) return null;
     return (
@@ -393,7 +395,7 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
                 onClick={() => {
                   if (otherUser?.id) {
                     router.push(
-                      `/profile/${otherUser.id}?fromChat=true&showPhotos=true`
+                      `/profile/${otherUser.id}?fromChat=true&showPhotos=true`,
                     );
                   }
                 }}
@@ -406,7 +408,7 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
                 onClick={() => {
                   if (otherUser?.id) {
                     router.push(
-                      `/profile/${otherUser.id}?fromChat=true&showPhotos=true`
+                      `/profile/${otherUser.id}?fromChat=true&showPhotos=true`,
                     );
                   }
                 }}
@@ -435,7 +437,7 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
               onClick={() => {
                 if (otherUser?.id) {
                   router.push(
-                    `/profile/${otherUser.id}?fromChat=true&showPhotos=true`
+                    `/profile/${otherUser.id}?fromChat=true&showPhotos=true`,
                   );
                 }
               }}
@@ -460,7 +462,7 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
                 onClick={() => {
                   if (otherUser?.id) {
                     router.push(
-                      `/profile/${otherUser.id}?fromChat=true&showPhotos=true`
+                      `/profile/${otherUser.id}?fromChat=true&showPhotos=true`,
                     );
                   }
                 }}
@@ -527,7 +529,7 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
                 key={message.id || index}
                 className={cn(
                   "flex gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300",
-                  isCurrentUser ? "justify-end" : "justify-start"
+                  isCurrentUser ? "justify-end" : "justify-start",
                 )}
               >
                 <Avatar
@@ -536,16 +538,16 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
                     !showAvatar && "invisible",
                     !isCurrentUser &&
                       showAvatar &&
-                      "cursor-pointer hover:opacity-80 transition-opacity"
+                      "cursor-pointer hover:opacity-80 transition-opacity",
                   )}
                   onClick={() => {
-                    if (!isCurrentUser && message.sender?._id) {
+                    if (!isCurrentUser && (message.sender as any)?._id) {
                       const senderId =
-                        (message.sender as ChatUser)._id ||
-                        (message.sender as ChatUser).id;
+                        (message.sender as any)._id ||
+                        (message.sender as any).id;
                       if (senderId && senderId !== user?.id) {
                         router.push(
-                          `/profile/${senderId}?fromChat=true&showPhotos=true`
+                          `/profile/${senderId}?fromChat=true&showPhotos=true`,
                         );
                       }
                     }
@@ -558,7 +560,7 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
                     {getInitials(
                       (message.sender as ChatUser)?.name ||
                         (message.sender as ChatUser)?.firstname ||
-                        "م"
+                        "م",
                     )}
                   </AvatarFallback>
                 </Avatar>
@@ -568,7 +570,7 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
                     "group relative max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm transition-all hover:shadow-md",
                     isCurrentUser
                       ? "bg-primary-500 text-white rounded-br-sm"
-                      : "bg-card text-text rounded-bl-sm border border-border"
+                      : "bg-card text-text rounded-bl-sm border border-border",
                   )}
                 >
                   {/* Reply Preview */}
@@ -578,7 +580,7 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
                         "rounded-lg px-2 py-1 mb-2 text-xs border-r-2",
                         isCurrentUser
                           ? "bg-white/20 border-white/50"
-                          : "bg-gray-100 border-gray-400"
+                          : "bg-gray-100 border-gray-400",
                       )}
                     >
                       <span
@@ -606,7 +608,7 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
                     <div
                       className={cn(
                         "rounded-lg px-2 py-1 mb-2 text-xs border-r-2",
-                        "bg-yellow-50 border-yellow-400 text-yellow-700"
+                        "bg-yellow-50 border-yellow-400 text-yellow-700",
                       )}
                     >
                       <span>⏳ قيد المراجعة</span>
@@ -621,7 +623,7 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
                           "rounded-lg px-2 py-1 mb-2 text-xs border-r-2",
                           isCurrentUser
                             ? "bg-yellow-500/30 border-yellow-300"
-                            : "bg-yellow-50 border-yellow-400 text-yellow-700"
+                            : "bg-yellow-50 border-yellow-400 text-yellow-700",
                         )}
                       >
                         <span>⚠️ محتوى مشكوك فيه</span>
@@ -633,7 +635,7 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
                     <p
                       className={cn(
                         "text-sm italic",
-                        isCurrentUser ? "opacity-70" : "text-gray-400"
+                        isCurrentUser ? "opacity-70" : "text-gray-400",
                       )}
                     >
                       تم حذف هذه الرسالة
@@ -671,7 +673,7 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
                             "flex items-center gap-2 rounded-lg px-3 py-2 transition-colors",
                             isCurrentUser
                               ? "bg-white/20 hover:bg-white/30"
-                              : "bg-gray-100 hover:bg-gray-200"
+                              : "bg-gray-100 hover:bg-gray-200",
                           )}
                         >
                           <span>📄</span>
@@ -684,7 +686,7 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
                                 "text-[10px]",
                                 isCurrentUser
                                   ? "text-white/70"
-                                  : "text-gray-500"
+                                  : "text-gray-500",
                               )}
                             >
                               {(message.content.media.size / 1024).toFixed(1)}{" "}
@@ -699,7 +701,9 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
                   <div
                     className={cn(
                       "mt-1 flex items-center gap-1 text-xs",
-                      isCurrentUser ? "text-primary-100" : "text-text-secondary"
+                      isCurrentUser
+                        ? "text-primary-100"
+                        : "text-text-secondary",
                     )}
                   >
                     <span>{getRelativeTime(message.createdAt)}</span>
@@ -707,7 +711,7 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
                       <span
                         className={cn(
                           "text-[9px]",
-                          isCurrentUser ? "text-white/70" : "text-gray-400"
+                          isCurrentUser ? "text-white/70" : "text-gray-400",
                         )}
                         title={`معدلة في ${formatTime(message.editedAt || message.updatedAt)}`}
                       >
@@ -724,7 +728,7 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
                       "absolute bottom-0 h-4 w-4",
                       isCurrentUser
                         ? "-right-1 bg-primary-500"
-                        : "-left-1 bg-card border-l border-b border-border"
+                        : "-left-1 bg-card border-l border-b border-border",
                     )}
                     style={{
                       clipPath: isCurrentUser
@@ -745,7 +749,7 @@ export function ChatInterfaceRedesigned({ chatRoomId }: ChatInterfaceProps) {
               onClick={() => {
                 if (otherUser?.id) {
                   router.push(
-                    `/profile/${otherUser.id}?fromChat=true&showPhotos=true`
+                    `/profile/${otherUser.id}?fromChat=true&showPhotos=true`,
                   );
                 }
               }}
