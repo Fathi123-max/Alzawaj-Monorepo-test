@@ -10,9 +10,26 @@ services:
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     environment:
-      - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=${BACKEND_URL:-http://backend:5000}
+      - NODE_ENV=${NODE_ENV:-production}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://backend:5000}
       - NEXT_PUBLIC_APP_URL=${FRONTEND_URL:-http://localhost:3000}
+      - NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME:-Alzawaj Platform}
+      - NEXT_PUBLIC_APP_DESCRIPTION=${NEXT_PUBLIC_APP_DESCRIPTION:-Islamic Marriage Platform}
+      - NEXT_PUBLIC_ENABLE_CHAT=${NEXT_PUBLIC_ENABLE_CHAT:-true}
+      - NEXT_PUBLIC_ENABLE_NOTIFICATIONS=${NEXT_PUBLIC_ENABLE_NOTIFICATIONS:-true}
+      - NEXT_PUBLIC_ENABLE_PHOTOS=${NEXT_PUBLIC_ENABLE_PHOTOS:-true}
+      - NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=${NEXT_PUBLIC_GOOGLE_ANALYTICS_ID:-G-64NDG1021P}
+      - NEXT_PUBLIC_VERCEL_ANALYTICS_ENABLED=${NEXT_PUBLIC_VERCEL_ANALYTICS_ENABLED:-true}
+      - NEXT_PUBLIC_FIREBASE_API_KEY=${NEXT_PUBLIC_FIREBASE_API_KEY}
+      - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
+      - NEXT_PUBLIC_FIREBASE_PROJECT_ID=${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
+      - NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}
+      - NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
+      - NEXT_PUBLIC_FIREBASE_APP_ID=${NEXT_PUBLIC_FIREBASE_APP_ID}
+      - NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
+      - NEXT_PUBLIC_FIREBASE_VAPID_KEY=${NEXT_PUBLIC_FIREBASE_VAPID_KEY}
+      - NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY=${NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY}
+      - NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT=${NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}
     depends_on:
       - backend
     networks:
@@ -34,14 +51,53 @@ services:
     ports:
       - "${BACKEND_PORT:-5000}:5000"
     environment:
-      - NODE_ENV=production
-      - PORT=5000
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=${PORT:-5000}
       - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/alzawaj}
       - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
       - CORS_ORIGIN=${FRONTEND_URL:-http://localhost:3000}
-      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - CORS_CREDENTIALS=${CORS_CREDENTIALS:-true}
+      - REDIS_URL=${REDIS_URL:-redis://:${REDIS_PASSWORD:-alzawaj_redis_default_password}@redis:6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-alzawaj_redis_default_password}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      - BCRYPT_ROUNDS=${BCRYPT_ROUNDS:-12}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_FILE_PATH=${LOG_FILE_PATH:-./logs/app.log}
+      - MAX_FILE_SIZE=${MAX_FILE_SIZE:-10485760}
+      - ALLOWED_FILE_TYPES=${ALLOWED_FILE_TYPES:-jpg,jpeg,png,pdf}
+      - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-100}
+      - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-900000}
+      - ENABLE_METRICS=${ENABLE_METRICS:-true}
+      - HEALTH_CHECK_INTERVAL=${HEALTH_CHECK_INTERVAL:-30000}
+      # ImageKit Configuration
+      - IMAGEKIT_PUBLIC_KEY=${IMAGEKIT_PUBLIC_KEY}
+      - IMAGEKIT_PRIVATE_KEY=${IMAGEKIT_PRIVATE_KEY}
+      - IMAGEKIT_URL_ENDPOINT=${IMAGEKIT_URL_ENDPOINT}
+      - IMAGEKIT_ROOT_FOLDER=${IMAGEKIT_ROOT_FOLDER}
+      # AWS S3 Configuration
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      # Firebase Configuration
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+      - FIREBASE_CLIENT_EMAIL=${FIREBASE_CLIENT_EMAIL}
+      - FIREBASE_PRIVATE_KEY_ID=${FIREBASE_PRIVATE_KEY_ID}
+      - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY}
+      # SMTP Configuration
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-465}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SMTP_SECURE=${SMTP_SECURE:-true}
+      # Twilio Configuration
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
     depends_on:
       - mongodb
+      - redis
     networks:
       - alzawaj-network
     restart: unless-stopped
@@ -75,7 +131,7 @@ services:
       retries: 3
       start_period: 40s
 
-  # Redis service (optional, for rate limiting and sessions)
+  # Redis service (for rate limiting)
   redis:
     image: redis:7-alpine
     container_name: alzawaj-redis
@@ -83,11 +139,19 @@ services:
       - "${REDIS_PORT:-6380}:6379"
     volumes:
       - redis_data:/data
+    command: >
+      sh -c '
+      echo "requirepass $${REDIS_PASSWORD:-}" > /etc/redis/redis.conf &&
+      echo "port 6379" >> /etc/redis/redis.conf &&
+      redis-server /etc/redis/redis.conf
+      '
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-alzawaj_redis_default_password}
     networks:
       - alzawaj-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "$${REDIS_PASSWORD:-alzawaj_redis_default_password}", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
