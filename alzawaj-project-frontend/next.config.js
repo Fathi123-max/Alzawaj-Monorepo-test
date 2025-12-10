@@ -99,13 +99,27 @@ const nextConfig = {
   // Output configuration for deployment
   output: "standalone",
 
-  // Disable static generation for problematic pages during build
+  // Ensure proper standalone output
+  outputFileTracingExcludes: {
+    "*": ["node_modules/**", ".next/cache/**", ".next/server/chunks/**"],
+  },
+
+  // Skip static generation for problematic pages during build
   trailingSlash: false,
   poweredByHeader: false,
 
   // Skip static generation for error pages during build
   generateBuildId: async () => {
     return "build";
+  },
+
+  // Add experimental appDir to handle global error properly
+  experimental: {
+    scrollRestoration: true,
+    serverComponentsExternalPackages: [
+      "@vercel/analytics",
+      "@vercel/speed-insights",
+    ],
   },
 
   // Strict mode for better development experience

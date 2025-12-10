@@ -2,6 +2,9 @@
 
 import { useEffect } from "react";
 
+// Force dynamic rendering to prevent SSR issues
+export const dynamic = "force-dynamic";
+
 export default function GlobalError({ error, reset }) {
   useEffect(() => {
     // Log the error to an error reporting service

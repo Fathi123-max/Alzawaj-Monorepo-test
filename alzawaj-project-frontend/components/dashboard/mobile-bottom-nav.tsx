@@ -150,7 +150,7 @@ export function MobileBottomNav({ navigation }: MobileBottomNavProps) {
           const active = isActive(item.href);
           return (
             <Link
-              key={item.name}
+              key={`mobile-nav-${item.name}`}
               href={item.href}
               className={`px-0 flex flex-col items-center justify-center py-1 sm:py-2 transition-colors relative ${
                 active
