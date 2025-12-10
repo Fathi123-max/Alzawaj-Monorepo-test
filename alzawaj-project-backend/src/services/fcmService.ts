@@ -3,16 +3,32 @@ import { getMessaging } from 'firebase-admin/messaging';
 import { IUser } from '../types';
 import { logger } from '../config/logger';
 
-// Initialize Firebase Admin SDK
-if (!admin.apps.length) {
+let messagingInitialized = false;
+let messagingService: admin.messaging.Messaging | null = null;
+
+// Initialize Firebase Admin SDK only when needed
+const initializeFirebase = () => {
+  if (messagingInitialized && messagingService) {
+    return messagingService;
+  }
+
   try {
+    // Check if Firebase app is already initialized
+    if (admin.apps.length > 0) {
+      messagingService = getMessaging();
+      messagingInitialized = true;
+      return messagingService;
+    }
+
     // For production use, set the path to your service account key file
     let serviceAccount: admin.ServiceAccount | null = null;
 
     if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
+      // Handle potential escaped newlines in the private key
+      const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n').replace(/\\r/g, '\r');
       serviceAccount = {
         projectId: process.env.FIREBASE_PROJECT_ID,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        privateKey: privateKey,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       };
     }
@@ -22,15 +38,26 @@ if (!admin.apps.length) {
         credential: admin.credential.cert(serviceAccount),
       });
     } else {
-      // Use application default credentials in production if available
-      admin.initializeApp();
+      // For environments that support default credentials (like Google Cloud)
+      // Check if we're in an environment that supports application default credentials
+      if (process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.NODE_ENV === 'production') {
+        admin.initializeApp();
+      } else {
+        // For local development without proper Firebase setup, log a warning
+        logger.warn('Firebase environment variables not set. FCM services will not be available.');
+        return null;
+      }
     }
+
+    messagingService = getMessaging();
+    messagingInitialized = true;
+    logger.info('Firebase Admin SDK initialized successfully');
+    return messagingService;
   } catch (error) {
     logger.error('Firebase Admin initialization error:', error);
+    return null;
   }
-}
-
-const messaging = getMessaging();
+};
 
 /**
  * Send push notification to a specific user/device
@@ -42,6 +69,13 @@ export const sendPushNotification = async (
   data?: Record<string, string>
 ): Promise<boolean> => {
   try {
+    const messaging = initializeFirebase();
+
+    if (!messaging) {
+      logger.error(`Firebase not initialized. Cannot send notification to user ${userId}`);
+      return false;
+    }
+
     // Fetch the user from the database
     const User = (await import('../models/User')).User;
     const user = await User.findById(userId);
@@ -82,6 +116,13 @@ export const sendMulticastNotification = async (
   data?: Record<string, string>
 ): Promise<{ successCount: number; failureCount: number }> => {
   try {
+    const messaging = initializeFirebase();
+
+    if (!messaging) {
+      logger.error('Firebase not initialized. Cannot send multicast notification');
+      return { successCount: 0, failureCount: userIds.length };
+    }
+
     // Fetch users from the database
     const User = (await import('../models/User')).User;
     const users = await User.find({ _id: { $in: userIds } });
@@ -135,6 +176,13 @@ export const sendTopicNotification = async (
   data?: Record<string, string>
 ): Promise<boolean> => {
   try {
+    const messaging = initializeFirebase();
+
+    if (!messaging) {
+      logger.error('Firebase not initialized. Cannot send topic notification');
+      return false;
+    }
+
     const message = {
       notification: {
         title,
@@ -158,6 +206,13 @@ export const sendTopicNotification = async (
  */
 export const subscribeToTopic = async (token: string, topic: string): Promise<boolean> => {
   try {
+    const messaging = initializeFirebase();
+
+    if (!messaging) {
+      logger.error('Firebase not initialized. Cannot subscribe to topic');
+      return false;
+    }
+
     const response = await messaging.subscribeToTopic([token], topic);
     logger.info(`Successfully subscribed to topic: ${response}`);
     return true;
@@ -172,6 +227,13 @@ export const subscribeToTopic = async (token: string, topic: string): Promise<bo
  */
 export const unsubscribeFromTopic = async (token: string, topic: string): Promise<boolean> => {
   try {
+    const messaging = initializeFirebase();
+
+    if (!messaging) {
+      logger.error('Firebase not initialized. Cannot unsubscribe from topic');
+      return false;
+    }
+
     const response = await messaging.unsubscribeFromTopic([token], topic);
     logger.info(`Successfully unsubscribed from topic: ${response}`);
     return true;
