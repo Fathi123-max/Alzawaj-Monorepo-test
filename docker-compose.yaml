@@ -53,7 +53,9 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=${PORT:-5000}
-      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/alzawaj}
+      - MONGODB_URI=${MONGODB_URI:-mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD}@mongodb:27017/alzawaj?authSource=admin}
+      - MONGO_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-admin}
+      - MONGO_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
       - CORS_ORIGIN=${FRONTEND_URL:-http://localhost:3000}
@@ -121,11 +123,13 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-admin}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
       - MONGO_INITDB_DATABASE=alzawaj
+    command: ["--auth"]
     networks:
       - alzawaj-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: |
+        test $$(mongosh --quiet --eval "try { db.adminCommand('ping'); exitCode=0; } catch(e) { exitCode=1; } db.auth(process.env.MONGO_INITDB_ROOT_USERNAME, process.env.MONGO_INITDB_ROOT_PASSWORD); db.adminCommand('ping'); exitCode=0; } catch(e) { exitCode=1; } exit(exitCode)") -eq 0
       interval: 30s
       timeout: 10s
       retries: 3
