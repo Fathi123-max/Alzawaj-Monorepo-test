@@ -16,7 +16,6 @@
     "test:e2e": "playwright test",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "prepare": "husky install",
     "analyze": "cross-env ANALYZE=true next build"
   },
   "dependencies": {
