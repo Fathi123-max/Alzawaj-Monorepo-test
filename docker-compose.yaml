@@ -141,6 +141,7 @@ services:
       - redis_data:/data
     command: >
       sh -c '
+      mkdir -p /etc/redis &&
       echo "requirepass $${REDIS_PASSWORD:-}" > /etc/redis/redis.conf &&
       echo "port 6379" >> /etc/redis/redis.conf &&
       redis-server /etc/redis/redis.conf
