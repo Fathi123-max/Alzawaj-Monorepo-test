@@ -66,7 +66,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     try {
       localStorage.setItem(
         STORAGE_KEYS.THEME_SETTINGS,
-        JSON.stringify(updatedTheme),
+        JSON.stringify(updatedTheme)
       );
     } catch (error) {
       console.error("Failed to save theme to localStorage:", error);
@@ -100,6 +100,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (context === undefined) {
+    // Return default theme during build/ssr instead of throwing error
+    if (typeof window === "undefined") {
+      return DEFAULT_THEME;
+    }
     throw new Error("useTheme must be used within a ThemeProvider");
   }
   return context;

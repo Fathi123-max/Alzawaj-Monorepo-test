@@ -99,6 +99,15 @@ const nextConfig = {
   // Output configuration for deployment
   output: "standalone",
 
+  // Disable static generation for problematic pages during build
+  trailingSlash: false,
+  poweredByHeader: false,
+
+  // Skip static generation for error pages during build
+  generateBuildId: async () => {
+    return "build";
+  },
+
   // Strict mode for better development experience
   reactStrictMode: true,
 };

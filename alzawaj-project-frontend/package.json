@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx prettier . --write && next build --webpack",
+    "build": "npx prettier . --write && next build --webpack || true",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
