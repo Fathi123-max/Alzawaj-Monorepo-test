@@ -2,6 +2,8 @@ import { Metadata } from "next";
 import { AuthLayout } from "@/components/auth/auth-layout";
 import { RegistrationWizard } from "@/components/auth/registration-wizard";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "إنشاء حساب جديد مجاني - الزواج السعيد",
   description:

@@ -66,7 +66,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     try {
       localStorage.setItem(
         STORAGE_KEYS.THEME_SETTINGS,
-        JSON.stringify(updatedTheme)
+        JSON.stringify(updatedTheme),
       );
     } catch (error) {
       console.error("Failed to save theme to localStorage:", error);

@@ -96,7 +96,7 @@ export const metadata: Metadata = {
   category: "Social",
   classification: "Islamic Marriage Platform",
   metadataBase: new URL(
-    process.env["NEXT_PUBLIC_APP_URL"] || "http://localhost:3000"
+    process.env["NEXT_PUBLIC_APP_URL"] || "http://localhost:3000",
   ),
   alternates: {
     canonical: "/",
@@ -267,7 +267,6 @@ export default function RootLayout({
       <head>
         {/* Preload Critical Local Fonts */}
         <link
-          key="preload-noto-regular"
           rel="preload"
           href="/fonts/Noto_Kufi_Arabic/static/NotoKufiArabic-Regular.ttf"
           as="font"
@@ -275,7 +274,6 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link
-          key="preload-noto-medium"
           rel="preload"
           href="/fonts/Noto_Kufi_Arabic/static/NotoKufiArabic-Medium.ttf"
           as="font"
@@ -283,7 +281,6 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link
-          key="preload-amiri-regular"
           rel="preload"
           href="/fonts/Amiri/Amiri-Regular.ttf"
           as="font"
@@ -292,7 +289,6 @@ export default function RootLayout({
         />
 
         <script
-          key="structured-data"
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(structuredData),

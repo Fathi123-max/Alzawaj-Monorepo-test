@@ -50,7 +50,14 @@ RUN chown nextjs:nodejs .next
 # Automatically leverage output traces to reduce image size
 # Copy standalone if it exists, otherwise create minimal structure
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./ || true
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static/ || true
+
+# Copy static files using a conditional approach
+RUN if [ -d "/app/.next/static" ]; then \
+      mkdir -p ./.next/static && \
+      cp -r /app/.next/static/* ./.next/static/ 2>/dev/null || true; \
+    else \
+      mkdir -p ./.next/static; \
+    fi
 
 # If standalone server.js doesn't exist, create a fallback
 RUN if [ ! -f "server.js" ]; then \

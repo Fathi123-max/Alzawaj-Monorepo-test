@@ -197,6 +197,9 @@ importers:
       "@typescript-eslint/parser":
         specifier: ^8.8.0
         version: 8.47.0(eslint@8.57.1)(typescript@5.9.3)
+      baseline-browser-mapping:
+        specifier: ^2.9.5
+        version: 2.9.5
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
@@ -5612,10 +5615,10 @@ packages:
       }
     dev: true
 
-  /baseline-browser-mapping@2.8.31:
+  /baseline-browser-mapping@2.9.5:
     resolution:
       {
-        integrity: sha512-a28v2eWrrRWPpJSzxc+mKwm0ZtVx/G8SepdQZDArnXYU/XS+IF6mp8aB/4E+hH1tyGCoDo3KlUCdlSxGDsRkAw==,
+        integrity: sha512-D5vIoztZOq1XM54LUdttJVc96ggEsIfju2JBvht06pSzpckp3C7HReun67Bghzrtdsq9XdMGbSSB3v3GhMNmAA==,
       }
     hasBin: true
 
@@ -5687,7 +5690,7 @@ packages:
     engines: { node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7 }
     hasBin: true
     dependencies:
-      baseline-browser-mapping: 2.8.31
+      baseline-browser-mapping: 2.9.5
       caniuse-lite: 1.0.30001757
       electron-to-chromium: 1.5.259
       node-releases: 2.0.27

@@ -14,6 +14,8 @@ import {
   MessageCircle,
 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "حولنا - من نحن ورؤيتنا في الزواج السعيد",
   description:

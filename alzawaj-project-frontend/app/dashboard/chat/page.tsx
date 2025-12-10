@@ -1,49 +1,7 @@
-"use client";
-
 import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { ChatList } from "@/components/chat/chat-list";
-import { ChatInterfaceRedesigned } from "@/components/chat/chat-interface-redesigned";
+import ChatPageClient from "./chat-client";
 
-function ChatPageContent() {
-  const searchParams = useSearchParams();
-  const requestId = searchParams.get("requestId");
-  const chatRoomId = searchParams.get("chatRoomId");
-
-  // If we have a chatRoomId, show the chat interface for that specific chat
-  if (chatRoomId) {
-    return (
-      <div className="h-full">
-        <ChatInterfaceRedesigned
-          chatRoomId={chatRoomId}
-          {...(requestId && { requestId })}
-        />
-      </div>
-    );
-  }
-
-  // Otherwise, show the regular chat list (all chats)
-  return (
-    <div className="h-full">
-      {/* Header - Mobile optimized */}
-      <div className="mb-4 sm:mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
-            المحادثات 💬
-          </h1>
-          <div className="flex sm:hidden">
-            {/* Mobile action buttons can be added here */}
-          </div>
-        </div>
-        <p className="text-sm sm:text-base text-gray-600">
-          تابع محادثاتك النشطة مع المهتمين
-        </p>
-      </div>
-
-      <ChatList />
-    </div>
-  );
-}
+export const dynamic = "force-dynamic";
 
 export default function ChatPage() {
   return (
@@ -54,7 +12,7 @@ export default function ChatPage() {
         </div>
       }
     >
-      <ChatPageContent />
+      <ChatPageClient />
     </Suspense>
   );
 }

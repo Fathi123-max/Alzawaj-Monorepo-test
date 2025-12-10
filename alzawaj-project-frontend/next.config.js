@@ -1,13 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable experimental features for better performance
-  experimental: {
-    // optimizeCss: true, // Disabled due to missing critters dependency
-    scrollRestoration: true,
-  },
-
-  // Output file tracing root for Docker builds
-  outputFileTracingRoot: ".",
+  // Output file tracing root for Docker builds (absolute path)
+  outputFileTracingRoot: process.cwd(),
 
   // Performance optimizations
   compiler: {
@@ -104,23 +98,32 @@ const nextConfig = {
     "*": ["node_modules/**", ".next/cache/**", ".next/server/chunks/**"],
   },
 
-  // Skip static generation for problematic pages during build
-  trailingSlash: false,
-  poweredByHeader: false,
-
-  // Skip static generation for error pages during build
+  // Skip static generation for all pages during build to avoid SSR issues
   generateBuildId: async () => {
     return "build";
   },
 
-  // Add experimental appDir to handle global error properly
+  // Force dynamic rendering for all pages to avoid SSR issues
+  trailingSlash: false,
+  poweredByHeader: false,
+
+  // Disable static generation for all pages during build
+  output: "standalone",
+
+  // Enable experimental features for better performance
   experimental: {
     scrollRestoration: true,
+    // Force all pages to be dynamic
     serverComponentsExternalPackages: [
       "@vercel/analytics",
       "@vercel/speed-insights",
     ],
+    // Disable static optimization
+    isrMemoryCacheSize: 0,
   },
+
+  // External packages for server components
+  serverExternalPackages: ["@vercel/analytics", "@vercel/speed-insights"],
 
   // Strict mode for better development experience
   reactStrictMode: true,

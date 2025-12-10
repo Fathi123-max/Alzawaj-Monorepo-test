@@ -15,6 +15,8 @@ import { formatTimeAgo } from "@/lib/utils";
 import { useNotifications } from "@/providers/notification-provider";
 import { useRouter } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default function NotificationsPage() {
   const {
     notifications,

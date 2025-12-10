@@ -13,6 +13,8 @@ export const metadata: Metadata = {
     "نصائح الزواج الإسلامي, توجيهات الزواج, الزواج في الإسلام, فتاوى الزواج, أحكام الزواج",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function TipsGuidancePage() {
   return (
     <PublicLayout>

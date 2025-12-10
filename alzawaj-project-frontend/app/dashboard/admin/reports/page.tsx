@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: "عرض وإدارة تقارير المستخدمين",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function AdminReportsPage() {
   return (
     <div className="container mx-auto p-4">

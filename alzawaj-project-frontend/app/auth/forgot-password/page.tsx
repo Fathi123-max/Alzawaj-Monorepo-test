@@ -2,6 +2,8 @@ import { Metadata } from "next";
 import { AuthContainer } from "@/components/auth/auth-container";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "نسيت كلمة المرور",
   description: "أعد تعيين كلمة المرور الخاصة بك",

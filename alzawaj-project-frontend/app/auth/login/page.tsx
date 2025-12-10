@@ -2,6 +2,8 @@ import { Metadata } from "next";
 import { AuthContainer } from "@/components/auth/auth-container";
 import { LoginForm } from "@/components/auth/login-form";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "تسجيل الدخول - الزواج السعيد",
   description:
