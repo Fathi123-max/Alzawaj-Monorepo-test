@@ -1233,6 +1233,13 @@ profileSchema.methods.getMissingFields = function (this: IProfile): string[] {
 // Static method to create text index
 profileSchema.statics.createSearchIndex = async function () {
   try {
+    // Only attempt to create the index if we're in an environment that allows it
+    // Skip in deployment environments where proper MongoDB permissions might not be available
+    if (process.env.NODE_ENV === 'production' && !process.env.ALLOW_INDEX_CREATION) {
+      console.log("Skipping search index creation in production environment");
+      return;
+    }
+
     // First, drop the existing index if it exists
     try {
       await this.collection.dropIndex("search_text_index");
@@ -1278,7 +1285,12 @@ profileSchema.statics.createSearchIndex = async function () {
 
     console.log("Search text index created successfully");
   } catch (error: any) {
-    console.error("Error creating search text index:", error);
+    if (error.code === 13) { // Unauthorized error code
+      console.warn("MongoDB authentication not sufficient to create text indexes. Index creation skipped.");
+      console.warn("This may cause reduced search functionality.");
+    } else {
+      console.error("Error creating search text index:", error);
+    }
   }
 };
 

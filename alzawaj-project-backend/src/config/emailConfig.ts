@@ -11,18 +11,22 @@ const transporter: Transporter = nodemailer.createTransport({
     pass: process.env.SMTP_PASS || "", // Your email password or app password
   },
   // Add timeout settings to prevent hanging
-  connectionTimeout: 60000, // 60 seconds
-  greetingTimeout: 30000, // 30 seconds
-  socketTimeout: 60000, // 60 seconds
+  connectionTimeout: 30000, // 30 seconds
+  greetingTimeout: 15000, // 15 seconds
+  socketTimeout: 30000, // 30 seconds
 });
 
-// Verify the transporter configuration
-transporter.verify((error: Error | null, success: boolean) => {
-  if (error) {
-    console.error("Email configuration error:", error);
-  } else {
-    console.log("Email server is ready to send messages");
-  }
-});
+// Verify the transporter configuration only if SMTP credentials are provided
+if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+  transporter.verify((error: Error | null, success: boolean) => {
+    if (error) {
+      console.error("Email configuration error:", error);
+    } else {
+      console.log("Email server is ready to send messages");
+    }
+  });
+} else {
+  console.log("Email configuration not provided. Email services will be disabled.");
+}
 
 export default transporter;
