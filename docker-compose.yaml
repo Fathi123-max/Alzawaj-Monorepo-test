@@ -53,7 +53,7 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=${PORT:-5000}
-      - MONGODB_URI=${MONGODB_URI:-mongodb://alzawaj_user:${MONGO_APP_PASSWORD:-default_password_for_dev}@mongodb:27017/alzawaj}
+      - MONGODB_URI=${MONGODB_URI:-mongodb://alzawaj_user:${MONGO_APP_PASSWORD:-default_password_for_dev}@mongodb:27017/alzawaj?authSource=admin}
       - MONGO_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-admin}
       - MONGO_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
       - MONGO_APP_PASSWORD=${MONGO_APP_PASSWORD:-default_password_for_dev}
@@ -119,7 +119,7 @@ services:
       - "${MONGODB_PORT:-27017}:27017"
     volumes:
       - mongodb_data:/data/db
-      - ./mongodb-init:/docker-entrypoint-initdb.d
+      - ./mongodb-init:/docker-entrypoint-initdb.d:ro
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-admin}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
