@@ -1,4 +1,4 @@
-import { Document, ObjectId } from "mongoose";
+import { Document, ObjectId, Types } from "mongoose";
 import { Request } from "express";
 import type { IUser } from "../models/User";
 import type { IProfile } from "../models/Profile";
@@ -94,7 +94,7 @@ export type MeetingType =
 
 // Base interface for all documents
 export interface BaseDocument extends Document {
-  _id: ObjectId;
+  _id: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
