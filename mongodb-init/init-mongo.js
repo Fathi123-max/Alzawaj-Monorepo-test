@@ -1,14 +1,21 @@
 // MongoDB initialization script
 // This script runs once when MongoDB starts for the first time
+// This creates the application user in the alzawaj database for proper authentication
 
-// Create a dedicated user for the application with readWrite permissions in the alzawaj database
+// Switch to the alzawaj database
 db = db.getSiblingDB('alzawaj');
+
+// Create a dedicated user for the application with readWrite permissions
 db.createUser({
   user: 'alzawaj_user',
   pwd: 'alzawaj_password', // Using fixed password that matches the .env file
   roles: [
     {
       role: 'readWrite',
+      db: 'alzawaj'
+    },
+    {
+      role: 'dbAdmin',
       db: 'alzawaj'
     }
   ]
