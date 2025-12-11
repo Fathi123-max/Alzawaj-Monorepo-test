@@ -1,6 +1,6 @@
 FROM node:20-alpine AS base
 # Install pnpm globally for all stages
-RUN npm install -g pnpm@8.15.8
+RUN npm install -g pnpm@10.11.0
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -18,8 +18,11 @@ COPY package.json package-lock.json* pnpm-lock.yaml* ./
 RUN pnpm install --ignore-scripts
 COPY . .
 
-# Build application for production
+# Build application for production using webpack instead of Turbopack
 ENV NODE_ENV=production
+# Force Next.js to use webpack instead of Turbopack
+ENV NEXT_PRIVATE_LOCAL_WEBPACK=1
+ENV NEXT_USE_LOCAL_WEBPACK=1
 RUN pnpm run build
 
 # Production image, copy all the files and run next

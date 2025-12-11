@@ -42,9 +42,8 @@ export function SearchResults({ onSendRequest }: SearchResultsProps) {
     setLoading(true);
     try {
       // Using mock search API for development/testing
-      const { mockSearchApi } = await import(
-        "@/lib/static-data/search-profiles"
-      );
+      const { mockSearchApi } =
+        await import("@/lib/static-data/search-profiles");
 
       const filters = Object.fromEntries(searchParams.entries());
 
@@ -111,9 +110,8 @@ export function SearchResults({ onSendRequest }: SearchResultsProps) {
   const handleSendRequest = async (profileId: string, message: string) => {
     try {
       // Using mock API for development/testing
-      const { mockRequestsApi } = await import(
-        "@/lib/static-data/marriage-requests"
-      );
+      const { mockRequestsApi } =
+        await import("@/lib/static-data/marriage-requests");
 
       // Simulate sending a request
       await mockRequestsApi.respondToRequest({

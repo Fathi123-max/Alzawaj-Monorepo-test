@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/toaster";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+// import { Analytics } from "@vercel/analytics/react";
+// import { SpeedInsights } from "@vercel/speed-insights/next";
 import "@/global.css";
 
 // Optimized local font loading for Arabic text
@@ -300,8 +300,8 @@ export default function RootLayout({
           {children}
           <Toaster />
         </Providers>
-        <Analytics />
-        <SpeedInsights />
+        {/* <Analytics /> */}
+        {/* <SpeedInsights /> */}
       </body>
     </html>
   );

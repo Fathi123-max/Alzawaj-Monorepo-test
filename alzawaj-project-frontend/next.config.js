@@ -8,6 +8,11 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === "production",
   },
 
+  // Enable experimental features without invalid keys
+  experimental: {
+    scrollRestoration: true,
+  },
+
   // Image optimization for profile pictures
   images: {
     remotePatterns: [
@@ -35,7 +40,7 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     // Add allowed qualities to fix image quality warnings
-    qualities: [75, 100],
+     // qualities: [75, 100],
   },
 
   // Security headers
@@ -95,7 +100,7 @@ const nextConfig = {
 
   // Ensure proper standalone output
   outputFileTracingExcludes: {
-    "*": ["node_modules/**", ".next/cache/**", ".next/server/chunks/**"],
+    "*": ["node_modules/**", ".next/cache/**"], // Removed .next/server/chunks/** to ensure all chunks are included
   },
 
   // Skip static generation for all pages during build to avoid SSR issues
@@ -110,19 +115,7 @@ const nextConfig = {
   // Disable static generation for all pages during build
   output: "standalone",
 
-  // Enable experimental features for better performance
-  experimental: {
-    scrollRestoration: true,
-    // Force all pages to be dynamic
-    serverComponentsExternalPackages: [
-      "@vercel/analytics",
-      "@vercel/speed-insights",
-    ],
-    // Disable static optimization
-    isrMemoryCacheSize: 0,
-  },
-
-  // External packages for server components
+  // Server components external packages
   serverExternalPackages: ["@vercel/analytics", "@vercel/speed-insights"],
 
   // Strict mode for better development experience

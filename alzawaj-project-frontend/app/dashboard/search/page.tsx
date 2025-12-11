@@ -206,9 +206,9 @@ const convertToMockProfile = (apiProfile: Profile): MockProfile => {
     profilePicture: profilePicture,
     verified: Boolean(
       (apiProfile as any).verification?.isVerified ||
-        apiProfile.isApproved ||
-        (apiProfile as any).verified ||
-        false,
+      apiProfile.isApproved ||
+      (apiProfile as any).verified ||
+      false,
     ),
     isOnline: Boolean((apiProfile as any).isOnline || false),
     lastActive: (apiProfile as any).lastActive || "منذ ساعة",
