@@ -191,11 +191,13 @@ const Phone: React.FC<PhoneProps> = ({
   defaultCountry,
 }) => {
   // Ensure the default country exists in our filtered list (case insensitive)
-  const safeDefaultCountry = countries.find(
+  const foundCountry = countries.find(
     (c) => c[1]?.toLowerCase() === defaultCountry?.toLowerCase(),
-  )
-    ? defaultCountry
-    : ("eg" as CountryIso2);
+  );
+
+  const safeDefaultCountry = (
+    foundCountry ? foundCountry[1] : "eg"
+  ) as CountryIso2;
 
   // Wrap usePhoneInput in try-catch to handle any library errors
   let phoneHookResult;

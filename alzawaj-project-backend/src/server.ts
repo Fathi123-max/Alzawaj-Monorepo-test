@@ -1,4 +1,4 @@
-import express, { Express } from "express";
+import express, { Express, Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 import cors, { CorsOptions } from "cors";
 import helmet from "helmet";
@@ -87,9 +87,17 @@ app.use(
   }),
 );
 
+
+// Add a middleware to set the Access-Control-Allow-Private-Network header
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('Access-Control-Allow-Private-Network', 'true');
+  next();
+});
+
 // CORS configuration
+const allowedOrigins = (process.env.CORS_ORIGIN?.split(",") || ["http://localhost:3000", "http://116.203.98.236:3000"]);
 const corsOptions: CorsOptions = {
-  origin: process.env.CORS_ORIGIN?.split(",") || "http://localhost:3000",
+  origin: allowedOrigins,
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "Accept-Language"],
