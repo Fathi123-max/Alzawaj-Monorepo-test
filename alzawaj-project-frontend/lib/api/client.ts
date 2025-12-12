@@ -8,7 +8,7 @@ const api: AxiosInstance = axios.create({
   baseURL:
     process.env["NEXT_PUBLIC_API_BASE_URL"] ||
     (typeof window !== "undefined" && window.location.hostname === "localhost"
-      ? "http://localhost:3000/api"
+      ? "http://localhost:5000/api"  // Backend runs on port 5001 by default
       : "https://alzawaj-backend-staging.onrender.com/api"),
   timeout: 60000,
   headers: {

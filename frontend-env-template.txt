@@ -3,6 +3,7 @@
 
 NODE_ENV=production
 NEXT_PUBLIC_API_URL=https://api.your-domain.com
+NEXT_PUBLIC_API_BASE_URL=http://localhost:5000/api  # Backend API URL
 NEXT_PUBLIC_APP_URL=https://your-domain.com
 NEXT_PUBLIC_APP_NAME=Alzawaj Platform
 NEXT_PUBLIC_APP_DESCRIPTION=Islamic Marriage Platform
