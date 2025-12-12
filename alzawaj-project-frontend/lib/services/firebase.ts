@@ -1,4 +1,4 @@
-import { initializeApp, getApps } from "firebase/app";
+import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import {
   getMessaging,
   getToken,
@@ -20,7 +20,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase app only on the client
-let app;
+let app: FirebaseApp | null = null;
 let messaging: any;
 
 // Check if Firebase Messaging is supported in the current environment
@@ -30,7 +30,11 @@ const isFirebaseMessagingSupported = (): boolean => {
   }
 
   // Check if required APIs are available
-  if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+  if (
+    !("serviceWorker" in navigator) ||
+    !("PushManager" in window) ||
+    !("Notification" in window)
+  ) {
     return false; // Required APIs not available
   }
 
@@ -44,7 +48,13 @@ const isFirebaseMessagingSupported = (): boolean => {
 
 if (typeof window !== "undefined" && isFirebaseMessagingSupported()) {
   // Initialize Firebase app only if not already initialized
-  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+  const existingApps = getApps();
+  if (existingApps.length === 0) {
+    app = initializeApp(firebaseConfig);
+  } else {
+    // Use type assertion since we've confirmed the array has items
+    app = existingApps[0]!;
+  }
 
   // Initialize Firebase Messaging only if supported
   messaging = getMessaging(app);
@@ -59,8 +69,15 @@ if (typeof window !== "undefined" && isFirebaseMessagingSupported()) {
  */
 export const getFCMToken = async (): Promise<string | null> => {
   // Check if we're in a browser environment and if Firebase is supported
-  if (typeof window === "undefined" || !app || !messaging || !isFirebaseMessagingSupported()) {
-    console.log("Firebase not initialized on server or missing app/messaging, or browser doesn't support required APIs");
+  if (
+    typeof window === "undefined" ||
+    !app ||
+    !messaging ||
+    !isFirebaseMessagingSupported()
+  ) {
+    console.log(
+      "Firebase not initialized on server or missing app/messaging, or browser doesn't support required APIs",
+    );
     return null;
   }
 
@@ -97,7 +114,7 @@ export const getFCMToken = async (): Promise<string | null> => {
             const serviceWorker = registration.installing;
             if (serviceWorker) {
               // Check if serviceWorker has addEventListener method (fix for the error)
-              if (typeof serviceWorker.addEventListener === 'function') {
+              if (typeof serviceWorker.addEventListener === "function") {
                 serviceWorker.addEventListener("statechange", (event) => {
                   const target = event.target as ServiceWorker;
                   if (target.state === "activated") {
@@ -106,7 +123,9 @@ export const getFCMToken = async (): Promise<string | null> => {
                   }
                 });
               } else {
-                console.warn("Service worker does not have addEventListener method");
+                console.warn(
+                  "Service worker does not have addEventListener method",
+                );
                 resolve(void 0);
               }
             } else {
@@ -177,8 +196,15 @@ export const getFCMToken = async (): Promise<string | null> => {
  */
 export const deleteFCMToken = async (): Promise<boolean> => {
   // Check if we're in a browser environment and if Firebase is supported
-  if (typeof window === "undefined" || !app || !messaging || !isFirebaseMessagingSupported()) {
-    console.log("Firebase not initialized on server or missing app/messaging, or browser doesn't support required APIs");
+  if (
+    typeof window === "undefined" ||
+    !app ||
+    !messaging ||
+    !isFirebaseMessagingSupported()
+  ) {
+    console.log(
+      "Firebase not initialized on server or missing app/messaging, or browser doesn't support required APIs",
+    );
     return false;
   }
 
@@ -196,8 +222,15 @@ export const deleteFCMToken = async (): Promise<boolean> => {
  */
 export const onForegroundMessage = (): Promise<any> => {
   // Check if we're in a browser environment and if Firebase is supported
-  if (typeof window === "undefined" || !app || !messaging || !isFirebaseMessagingSupported()) {
-    console.log("Firebase not initialized on server or missing app/messaging, or browser doesn't support required APIs");
+  if (
+    typeof window === "undefined" ||
+    !app ||
+    !messaging ||
+    !isFirebaseMessagingSupported()
+  ) {
+    console.log(
+      "Firebase not initialized on server or missing app/messaging, or browser doesn't support required APIs",
+    );
     return Promise.resolve(null);
   }
 

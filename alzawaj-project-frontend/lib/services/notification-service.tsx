@@ -134,7 +134,8 @@ export const listenForForegroundMessages = async (): Promise<void> => {
   }
 
   try {
-    const { getMessaging, onMessage, isSupported } = await import("firebase/messaging");
+    const { getMessaging, onMessage, isSupported } =
+      await import("firebase/messaging");
 
     // Check if Firebase Messaging is supported in the current environment
     const messagingSupported = await isSupported();
