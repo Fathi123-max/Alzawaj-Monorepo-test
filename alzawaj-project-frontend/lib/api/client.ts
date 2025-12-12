@@ -10,8 +10,8 @@ const api: AxiosInstance = axios.create({
     (typeof window !== "undefined" &&
       (window.location.hostname === "localhost" ||
         window.location.hostname === "127.0.0.1"))
-      ? "http://localhost:5001/api" // Backend runs on port 5001 in local development
-      : `${window.location.protocol}//${window.location.hostname}:5000/api`, // Backend runs on same host, port 5000 in deployment
+      ? "http://116.203.98.236:5000" // Backend runs on port 5001 in local development
+      : `${window.location.protocol}//${window.location.hostname}:5000`, // Backend runs on same host, port 5000 in deployment
   timeout: 60000,
   headers: {
     "Content-Type": "application/json",

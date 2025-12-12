@@ -108,8 +108,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
       // Determine the proper socket URL based on the NEXT_PUBLIC_BACKEND_URL
       const backendUrl =
-        process.env["NEXT_PUBLIC_BACKEND_URL"] || "http://localhost:5001";
-      let socketUrl = "http://localhost:5001"; // default fallback
+        process.env["NEXT_PUBLIC_BACKEND_URL"] || "http://116.203.98.236:5001";
+      let socketUrl = "http://116.203.98.236:5001"; // default fallback
 
       if (backendUrl) {
         // Extract the socket URL from backend URL
