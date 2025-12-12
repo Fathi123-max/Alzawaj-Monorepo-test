@@ -10,14 +10,23 @@ import { useNotifications } from "@/providers/notification-provider";
 export const requestNotificationPermission = async (): Promise<
   string | null
 > => {
-  // Check if we're in a browser environment
+  // Check if we're in a browser environment and if Firebase is supported
   if (typeof window === "undefined" || !app) {
     console.log("Firebase not initialized on server or missing app");
     return null;
   }
 
+  // Import Firebase messaging dynamically to ensure it's only imported in browser environment
+  const { getMessaging, isSupported } = await import("firebase/messaging");
+
+  // Check if Firebase Messaging is supported in the current environment
+  const messagingSupported = await isSupported();
+  if (!messagingSupported) {
+    console.log("Firebase Messaging is not supported in this browser");
+    return null;
+  }
+
   try {
-    const { getMessaging, getToken } = await import("firebase/messaging");
     // Initialize messaging only in browser
     const messaging = getMessaging(app);
 
@@ -125,7 +134,15 @@ export const listenForForegroundMessages = async (): Promise<void> => {
   }
 
   try {
-    const { getMessaging, onMessage } = await import("firebase/messaging");
+    const { getMessaging, onMessage, isSupported } = await import("firebase/messaging");
+
+    // Check if Firebase Messaging is supported in the current environment
+    const messagingSupported = await isSupported();
+    if (!messagingSupported) {
+      console.log("Firebase Messaging is not supported in this browser");
+      return;
+    }
+
     const messaging = getMessaging(app);
     onMessage(messaging, (payload: MessagePayload) => {
       console.log("Foreground message received: ", payload);
