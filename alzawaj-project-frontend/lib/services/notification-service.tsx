@@ -1,11 +1,6 @@
 // lib/services/notificationService.tsx (frontend)
 import { useEffect } from "react";
-import {
-  getMessaging,
-  getToken,
-  onMessage,
-  MessagePayload,
-} from "firebase/messaging";
+import type { MessagePayload } from "firebase/messaging";
 import { app } from "./firebase"; // Your Firebase app configuration
 import { useNotifications } from "@/providers/notification-provider";
 
@@ -22,6 +17,7 @@ export const requestNotificationPermission = async (): Promise<
   }
 
   try {
+    const { getMessaging, getToken } = await import("firebase/messaging");
     // Initialize messaging only in browser
     const messaging = getMessaging(app);
 
@@ -121,7 +117,7 @@ const registerTokenWithBackend = async (token: string): Promise<void> => {
 /**
  * Listen for foreground messages
  */
-export const listenForForegroundMessages = (): void => {
+export const listenForForegroundMessages = async (): Promise<void> => {
   // Check if we're in a browser environment
   if (typeof window === "undefined" || !app) {
     console.log("Firebase not initialized on server or missing app");
@@ -129,6 +125,7 @@ export const listenForForegroundMessages = (): void => {
   }
 
   try {
+    const { getMessaging, onMessage } = await import("firebase/messaging");
     const messaging = getMessaging(app);
     onMessage(messaging, (payload: MessagePayload) => {
       console.log("Foreground message received: ", payload);
@@ -174,7 +171,7 @@ export const useNotificationSetup = (): void => {
       const token = await requestNotificationPermission();
 
       // Set up foreground message listener
-      listenForForegroundMessages();
+      await listenForForegroundMessages();
 
       console.log("Notification setup complete, token:", token);
     };
