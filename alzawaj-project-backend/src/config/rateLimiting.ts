@@ -25,6 +25,11 @@ try {
         : {}),
     });
     redisClient.connect();
+    
+    // Mask password in Redis URL for logging
+    const maskedRedisUrl = process.env.REDIS_URL?.replace(/:([^:@]+)@/, ":****@") || "URL not set";
+    logger.info(`Redis connecting to: ${maskedRedisUrl}`);
+    
     logger.info("Redis connected for rate limiting");
   }
 } catch (error) {

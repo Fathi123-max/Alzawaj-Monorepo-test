@@ -18,7 +18,12 @@ export const connectDB = async (): Promise<void> => {
       throw new Error("MongoDB URI is not defined in environment variables");
     }
 
-    logger.info("Attempting to connect to MongoDB...");
+    // Mask password in URI for logging
+    const maskedURI = mongoURI.replace(
+      /:([^:@]+)@/,
+      ":****@"
+    );
+    logger.info(`Attempting to connect to MongoDB with URI: ${maskedURI}`);
 
     // Modern Mongoose connection options
     const options = {
