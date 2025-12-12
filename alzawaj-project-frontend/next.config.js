@@ -108,13 +108,6 @@ const nextConfig = {
     return "build";
   },
 
-  // Force dynamic rendering for all pages to avoid SSR issues
-  trailingSlash: false,
-  poweredByHeader: false,
-
-  // Disable static generation for all pages during build
-  output: "standalone",
-
   // Server components external packages
   serverExternalPackages: ["@vercel/analytics", "@vercel/speed-insights"],
 
