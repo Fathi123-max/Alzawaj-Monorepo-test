@@ -872,7 +872,7 @@ export const quickSearch = async (
         }
 
         // Check if the profile is for the searcher themselves
-        if (profile.userId.toString() === userId) {
+        if (profile.userId.toString() === userId?.toString()) {
           return false;
         }
 

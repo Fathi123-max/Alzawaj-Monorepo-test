@@ -1,7 +1,7 @@
 import rateLimit from "express-rate-limit";
 import slowDown from "express-slow-down";
 import RedisStore from "rate-limit-redis";
-import redis from "redis";
+import * as redis from "redis";
 import { Request, Response } from "express";
 import logger from "./logger";
 
@@ -16,30 +16,34 @@ interface RateLimitMessage {
 // Redis client for rate limiting (optional, falls back to memory)
 let redisClient: redis.RedisClientType | undefined;
 
-try {
-  if (process.env.REDIS_URL && process.env.NODE_ENV !== "test") {
-    redisClient = redis.createClient({
-      url: process.env.REDIS_URL,
-      ...(process.env.REDIS_PASSWORD
-        ? { password: process.env.REDIS_PASSWORD }
-        : {}),
-    });
-    redisClient.connect();
-    
-    // Mask password in Redis URL for logging
-    const maskedRedisUrl = process.env.REDIS_URL?.replace(/:([^:@]+)@/, ":****@") || "URL not set";
-    logger.info(`Redis connecting to: ${maskedRedisUrl}`);
-    
-    logger.info("Redis connected for rate limiting");
+(async () => {
+  try {
+    if (process.env.REDIS_URL && process.env.NODE_ENV !== "test") {
+      redisClient = redis.createClient({
+        url: process.env.REDIS_URL,
+        ...(process.env.REDIS_PASSWORD
+          ? { password: process.env.REDIS_PASSWORD }
+          : {}),
+      });
+
+      // Mask password in Redis URL for logging
+      const maskedRedisUrl = process.env.REDIS_URL?.replace(/:([^:@]+)@/, ":****@") || "URL not set";
+      logger.info(`Redis connecting to: ${maskedRedisUrl}`);
+
+      await redisClient.connect();
+      
+      logger.info("Redis connected for rate limiting");
+    }
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown Redis error";
+    logger.warn(
+      "Redis not available for rate limiting, using memory store:",
+      errorMessage,
+    );
+    redisClient = undefined; // Fallback to memory
   }
-} catch (error) {
-  const errorMessage =
-    error instanceof Error ? error.message : "Unknown Redis error";
-  logger.warn(
-    "Redis not available for rate limiting, using memory store:",
-    errorMessage,
-  );
-}
+})();
 
 // Rate limit message function
 const createRateLimitMessage = (

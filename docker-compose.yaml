@@ -59,8 +59,7 @@ services:
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
       - CORS_ORIGIN=${FRONTEND_URL:-http://localhost:3000}
       - CORS_CREDENTIALS=${CORS_CREDENTIALS:-true}
-      - REDIS_URL=${REDIS_URL:-redis://:${REDIS_PASSWORD:-alzawaj_redis_default_password}@redis:6379}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-alzawaj_redis_default_password}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
       - BCRYPT_ROUNDS=${BCRYPT_ROUNDS:-12}
       - LOG_LEVEL=${LOG_LEVEL:-info}
@@ -141,15 +140,14 @@ services:
       - "${REDIS_PORT:-6380}:6379"
     volumes:
       - redis_data:/data
-    command: >
-      sh -c ' mkdir -p /etc/redis && echo "requirepass $${REDIS_PASSWORD:-}" > /etc/redis/redis.conf && echo "port 6379" >> /etc/redis/redis.conf && redis-server /etc/redis/redis.conf '
-    environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-alzawaj_redis_default_password}
+    command: [ "redis-server" ]
+    # environment:
+    #   - REDIS_PASSWORD=${REDIS_PASSWORD:-alzawaj_redis_default_password}
     networks:
       - alzawaj-network
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "redis-cli", "-a", "$${REDIS_PASSWORD:-alzawaj_redis_default_password}", "ping" ]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 30s
       timeout: 10s
       retries: 3
