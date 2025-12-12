@@ -37,7 +37,7 @@ services:
     restart: unless-stopped
     working_dir: /app
     healthcheck:
-      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3000/ || curl -f http://localhost:3000/"]
+      test: [ "CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3000/ || curl -f http://localhost:3000/" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -54,10 +54,7 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=${PORT:-5000}
-      - MONGODB_URI=${MONGODB_URI:-mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD:-alzawaj_password}@mongodb:27017/alzawaj?authSource=admin}
-      - MONGO_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-admin}
-      - MONGO_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-alzawaj_password}
-      - MONGO_APP_PASSWORD=${MONGO_APP_PASSWORD:-alzawaj_password}
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/alzawaj}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
       - CORS_ORIGIN=${FRONTEND_URL:-http://localhost:3000}
@@ -108,7 +105,7 @@ services:
       - alzawaj-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"]
+      test: [ "CMD", "node", "-e", "require('http').get('http://localhost:5000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -124,15 +121,13 @@ services:
       - mongodb_data:/data/db
       - ./mongodb-init:/docker-entrypoint-initdb.d:ro
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-admin}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-alzawaj_password}
       - MONGO_INITDB_DATABASE=alzawaj
-    command: ["mongod", "--auth"]
+    # command: ["mongod", "--auth"] # Auth disabled
     networks:
       - alzawaj-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -147,19 +142,14 @@ services:
     volumes:
       - redis_data:/data
     command: >
-      sh -c '
-      mkdir -p /etc/redis &&
-      echo "requirepass $${REDIS_PASSWORD:-}" > /etc/redis/redis.conf &&
-      echo "port 6379" >> /etc/redis/redis.conf &&
-      redis-server /etc/redis/redis.conf
-      '
+      sh -c ' mkdir -p /etc/redis && echo "requirepass $${REDIS_PASSWORD:-}" > /etc/redis/redis.conf && echo "port 6379" >> /etc/redis/redis.conf && redis-server /etc/redis/redis.conf '
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-alzawaj_redis_default_password}
     networks:
       - alzawaj-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "$${REDIS_PASSWORD:-alzawaj_redis_default_password}", "ping"]
+      test: [ "CMD", "redis-cli", "-a", "$${REDIS_PASSWORD:-alzawaj_redis_default_password}", "ping" ]
       interval: 30s
       timeout: 10s
       retries: 3
