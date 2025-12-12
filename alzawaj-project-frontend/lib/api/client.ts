@@ -7,9 +7,14 @@ import { showToast } from "@/components/ui/toaster";
 const api: AxiosInstance = axios.create({
   baseURL:
     process.env["NEXT_PUBLIC_API_BASE_URL"] ||
-    (typeof window !== "undefined" && window.location.hostname === "localhost"
-      ? "http://localhost:5000/api"  // Backend runs on port 5001 by default
-      : "https://alzawaj-backend-staging.onrender.com/api"),
+    (typeof window !== "undefined" &&
+     (window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      window.location.hostname.match(/^192\.168\./) ||
+      window.location.hostname.match(/^10\./) ||
+      window.location.hostname.match(/^172\.(1[6-9]|2[0-9]|3[01])\./))
+      ? "http://localhost:5001/api"  // Backend runs on port 5001 in development
+      : `${window.location.protocol}//${window.location.hostname}:5000/api`), // Backend runs on port 5000 in production
   timeout: 60000,
   headers: {
     "Content-Type": "application/json",
