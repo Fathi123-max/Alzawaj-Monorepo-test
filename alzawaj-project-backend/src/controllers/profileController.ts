@@ -1308,7 +1308,7 @@ export const getPublicProfile = async (
     }
 
     // Record profile view
-    if (viewerId && viewerId.toString() !== profile.userId.toString()) {
+    if (viewerId && viewerId.toString() !== profile.userId._id.toString()) {
       await profile.recordView(viewerId.toString());
     }
 

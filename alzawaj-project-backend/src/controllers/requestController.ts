@@ -54,7 +54,7 @@ export const sendMarriageRequest = async (
       return;
     }
 
-    if (senderId === receiverId) {
+    if (senderId?.toString() === receiverId) {
       res.status(400).json(createErrorResponse("لا يمكن إرسال طلب زواج لنفسك"));
       return;
     }
@@ -85,7 +85,7 @@ export const sendMarriageRequest = async (
 
     // Check if receiver can receive requests from sender
     const canReceiveRequest = await receiverProfile.canReceiveRequestFrom(
-      senderId as string
+      senderId?.toString() || ""
     );
     
     console.log('[sendMarriageRequest] Receiver check:', {
@@ -575,7 +575,7 @@ export const rejectRequest = async (
     }
 
     // Check if user is the receiver
-    if (marriageRequest.receiver._id.toString() !== userId) {
+    if (marriageRequest.receiver._id.toString() !== userId?.toString()) {
       res
         .status(403)
         .json(createErrorResponse("ليس لديك صلاحية لرفض هذا الطلب"));
@@ -634,7 +634,7 @@ export const cancelRequest = async (
     }
 
     // Check if user is the sender
-    if (marriageRequest.sender.toString() !== userId) {
+    if (marriageRequest.sender.toString() !== userId?.toString()) {
       res
         .status(403)
         .json(createErrorResponse("ليس لديك صلاحية لإلغاء هذا الطلب"));
@@ -678,7 +678,7 @@ export const markAsRead = async (
     }
 
     // Check if user is the receiver
-    if (marriageRequest.receiver.toString() !== userId) {
+    if (marriageRequest.receiver.toString() !== userId?.toString()) {
       res
         .status(403)
         .json(createErrorResponse("ليس لديك صلاحية لتحديث هذا الطلب"));
@@ -730,7 +730,7 @@ export const arrangeMeeting = async (
     const isParticipant = [
       marriageRequest.sender._id.toString(),
       marriageRequest.receiver._id.toString(),
-    ].includes(userId as string);
+    ].includes(userId?.toString());
 
     if (!isParticipant) {
       res
@@ -781,12 +781,12 @@ export const arrangeMeeting = async (
 
     // Notify the other party
     const otherPartyId =
-      marriageRequest.sender._id.toString() === userId
+      marriageRequest.sender._id.toString() === userId?.toString()
         ? marriageRequest.receiver._id
         : marriageRequest.sender._id;
 
     await Notification.createMeetingProposalNotification({
-      proposer: userId as string,
+      proposer: userId?.toString() || "",
       receiver: otherPartyId,
       marriageRequest,
       meetingDetails: meetingData,
@@ -832,7 +832,7 @@ export const confirmMeeting = async (
     const isParticipant = [
       marriageRequest.sender.toString(),
       marriageRequest.receiver.toString(),
-    ].includes(userId as string);
+    ].includes(userId?.toString());
 
     if (!isParticipant) {
       res
@@ -848,12 +848,12 @@ export const confirmMeeting = async (
 
     // Notify the other party
     const otherParty =
-      marriageRequest.sender.toString() === userId
+      marriageRequest.sender.toString() === userId?.toString()
         ? marriageRequest.receiver.toString()
         : marriageRequest.sender.toString();
 
     await Notification.createMeetingConfirmationNotification({
-      confirmer: userId as string,
+      confirmer: userId?.toString() || "",
       receiver: otherParty,
       marriageRequest,
       meeting: marriageRequest.meeting,
@@ -912,7 +912,7 @@ export const getRequestDetails = async (
     const isParticipant = [
       marriageRequest.sender._id.toString(),
       marriageRequest.receiver._id.toString(),
-    ].includes(userId as string);
+    ].includes(userId?.toString());
 
     if (!isParticipant) {
       res

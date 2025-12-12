@@ -880,7 +880,7 @@ export const getAdminChatMessages = async (
     // Check if user is admin or participant
     const isAdmin = req.user?.role === "admin" || req.user?.role === "moderator";
     const isParticipant = chatRoom.participants.some(
-      (p) => p.user._id.toString() === req.user?._id
+      (p) => p.user._id.toString() === req.user?._id?.toString()
     );
 
     if (!isAdmin && !isParticipant) {
