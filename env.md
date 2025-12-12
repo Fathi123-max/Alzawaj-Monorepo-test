@@ -10,7 +10,7 @@ AWS_SECRET_ACCESS_KEY=your-aws-secret-key
 BACKEND_PORT=5000
 BACKEND_URL=http://jcc0ooskw0kssowoogckkws8.116.203.98.236.sslip.io
 
-NEXT_PUBLIC_API_BASE_URL=http://localhost:5000/api  
+NEXT_PUBLIC_API_BASE_URL=http://116.203.98.236:5000/api  
 BCRYPT_ROUNDS=12
 CORS_CREDENTIALS=true
 ENABLE_METRICS=true
@@ -32,7 +32,7 @@ LOG_FILE_PATH=./logs/app.log
 LOG_LEVEL=info
 MAX_FILE_SIZE=10485760 # 10MB in bytes
 MONGODB_URI=mongodb://mongodb:27017/alzawaj
-NEXT_PUBLIC_API_BASE_URL=http://localhost:5000/api
+NEXT_PUBLIC_API_BASE_URL=http://116.203.98.236:5000/api
 NEXT_PUBLIC_API_URL=http://jcc0ooskw0kssowoogckkws8.116.203.98.236.sslip.io
 NEXT_PUBLIC_APP_DESCRIPTION=Islamic Marriage Platform
 NEXT_PUBLIC_APP_NAME=Alzawaj Platform
