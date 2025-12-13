@@ -38,8 +38,36 @@ const server = createServer(app);
 // Initialize Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    methods: ["GET", "POST"],
+    origin: (origin, callback) => {
+      logger.debug(`Socket.IO CORS: Incoming origin: ${origin}`);
+      logger.debug(`Socket.IO CORS: Allowed origins: ${JSON.stringify(allowedOrigins)}`); // Using the same allowedOrigins for consistency
+
+      // Use the same logic as the main CORS configuration
+      if (!origin) {
+        logger.debug(`Socket.IO CORS: No origin provided - allowed.`);
+        callback(null, true);
+        return;
+      }
+
+      // Check if the origin is in the allowed list or is a matching pattern
+      const isAllowed = allowedOrigins.some(allowedOrigin => {
+        if (typeof allowedOrigin === 'string') {
+          return origin === allowedOrigin;
+        } else if (allowedOrigin instanceof RegExp) {
+          return allowedOrigin.test(origin);
+        }
+        return false;
+      });
+
+      if (isAllowed) {
+        logger.debug(`Socket.IO CORS: Origin ${origin} allowed.`);
+        callback(null, true);
+      } else {
+        logger.error(`Socket.IO CORS: Origin ${origin} not allowed.`);
+        callback(new Error(`Not allowed by CORS: ${origin}`));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
   },
 });
@@ -73,9 +101,49 @@ connectDB()
 app.set("trust proxy", 1);
 
 // CORS configuration - MUST be before other middleware to handle preflight requests
-const allowedOrigins = (process.env.CORS_ORIGIN?.split(",") || ["http://localhost:3000", "http://116.203.98.236:3000", "http://127.0.0.1:3000", "http://vw4ksss8cggwkgwwo8w4o8sk.116.203.98.236.sslip.io"]);
+const corsOriginEnv = process.env.CORS_ORIGIN;
+let allowedOrigins: (string | RegExp)[] = [
+  "http://localhost:3000",
+  "http://116.203.98.236:3000",
+  "http://127.0.0.1:3000",
+  "http://vw4ksss8cggwkgwwo8w4o8sk.116.203.98.236.sslip.io"
+];
+
+if (corsOriginEnv) {
+  // Split the environment variable by comma and trim whitespace
+  allowedOrigins = corsOriginEnv.split(",").map(origin => origin.trim());
+}
+
 const corsOptions: CorsOptions = {
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    logger.debug(`CORS: Incoming origin: ${origin}`);
+    logger.debug(`CORS: Allowed origins: ${JSON.stringify(allowedOrigins)}`);
+
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      logger.debug(`CORS: No origin provided - allowed.`);
+      callback(null, true);
+      return;
+    }
+
+    // Check if the origin is in the allowed list or is a matching pattern
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (typeof allowedOrigin === 'string') {
+        return origin === allowedOrigin;
+      } else if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return false;
+    });
+
+    if (isAllowed) {
+      logger.debug(`CORS: Origin ${origin} allowed.`);
+      callback(null, true);
+    } else {
+      logger.error(`CORS: Origin ${origin} not allowed.`);
+      callback(new Error(`Not allowed by CORS: ${origin}`));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "Accept-Language"],
