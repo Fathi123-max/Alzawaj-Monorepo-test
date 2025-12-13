@@ -72,6 +72,29 @@ connectDB()
 // Trust proxy (for deployment behind reverse proxy)
 app.set("trust proxy", 1);
 
+// CORS configuration - MUST be before other middleware to handle preflight requests
+const allowedOrigins = (process.env.CORS_ORIGIN?.split(",") || ["http://localhost:3000", "http://116.203.98.236:3000", "http://127.0.0.1:3000", "http://vw4ksss8cggwkgwwo8w4o8sk.116.203.98.236.sslip.io"]);
+const corsOptions: CorsOptions = {
+  origin: allowedOrigins,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "Accept-Language"],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+};
+
+// Handle preflight requests explicitly
+app.options("*", cors(corsOptions));
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// Add a middleware to set the Access-Control-Allow-Private-Network header
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('Access-Control-Allow-Private-Network', 'true');
+  next();
+});
+
 // Security middleware
 app.use(
   helmet({
@@ -86,23 +109,6 @@ app.use(
     },
   }),
 );
-
-
-// Add a middleware to set the Access-Control-Allow-Private-Network header
-app.use((req: Request, res: Response, next: NextFunction) => {
-  res.setHeader('Access-Control-Allow-Private-Network', 'true');
-  next();
-});
-
-// CORS configuration
-const allowedOrigins = (process.env.CORS_ORIGIN?.split(",") || ["http://localhost:3000", "http://116.203.98.236:3000", "http://127.0.0.1:3000", "http://vw4ksss8cggwkgwwo8w4o8sk.116.203.98.236.sslip.io"]);
-const corsOptions: CorsOptions = {
-  origin: allowedOrigins,
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "Accept-Language"],
-};
-app.use(cors(corsOptions));
 
 // Compression
 app.use(compression());
