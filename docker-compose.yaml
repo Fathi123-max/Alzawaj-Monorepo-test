@@ -12,24 +12,20 @@ services:
     env_file:
       - ./.env
     environment:
-      - PORT=3000
       - NODE_ENV=${NODE_ENV:-production}
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://116.203.98.236:5000}
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://116.203.98.236:3000}
       - NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME:-Alzawaj Platform}
       - NEXT_PUBLIC_APP_DESCRIPTION=${NEXT_PUBLIC_APP_DESCRIPTION:-Islamic Marriage Platform}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+      - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
       - NEXT_PUBLIC_ENABLE_CHAT=${NEXT_PUBLIC_ENABLE_CHAT:-true}
       - NEXT_PUBLIC_ENABLE_NOTIFICATIONS=${NEXT_PUBLIC_ENABLE_NOTIFICATIONS:-true}
       - NEXT_PUBLIC_ENABLE_PHOTOS=${NEXT_PUBLIC_ENABLE_PHOTOS:-true}
-      - NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=${NEXT_PUBLIC_GOOGLE_ANALYTICS_ID:-G-64NDG1021P}
-      - NEXT_PUBLIC_VERCEL_ANALYTICS_ENABLED=${NEXT_PUBLIC_VERCEL_ANALYTICS_ENABLED:-true}
       - NEXT_PUBLIC_FIREBASE_API_KEY=${NEXT_PUBLIC_FIREBASE_API_KEY}
       - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
       - NEXT_PUBLIC_FIREBASE_PROJECT_ID=${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
       - NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}
       - NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
       - NEXT_PUBLIC_FIREBASE_APP_ID=${NEXT_PUBLIC_FIREBASE_APP_ID}
-      - NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
       - NEXT_PUBLIC_FIREBASE_VAPID_KEY=${NEXT_PUBLIC_FIREBASE_VAPID_KEY}
       - NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY=${NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY}
       - NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT=${NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}
@@ -40,7 +36,7 @@ services:
     restart: unless-stopped
     working_dir: /app
     healthcheck:
-      test: [ "CMD", "node", "-e", "require('http').get('http://116.203.98.236:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))" ]
+      test: [ "CMD", "node", "-e", "require('http').get('${NEXT_PUBLIC_APP_URL}/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -58,14 +54,16 @@ services:
       - ./.env
     environment:
       - NODE_ENV=${NODE_ENV:-production}
-      - PORT=${BACKEND_PORT:-5000}
+      - PORT=${PORT:-5000}
       - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/alzawaj}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
-      - CORS_ORIGIN=${FRONTEND_URL:-http://116.203.98.236:3000}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - JWT_REFRESH_EXPIRES_IN=${JWT_REFRESH_EXPIRES_IN:-30d}
+      - CORS_ORIGIN=${CORS_ORIGIN}
       - CORS_CREDENTIALS=${CORS_CREDENTIALS:-true}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379}
-      - FRONTEND_URL=${FRONTEND_URL:-http://116.203.98.236:3000}
+      - FRONTEND_URL=${CORS_ORIGIN}
       - BCRYPT_ROUNDS=${BCRYPT_ROUNDS:-12}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - LOG_FILE_PATH=${LOG_FILE_PATH:-./logs/app.log}
@@ -80,26 +78,17 @@ services:
       - IMAGEKIT_PRIVATE_KEY=${IMAGEKIT_PRIVATE_KEY}
       - IMAGEKIT_URL_ENDPOINT=${IMAGEKIT_URL_ENDPOINT}
       - IMAGEKIT_ROOT_FOLDER=${IMAGEKIT_ROOT_FOLDER}
-      # AWS S3 Configuration
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_REGION=${AWS_REGION:-us-east-1}
-      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
       # Firebase Configuration
       - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
       - FIREBASE_CLIENT_EMAIL=${FIREBASE_CLIENT_EMAIL}
       - FIREBASE_PRIVATE_KEY_ID=${FIREBASE_PRIVATE_KEY_ID}
       - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY}
       # SMTP Configuration
-      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
-      - SMTP_PORT=${SMTP_PORT:-465}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
-      - SMTP_SECURE=${SMTP_SECURE:-true}
-      # Twilio Configuration
-      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
-      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
-      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
+      - SMTP_SECURE=${SMTP_SECURE}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -109,7 +98,7 @@ services:
       - alzawaj-network
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "node", "-e", "require('http').get('http://116.203.98.236:5000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))" ]
+      test: [ "CMD", "node", "-e", "require('http').get('${CORS_ORIGIN}/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))" ]
       interval: 30s
       timeout: 10s
       retries: 3
