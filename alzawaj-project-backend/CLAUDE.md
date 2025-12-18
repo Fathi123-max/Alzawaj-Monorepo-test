@@ -22,6 +22,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ### Common Operations
+
 ```bash
 # Development server with hot reload
 pnpm run dev
@@ -40,6 +41,7 @@ pnpm run build:watch
 ```
 
 ### Testing
+
 ```bash
 # Run all tests
 pnpm test
@@ -55,6 +57,7 @@ pnpm test -- profileController.test.ts
 ```
 
 ### Code Quality
+
 ```bash
 # Lint code with ESLint
 pnpm run lint
@@ -67,6 +70,7 @@ pnpm run format
 ```
 
 ### Database Operations
+
 ```bash
 # Seed database with test data
 pnpm run db:seed
@@ -76,6 +80,7 @@ pnpm run db:migrate
 ```
 
 ### Production Management
+
 ```bash
 # View application logs
 pnpm run logs
@@ -88,6 +93,7 @@ pnpm run stop
 ```
 
 ### Testing Scripts
+
 ```bash
 # Health check endpoint
 pnpm run health-check
@@ -111,6 +117,7 @@ pnpm run monitor-rate-limit
 ## Project Architecture
 
 ### Directory Structure
+
 ```
 src/
 ├── config/              # Configuration files (DB, Swagger, Logger, Rate limiting)
@@ -128,6 +135,7 @@ src/
 ```
 
 ### Core Models
+
 - **User** (`src/models/User.ts`) - User accounts and authentication
 - **Profile** (`src/models/Profile.ts`) - User profiles with search text index
 - **MarriageRequest** (`src/models/MarriageRequest.ts`) - Marriage proposals
@@ -138,7 +146,9 @@ src/
 - **OTPCode** (`src/models/OTPCode.ts`) - One-time password codes
 
 ### API Endpoints
+
 All routes are prefixed with `/api/`:
+
 - `/api/auth` - Authentication (register, login, logout)
 - `/api/profile` - User profiles
 - `/api/search` - User search and filtering
@@ -149,12 +159,13 @@ All routes are prefixed with `/api/`:
 - `/api/debug` - Debug routes (development only)
 
 ### Key Configuration Files
+
 - **TypeScript**: `tsconfig.json` - Path aliases configured (`@/*` maps to `src/*`)
 - **ESLint**: `.eslintrc.test.js` - Airbnb base configuration
-- **Environment**: `.env.example` - Reference for required environment variables
 - **OpenAPI**: `src/config/openapi.yaml` - API documentation specification
 
 ### Environment Variables Required
+
 ```env
 MONGODB_URI=mongodb+srv://<user>:<pass>@<cluster>/<db>?retryWrites=true&w=majority
 JWT_SECRET=your_jwt_secret
@@ -170,6 +181,7 @@ PORT=5001
 ## Development Guidelines
 
 ### Code Organization
+
 - Controllers handle HTTP requests/responses
 - Services contain business logic
 - Models define data schemas
@@ -177,7 +189,9 @@ PORT=5001
 - Utils contain reusable helper functions
 
 ### Path Aliases
+
 Use configured aliases to import modules:
+
 - `@/*` - Root of src directory
 - `@/models/*` - Models
 - `@/controllers/*` - Controllers
@@ -185,23 +199,27 @@ Use configured aliases to import modules:
 - `@/config/*` - Configuration files
 
 ### Testing
+
 - Tests use Jest with MongoDB Memory Server
 - Test files follow pattern: `src/tests/**/*.test.ts`
 - Setup configured in `src/tests/setup.ts`
 - Coverage excludes tests, seeders, and server.ts
 
 ### Database
+
 - MongoDB with Mongoose ODM
 - Connection in `src/config/database.ts`
 - Text index created automatically on Profile model for search
 - Seeders available for populating test data
 
 ### Real-time Features
+
 - Socket.IO configured in `src/server.ts`
 - CORS configured for frontend URL
 - Chat service available in `src/services/chatService.ts`
 
 ### API Documentation
+
 - Swagger UI available at `/api-docs` (development only)
 - OpenAPI specification in `/api-docs/swagger.json`
 - Source specification: `src/config/openapi.yaml`
@@ -209,6 +227,7 @@ Use configured aliases to import modules:
 ## Common Development Tasks
 
 ### Adding a New Feature
+
 1. Create Mongoose model in `src/models/`
 2. Add route definition in `src/routes/`
 3. Implement controller in `src/controllers/`
@@ -219,6 +238,7 @@ Use configured aliases to import modules:
 8. Update OpenAPI spec in `src/config/openapi.yaml`
 
 ### Working with Tests
+
 ```bash
 # Run specific test
 pnpm test auth.test.ts
@@ -231,6 +251,7 @@ pnpm test -- --inspect-brk
 ```
 
 ### Database Operations
+
 ```bash
 # Rebuild search index
 # Restart the server - index is created automatically
@@ -243,16 +264,19 @@ pnpm run db:seed
 ```
 
 ### Error Handling
+
 - Centralized error middleware in `src/middleware/errorMiddleware.ts`
 - Consistent error responses using `src/utils/responseHelper.ts`
 - Logging configured in `src/config/logger.ts` using Winston
 
 ### Image Upload
+
 - Images handled by ImageKit service
 - Upload service available in `src/services/uploadService.ts`
 - Maximum file size: 5MB (configurable via `MAX_FILE_SIZE`)
 
 ### Rate Limiting
+
 - Configured in `src/config/rateLimiting.ts`
 - Separate limits for auth, search, and general routes
 - Uses Redis store in production

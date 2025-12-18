@@ -21,8 +21,7 @@ out/
 .env.development
 .env.test
 
-# Exception: Keep .env.example files
-!.env.example
+
 
 # IDE and Editor files
 .vscode/
