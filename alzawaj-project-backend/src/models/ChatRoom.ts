@@ -322,7 +322,14 @@ chatRoomSchema.statics.createDirectChat = function (
     chatData.marriageRequest = marriageRequestId;
   }
 
-  return this.create(chatData);
+  return (async () => {
+    const result = await this.create(chatData);
+    // Ensure we return a single ChatRoom document
+    if (Array.isArray(result)) {
+      return result[0];
+    }
+    return result;
+  })();
 };
 
 export const ChatRoom = mongoose.model<IChatRoom, IChatRoomModel>(

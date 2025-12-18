@@ -1,5 +1,8 @@
 # See https://pnpm.io/pnpm-cli for more information about pnpm
 
+# Ignore workspace root check to allow adding deps at runtime
+ignore-workspace-root-check = true
+
 # Always prefer using pnpm for consistency
 prefer-workspace-packages = true
 

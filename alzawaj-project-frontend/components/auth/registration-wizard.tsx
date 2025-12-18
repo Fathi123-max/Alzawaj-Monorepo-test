@@ -246,6 +246,18 @@ export function RegistrationWizard({
               <AlertDescription className="text-sm">{error}</AlertDescription>
             </Alert>
           )}
+          {validationErrors && validationErrors.length > 0 && (
+            <Alert variant="destructive" className="mt-2">
+              <AlertDescription>
+                <div className="text-sm font-medium mb-2">يرجى تصحيح الأخطاء التالية:</div>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  {validationErrors.map((err, idx) => (
+                    <li key={idx}>{err}</li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
         </CardHeader>
 
         <CardContent className="px-2 sm:px-4 py-4">

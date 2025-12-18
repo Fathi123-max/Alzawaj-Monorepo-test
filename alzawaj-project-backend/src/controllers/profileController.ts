@@ -1260,7 +1260,7 @@ export const getPublicProfile = async (
     // Check if viewer is blocked
     if (
       profile.privacy?.blockedUsers?.some(
-        (blockedUserId) => blockedUserId.toString() === viewerId
+        (blockedUserId) => blockedUserId.toString() === viewerId?.toString()
       )
     ) {
       res
@@ -1273,7 +1273,7 @@ export const getPublicProfile = async (
     const profileData: any = profile.toObject();
     
     // Hide age if privacy setting is disabled
-    if (profile.privacy?.showAge === false && viewerId !== profile.userId.toString()) {
+    if (profile.privacy?.showAge === false && viewerId?.toString() !== profile.userId.toString()) {
       if (profileData.basicInfo) {
         profileData.basicInfo.age = undefined;
         profileData.basicInfo.dateOfBirth = undefined;
@@ -1281,7 +1281,7 @@ export const getPublicProfile = async (
     }
     
     // Hide location if privacy setting is disabled
-    if (profile.privacy?.showLocation === false && viewerId?.toString() !== profile.userId.toString()) {
+    if (profile.privacy?.showLocation === false && viewerId?.toString() !== (profile.userId as any)._id.toString()) {
       if (profileData.basicInfo?.currentLocation) {
         profileData.basicInfo.currentLocation = undefined;
       }
@@ -1291,7 +1291,7 @@ export const getPublicProfile = async (
     }
     
     // Hide occupation if privacy setting is disabled
-    if (profile.privacy?.showOccupation === false && viewerId?.toString() !== profile.userId.toString()) {
+    if (profile.privacy?.showOccupation === false && viewerId?.toString() !== (profile.userId as any)._id.toString()) {
       if (profileData.professional) {
         profileData.professional.occupation = undefined;
         profileData.professional.company = undefined;
@@ -1299,16 +1299,16 @@ export const getPublicProfile = async (
     }
     
     // Hide profile picture based on setting
-    if (profile.privacy?.showProfilePicture === 'none' && viewerId?.toString() !== profile.userId.toString()) {
+    if (profile.privacy?.showProfilePicture === 'none' && viewerId?.toString() !== (profile.userId as any)._id.toString()) {
       profileData.profilePicture = undefined;
-    } else if (profile.privacy?.showProfilePicture === 'matches-only' && viewerId?.toString() !== profile.userId.toString()) {
+    } else if (profile.privacy?.showProfilePicture === 'matches-only' && viewerId?.toString() !== (profile.userId as any)._id.toString()) {
       // TODO: Check if viewer is a match
       // For now, hide from non-matches
       profileData.profilePicture = undefined;
     }
 
     // Record profile view
-    if (viewerId && viewerId.toString() !== profile.userId._id.toString()) {
+    if (viewerId && viewerId.toString() !== (profile.userId as any)._id.toString()) {
       await profile.recordView(viewerId.toString());
     }
 
@@ -1834,14 +1834,14 @@ export const getAllProfiles = async (
     for (let item of profilesWithInfo) {
       try {
         item.canSendRequest = await item.profile.canReceiveRequestFrom(
-          currentUserId as string
+          currentUserId.toString()
         );
 
         // Also check if there's already an active request
         if (item.canSendRequest) {
           const existingRequest = await MarriageRequest.checkExistingRequest(
-            currentUserId as mongoose.Types.ObjectId,
-            item.profile.userId as mongoose.Types.ObjectId
+            currentUserId as unknown as mongoose.Types.ObjectId,
+            item.profile.userId as unknown as mongoose.Types.ObjectId
           );
           item.canSendRequest = !existingRequest;
         }

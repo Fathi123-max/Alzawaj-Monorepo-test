@@ -9,10 +9,21 @@ WORKDIR /app
 # Copy package files
 COPY package.json package-lock.json* pnpm-lock.yaml* ./
 
-# Install dependencies
-# Install all dependencies (including dev) for building
+# Install all dependencies (including dev) for development
 ENV NODE_ENV=development
 RUN pnpm install --ignore-scripts
+
+# Development stage
+FROM base AS development
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Ensure nodemon is available in development stage
+RUN npm install -g nodemon
+
+EXPOSE 5001
+CMD ["pnpm", "run", "dev"]
 
 # Build stage
 FROM base AS builder

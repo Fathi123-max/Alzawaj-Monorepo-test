@@ -151,9 +151,6 @@ const corsOptions: CorsOptions = {
   optionsSuccessStatus: 204,
 };
 
-// Handle preflight requests explicitly
-app.options("*", cors(corsOptions));
-
 // Apply CORS middleware
 app.use(cors(corsOptions));
 
@@ -182,7 +179,8 @@ app.use(
 app.use(compression());
 
 // Data sanitization against NoSQL query injection
-app.use(mongoSanitize());
+// Note: Disabled due to Express 5 compatibility issue with req.query being read-only
+// app.use(mongoSanitize());
 
 // Body parsing middleware
 app.use(express.json({ limit: "10mb" }));

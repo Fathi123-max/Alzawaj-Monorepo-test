@@ -506,14 +506,14 @@ export const searchProfiles = async (
     for (let item of profilesWithScores) {
       try {
         item.canSendRequest = await item.profile.canReceiveRequestFrom(
-          userId as string
+          userId?.toString() || ''
         );
 
         // Also check if there's already an active request
         if (item.canSendRequest) {
           const existingRequest = await MarriageRequest.checkExistingRequest(
-            userId as mongoose.Types.ObjectId,
-            item.profile.userId as mongoose.Types.ObjectId
+            userId as unknown as mongoose.Types.ObjectId,
+            item.profile.userId as unknown as mongoose.Types.ObjectId
           );
           item.canSendRequest = !existingRequest;
         }
@@ -677,13 +677,13 @@ export const getRecommendations = async (
     for (let item of profilesWithScores) {
       try {
         item.canSendRequest = await item.profile.canReceiveRequestFrom(
-          userId as string
+          userId?.toString() || ''
         );
 
         if (item.canSendRequest) {
           const existingRequest = await MarriageRequest.checkExistingRequest(
-            userId as mongoose.Types.ObjectId,
-            item.profile.userId as mongoose.Types.ObjectId
+            userId as unknown as mongoose.Types.ObjectId,
+            item.profile.userId as unknown as mongoose.Types.ObjectId
           );
           item.canSendRequest = !existingRequest;
         }
@@ -809,7 +809,7 @@ export const quickSearch = async (
       }
 
       // Check if the profile is for the searcher themselves
-      if (profile.userId.toString() === userId) {
+      if (profile.userId.toString() === userId?.toString()) {
         return false;
       }
 

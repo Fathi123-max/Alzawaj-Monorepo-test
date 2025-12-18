@@ -10,6 +10,21 @@ WORKDIR /app
 COPY package.json package-lock.json* pnpm-lock.yaml* ./
 RUN pnpm install --ignore-scripts
 
+# Development stage
+FROM base AS development
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Install all dependencies for development, including TypeScript dependencies
+ENV NODE_ENV=development
+RUN pnpm install --ignore-scripts
+# Install TypeScript dependencies with workspace flag to avoid workspace root check error
+RUN pnpm add --save-dev typescript @types/react @types/node -w
+
+EXPOSE 3000
+CMD ["pnpm", "run", "dev"]
+
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app

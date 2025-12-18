@@ -403,20 +403,19 @@ marriageRequestSchema.virtual("canRespond").get(function (
 });
 
 // Pre-save middleware
-marriageRequestSchema.pre<IMarriageRequest>("save", function (next) {
+marriageRequestSchema.pre<IMarriageRequest>("save", function () {
   // Set expiry date (30 days from creation)
   if (this.isNew) {
     this.expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
   }
 
   // Update read status when status changes
-  if (this.isModified("status") && this.status !== "pending") {
+  if (this.isModified("status") && this.status  !== "pending") {
     this.isRead = true;
     this.readDate = new Date();
   }
-
-  next();
 });
+
 
 // Instance methods
 marriageRequestSchema.methods.accept = async function (

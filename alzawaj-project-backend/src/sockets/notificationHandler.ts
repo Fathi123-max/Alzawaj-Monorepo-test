@@ -33,13 +33,13 @@ export const initializeSocketHandlers = (io: Server) => {
 
         if (user) {
           // Store the connection
-          connectedUsers.set(user.id, socket.id);
-          socket.data.userId = user.id;
+          connectedUsers.set(user._id.toString(), socket.id);
+          socket.data.userId = user._id.toString();
 
-          logger.info(`User ${user.id} authenticated via socket ${socket.id}`);
+          logger.info(`User ${user._id} authenticated via socket ${socket.id}`);
 
           // Join user's notification room
-          socket.join(`user_${user.id}`);
+          socket.join(`user_${user._id.toString()}`);
 
           socket.emit('authenticated', { success: true });
         } else {
@@ -550,8 +550,11 @@ const verifyTokenAndGetUser = async (token: string): Promise<IUser | null> => {
     // const user = await User.findById(decoded.id);
     // return user;
 
-    // For now, returning a mock user
-    return { id: decoded.id, role: decoded.role } as IUser;
+    // For now, returning a mock user with the decoded data
+    // This is not a complete IUser, but it has the minimum required fields
+    const { User } = await import('../models/User');
+    const user = await User.findById(decoded.id);
+    return user;
   } catch (error) {
     logger.error('Token verification error:', error);
     return null;

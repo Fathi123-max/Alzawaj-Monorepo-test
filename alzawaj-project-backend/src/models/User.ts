@@ -214,28 +214,28 @@ userSchema.virtual("isLocked").get(function (this: IUser) {
 });
 
 // Hash password before saving
-userSchema.pre<IUser>("save", async function (next) {
-  if (!this.isModified("password")) return next();
+userSchema.pre<IUser>("save", async function () {
+  if (!this.isModified("password")) {
+    return;
+  }
 
   try {
     console.log("Hashing password before saving user");
     const saltRounds = parseInt(process.env.BCRYPT_ROUNDS || "12");
     this.password = await bcrypt.hash(this.password, saltRounds);
     console.log("Password hashed successfully");
-    next();
   } catch (error) {
     console.log("Error hashing password:", error);
-    next(error as Error);
+    throw error;
   }
 });
 
 // Update lastActiveAt on save
-userSchema.pre<IUser>("save", function (next) {
+userSchema.pre<IUser>("save", function () {
   if (this.isNew || this.isModified("lastLoginAt")) {
     console.log("Updating lastActiveAt");
     this.lastActiveAt = new Date();
   }
-  next();
 });
 
 // Compare password method

@@ -855,7 +855,7 @@ profileSchema.index({
 
 
 // Pre-save hook to cache completion percentage
-profileSchema.pre('save', function(next) {
+profileSchema.pre('save', function() {
   if (this.isNew || this.isModified()) {
     // Calculate completion percentage based on required fields
     const requiredFields = [
@@ -884,7 +884,7 @@ profileSchema.pre('save', function(next) {
     const allRequiredFields = [...requiredFields, ...genderSpecificFields];
     const completedFields = allRequiredFields.filter((field) => {
       if (field.includes(".")) {
-        const parts = field.split(".");
+        const parts =field.split(".");
         const parent = parts[0];
         const child = parts[1];
         return (
@@ -899,8 +899,8 @@ profileSchema.pre('save', function(next) {
 
     this.completionPercentage = Math.round((completedFields.length / allRequiredFields.length) * 100);
   }
-  next();
 });
+
 
 // Virtual for compatibility with search
 profileSchema.virtual("isActiveProfile").get(function (this: IProfile) {

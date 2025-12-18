@@ -173,7 +173,7 @@ export const protect = asyncHandler(
  */
 export const requireCompleteProfile = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const profile = await Profile.findOne({ userId: req.user!.id });
+    const profile = await Profile.findOne({ userId: req.user!._id });
 
     if (!profile) {
       throw createAuthError("الملف الشخصي غير موجود", "PROFILE_NOT_FOUND");
@@ -197,7 +197,7 @@ export const requireCompleteProfile = asyncHandler(
 export const requireApprovedProfile = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     if (!req.profile) {
-      const profile = await Profile.findOne({ userId: req.user!.id });
+      const profile = await Profile.findOne({ userId: req.user!._id });
       if (!profile) {
         throw createAuthError("الملف الشخصي غير موجود", "PROFILE_NOT_FOUND");
       }
@@ -275,7 +275,7 @@ export const ensureOwnership = (paramName: string = "id") => {
     }
 
     // Check if user is accessing their own resource
-    if (resourceOwnerId !== req.user!.id.toString()) {
+    if (resourceOwnerId !== req.user!._id.toString()) {
       // logger.security('Unauthorized resource access attempt', {
       //   userId: req.user!.id,
       //   attemptedResourceId: resourceOwnerId
@@ -309,7 +309,7 @@ export const canAccessProfile = asyncHandler(
     }
 
     // Check if user owns the profile
-    if (profile.userId.toString() !== req.user!.id.toString()) {
+    if (profile.userId.toString() !== req.user!._id.toString()) {
       // logger.security('Unauthorized profile access attempt', {
       //   userId: req.user!.id,
       //   attemptedProfileId: profileId,
@@ -337,7 +337,7 @@ export const checkUserActionLimit = (
   const userAttempts = new Map<string, { count: number; resetTime: number }>();
 
   return (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user!.id;
+    const userId = req.user!._id;
     const now = Date.now();
     const userKey = `${userId}_${action}`;
 

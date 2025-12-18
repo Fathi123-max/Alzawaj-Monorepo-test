@@ -964,7 +964,7 @@ export const sendAdminMessage = async (
 
     // Check if admin is already a participant, if not add them
     const isParticipant = chatRoom.participants.some(
-      (p) => p.user.toString() === adminId
+      (p) => p.user.toString() === adminId?.toString()
     );
 
     if (!isParticipant) {
