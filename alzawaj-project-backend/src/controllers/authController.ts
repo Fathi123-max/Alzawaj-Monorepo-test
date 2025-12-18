@@ -8,7 +8,7 @@ import {
   createSuccessResponse,
   createErrorResponse,
 } from "../utils/responseHelper";
-import emailService from "../services/emailService";
+import { emailService } from "../services/resendEmailService";
 import smsService from "../services/smsService";
 
 // Extend Request interface for authentication
@@ -102,7 +102,7 @@ interface LoginData {
 export const register = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const {
@@ -129,8 +129,8 @@ export const register = async (
       res.status(400).json(
         createErrorResponse(
           "بيانات التسجيل غير صحيحة",
-          errors.array().map((err: any) => err.msg),
-        ),
+          errors.array().map((err: any) => err.msg)
+        )
       );
       return;
     }
@@ -181,7 +181,20 @@ export const register = async (
       city: location?.city || "Unknown",
       nationality: location?.nationality || "Unknown",
       maritalStatus: (basicInfo as any)?.maritalStatus || "single",
-      education: education?.education && ["primary", "secondary", "high-school", "diploma", "bachelor", "master", "doctorate", "other"].includes(education.education) ? education.education : "bachelor",
+      education:
+        education?.education &&
+        [
+          "primary",
+          "secondary",
+          "high-school",
+          "diploma",
+          "bachelor",
+          "master",
+          "doctorate",
+          "other",
+        ].includes(education.education)
+          ? education.education
+          : "bachelor",
       occupation: professional?.occupation || education?.occupation || "",
       religiousLevel: religiousInfo?.religiousLevel || "moderate",
       isPrayerRegular: religiousInfo?.isPrayerRegular ?? true,
@@ -205,25 +218,31 @@ export const register = async (
       wantsChildren: religiousInfo?.wantsChildren,
       // Gender-specific fields for males
       hasBeard: gender === "m" ? basicInfo.hasBeard : undefined,
-      financialSituation: gender === "m" ? basicInfo.financialSituation : undefined,
+      financialSituation:
+        gender === "m" ? basicInfo.financialSituation : undefined,
       housingOwnership: gender === "m" ? basicInfo.housingOwnership : undefined,
       monthlyIncome: gender === "m" ? professional?.monthlyIncome : undefined,
       // Gender-specific fields for females
       guardianName: gender === "f" ? basicInfo.guardianName : undefined,
       guardianPhone: gender === "f" ? basicInfo.guardianPhone : undefined,
       guardianEmail: gender === "f" ? basicInfo.guardianEmail : undefined,
-      guardianRelationship: gender === "f" ? basicInfo.guardianRelationship : undefined,
+      guardianRelationship:
+        gender === "f" ? basicInfo.guardianRelationship : undefined,
       wearHijab: gender === "f" ? basicInfo.wearHijab : undefined,
       wearNiqab: gender === "f" ? basicInfo.wearNiqab : undefined,
-      workAfterMarriage: gender === "f" ? personalInfo?.workAfterMarriage : undefined,
+      workAfterMarriage:
+        gender === "f" ? personalInfo?.workAfterMarriage : undefined,
       privacy: {
-        profileVisibility: privacy?.profileVisibility || (gender === "f" ? "guardian-approved" : "everyone"),
+        profileVisibility:
+          privacy?.profileVisibility ||
+          (gender === "f" ? "guardian-approved" : "everyone"),
         showAge: privacy?.showAge ?? true,
         showLocation: privacy?.showLocation ?? false,
         showOccupation: privacy?.showOccupation ?? true,
         showProfilePicture: privacy?.showProfilePicture || "everyone",
         allowMessagesFrom: privacy?.allowMessagesFrom || "everyone",
-        requireGuardianApproval: privacy?.requireGuardianApproval ?? (gender === "f"),
+        requireGuardianApproval:
+          privacy?.requireGuardianApproval ?? gender === "f",
         showOnlineStatus: privacy?.showOnlineStatus ?? false,
         allowNearbySearch: privacy?.allowNearbySearch ?? true,
       },
@@ -237,10 +256,10 @@ export const register = async (
       console.log("📸 Photo upload attempt - file received:", {
         originalname: req.file.originalname,
         mimetype: req.file.mimetype,
-        size: req.file.size
+        size: req.file.size,
       });
       try {
-        const ImageKit = require('imagekit');
+        const ImageKit = require("imagekit");
         const imagekit = new ImageKit({
           publicKey: process.env.IMAGEKIT_PUBLIC_KEY || "",
           privateKey: process.env.IMAGEKIT_PRIVATE_KEY || "",
@@ -249,7 +268,7 @@ export const register = async (
 
         console.log("📸 ImageKit config loaded, uploading...");
         const uploadResult = await imagekit.upload({
-          file: req.file.buffer.toString('base64'),
+          file: req.file.buffer.toString("base64"),
           fileName: `profile-${newUser._id}-${Date.now()}`,
           folder: "profile-pictures",
           useUniqueFileName: true,
@@ -279,9 +298,14 @@ export const register = async (
         });
 
         await newProfile.save();
-        console.log("✅ Profile picture uploaded successfully during registration");
+        console.log(
+          "✅ Profile picture uploaded successfully during registration"
+        );
       } catch (uploadError) {
-        console.error("❌ Failed to upload profile picture during registration:", uploadError);
+        console.error(
+          "❌ Failed to upload profile picture during registration:",
+          uploadError
+        );
         // Continue without photo - don't fail registration
       }
     } else {
@@ -300,13 +324,11 @@ export const register = async (
     try {
       const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
       const verificationLink = `${frontendUrl}/auth/verify-email?token=${emailToken}&mode=verifyEmail`;
-      emailService.sendEmailVerificationLink(
-        email,
-        basicInfo.name,
-        verificationLink,
-      ).catch((error) => {
-        console.error("Failed to send verification email:", error);
-      });
+      emailService
+        .sendEmailVerificationLink(email, basicInfo.name, verificationLink)
+        .catch((error) => {
+          console.error("Failed to send verification email:", error);
+        });
     } catch (emailError) {
       console.error("Error preparing verification email:", emailError);
     }
@@ -314,7 +336,10 @@ export const register = async (
     // Check for FCM token in request body and update user
     if (req.body.fcmToken) {
       newUser.fcmToken = req.body.fcmToken;
-      console.log("Updated FCM token for user during registration:", newUser._id);
+      console.log(
+        "Updated FCM token for user during registration:",
+        newUser._id
+      );
       await newUser.save(); // Save the FCM token update to the database
     }
 
@@ -334,21 +359,21 @@ export const register = async (
             id: newProfile._id,
             completionPercentage: newProfile.completionPercentage,
           },
-        },
-      ),
+        }
+      )
     );
   } catch (error) {
     next(error);
   }
 };
 
-/** 
+/**
  * Login user
  */
 export const login = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     console.log("Login attempt started");
@@ -363,8 +388,8 @@ export const login = async (
       res.status(400).json(
         createErrorResponse(
           "بيانات تسجيل الدخول غير صحيحة",
-          errors.array().map((err: any) => err.msg),
-        ),
+          errors.array().map((err: any) => err.msg)
+        )
       );
       return;
     }
@@ -373,21 +398,25 @@ export const login = async (
     // Find user by email or phone
     const user = await User.findOne({
       $or: [{ email: username }, { phone: username }],
-    }).select('+password').populate("profile");
+    })
+      .select("+password")
+      .populate("profile");
     console.log("User search completed, user found:", !!user);
-    
+
     if (user) {
       console.log("User details:", {
         email: user.email,
         hasPassword: !!user.password,
         passwordLength: user.password ? user.password.length : 0,
-        id: user._id
+        id: user._id,
       });
-      
+
       // Additional check for password field
       if (!user.password) {
         console.log("ERROR: User found but password field is missing or empty");
-        res.status(500).json(createErrorResponse("خطأ في النظام. يرجى التواصل مع الإدارة"));
+        res
+          .status(500)
+          .json(createErrorResponse("خطأ في النظام. يرجى التواصل مع الإدارة"));
         return;
       }
     }
@@ -414,7 +443,9 @@ export const login = async (
       console.log("User email is not verified");
       res
         .status(403)
-        .json(createErrorResponse("يجب تأكيد البريد الإلكتروني قبل تسجيل الدخول"));
+        .json(
+          createErrorResponse("يجب تأكيد البريد الإلكتروني قبل تسجيل الدخول")
+        );
       return;
     }
 
@@ -423,13 +454,15 @@ export const login = async (
     if (user.profile) {
       console.log("Profile verification:", (user.profile as any).verification);
     }
-    
+
     // Check if profile is verified by admin
     if (user.profile && !(user.profile as any).verification?.isVerified) {
       console.log("User profile is not verified by admin");
       res
         .status(403)
-        .json(createErrorResponse("حسابك قيد المراجعة. يرجى انتظار موافقة الإدارة"));
+        .json(
+          createErrorResponse("حسابك قيد المراجعة. يرجى انتظار موافقة الإدارة")
+        );
       return;
     }
 
@@ -454,8 +487,8 @@ export const login = async (
         .status(423)
         .json(
           createErrorResponse(
-            "الحساب مقفل مؤقتاً بسبب محاولات تسجيل دخول فاشلة متكررة",
-          ),
+            "الحساب مقفل مؤقتاً بسبب محاولات تسجيل دخول فاشلة متكررة"
+          )
         );
       return;
     }
@@ -491,7 +524,7 @@ export const login = async (
     console.log("Cleaning up old refresh tokens");
     // Clean up old refresh tokens
     user.refreshTokens = user.refreshTokens.filter(
-      (tokenObj: any) => tokenObj.expiresAt > new Date(),
+      (tokenObj: any) => tokenObj.expiresAt > new Date()
     );
 
     console.log("Saving user");
@@ -512,7 +545,7 @@ export const login = async (
         isEmailVerified: user.isEmailVerified,
         isPhoneVerified: user.isPhoneVerified,
         lastLogin: user.lastLoginAt,
-      }
+      },
     });
     console.log("Login response sent successfully");
   } catch (error) {
@@ -527,7 +560,7 @@ export const login = async (
 export const refreshToken = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const { refreshToken } = req.body;
@@ -556,7 +589,7 @@ export const refreshToken = async (
     // Check if refresh token exists and is valid
     const tokenIndex = user.refreshTokens.findIndex(
       (tokenObj: any) =>
-        tokenObj.token === refreshToken && tokenObj.expiresAt > new Date(),
+        tokenObj.token === refreshToken && tokenObj.expiresAt > new Date()
     );
 
     if (tokenIndex === -1) {
@@ -596,7 +629,7 @@ export const refreshToken = async (
           refreshToken: newRefreshToken,
           expiresIn: "15m",
         },
-      }),
+      })
     );
   } catch (error) {
     next(error);
@@ -609,7 +642,7 @@ export const refreshToken = async (
 export const logout = async (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const { refreshToken } = req.body;
@@ -620,7 +653,7 @@ export const logout = async (
       if (user) {
         // Remove the specific refresh token
         user.refreshTokens = user.refreshTokens.filter(
-          (tokenObj: any) => tokenObj.token !== refreshToken,
+          (tokenObj: any) => tokenObj.token !== refreshToken
         );
         await user.save();
       }
@@ -638,7 +671,7 @@ export const logout = async (
 export const logoutAll = async (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const userId = req.user?._id;
@@ -664,7 +697,7 @@ export const logoutAll = async (
 export const sendEmailVerification = async (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const userId = req.user?._id;
@@ -690,7 +723,7 @@ export const sendEmailVerification = async (
     await emailService.sendEmailVerification(
       user.email,
       (user.profile as any)?.basicInfo?.name || "المستخدم",
-      emailToken,
+      emailToken
     );
 
     res.json(createSuccessResponse("تم إرسال رسالة التأكيد بنجاح"));
@@ -705,7 +738,7 @@ export const sendEmailVerification = async (
 export const verifyEmail = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const { token } = req.body;
@@ -760,7 +793,7 @@ export const verifyEmail = async (
 export const sendPhoneVerification = async (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const userId = req.user?._id;
@@ -797,7 +830,7 @@ export const sendPhoneVerification = async (
 export const verifyPhone = async (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const { otp } = req.body;
@@ -852,7 +885,7 @@ export const verifyPhone = async (
 export const devConfirmEmail = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const { userId } = req.body;
@@ -887,7 +920,7 @@ export const devConfirmEmail = async (
 export const devConfirmPhone = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const { userId } = req.body;
@@ -922,7 +955,7 @@ export const devConfirmPhone = async (
 export const forgotPassword = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const { email } = req.body;
@@ -937,8 +970,8 @@ export const forgotPassword = async (
       // Don't reveal if email exists or not for security
       res.json(
         createSuccessResponse(
-          "إذا كان البريد الإلكتروني موجود، ستصلك رسالة إعادة تعيين كلمة المرور",
-        ),
+          "إذا كان البريد الإلكتروني موجود، ستصلك رسالة إعادة تعيين كلمة المرور"
+        )
       );
       return;
     }
@@ -952,11 +985,11 @@ export const forgotPassword = async (
       await emailService.sendPasswordReset(
         email,
         (user.profile as any)?.basicInfo?.name || "المستخدم",
-        resetToken,
+        resetToken
       );
 
       res.json(
-        createSuccessResponse("تم إرسال رسالة إعادة تعيين كلمة المرور بنجاح"),
+        createSuccessResponse("تم إرسال رسالة إعادة تعيين كلمة المرور بنجاح")
       );
     } catch (emailError) {
       // Reset the fields if email fails
@@ -968,8 +1001,8 @@ export const forgotPassword = async (
         .status(500)
         .json(
           createErrorResponse(
-            "فشل في إرسال البريد الإلكتروني. يرجى المحاولة لاحقاً",
-          ),
+            "فشل في إرسال البريد الإلكتروني. يرجى المحاولة لاحقاً"
+          )
         );
     }
   } catch (error) {
@@ -983,7 +1016,7 @@ export const forgotPassword = async (
 export const resetPassword = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const { token, newPassword } = req.body;
@@ -1008,7 +1041,7 @@ export const resetPassword = async (
       res
         .status(400)
         .json(
-          createErrorResponse("رمز إعادة التعيين غير صحيح أو منتهي الصلاحية"),
+          createErrorResponse("رمز إعادة التعيين غير صحيح أو منتهي الصلاحية")
         );
       return;
     }
@@ -1026,8 +1059,8 @@ export const resetPassword = async (
 
     res.json(
       createSuccessResponse(
-        "تم إعادة تعيين كلمة المرور بنجاح. يرجى تسجيل الدخول مرة أخرى",
-      ),
+        "تم إعادة تعيين كلمة المرور بنجاح. يرجى تسجيل الدخول مرة أخرى"
+      )
     );
   } catch (error) {
     next(error);
@@ -1040,7 +1073,7 @@ export const resetPassword = async (
 export const changePassword = async (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -1075,8 +1108,8 @@ export const changePassword = async (
         .status(400)
         .json(
           createErrorResponse(
-            "كلمة المرور الجديدة يجب أن تكون مختلفة عن الحالية",
-          ),
+            "كلمة المرور الجديدة يجب أن تكون مختلفة عن الحالية"
+          )
         );
       return;
     }
@@ -1089,7 +1122,7 @@ export const changePassword = async (
     const currentRefreshToken = req.body.refreshToken;
     if (currentRefreshToken) {
       user.refreshTokens = user.refreshTokens.filter(
-        (tokenObj: any) => tokenObj.token === currentRefreshToken,
+        (tokenObj: any) => tokenObj.token === currentRefreshToken
       );
     } else {
       user.refreshTokens = [];
@@ -1109,7 +1142,7 @@ export const changePassword = async (
 export const getMe = async (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     console.log("getMe called, user from request:", req.user);
@@ -1119,14 +1152,14 @@ export const getMe = async (
     const user = await User.findById(userId)
       .populate("profile")
       .select(
-        "-password -refreshTokens -emailVerificationToken -phoneVerificationOTP -passwordResetToken",
+        "-password -refreshTokens -emailVerificationToken -phoneVerificationOTP -passwordResetToken"
       );
-    
+
     console.log("getMe - User from DB:", !!user);
     if (user) {
       console.log("getMe - User details:", {
         id: user._id,
-        email: user.email
+        email: user.email,
       });
     }
 
@@ -1150,28 +1183,10 @@ export const getMe = async (
           createdAt: user.createdAt,
         },
         profile: user.profile,
-      }),
+      })
     );
   } catch (error) {
     console.log("getMe - Error:", error);
     next(error);
   }
-};
-
-export default {
-  register,
-  login,
-  refreshToken,
-  logout,
-  logoutAll,
-  sendEmailVerification,
-  verifyEmail,
-  sendPhoneVerification,
-  verifyPhone,
-  forgotPassword,
-  resetPassword,
-  changePassword,
-  getMe,
-  devConfirmEmail,
-  devConfirmPhone,
 };

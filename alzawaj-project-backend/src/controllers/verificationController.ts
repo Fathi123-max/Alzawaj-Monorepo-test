@@ -1,33 +1,31 @@
 import { Request, Response, NextFunction } from "express";
 import { validationResult } from "express-validator";
-import { createSuccessResponse, createErrorResponse } from "../utils/responseHelper";
-import emailService from "../services/emailService";
+import {
+  createSuccessResponse,
+  createErrorResponse,
+} from "../utils/responseHelper";
+import { emailService } from "../services/resendEmailService";
 import { User } from "../models/User";
 import crypto from "crypto";
 
 export const requestVerification = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(400).json(
-        createErrorResponse("بيانات غير صحيحة", errors.array().map((e: any) => e.msg)),
+        createErrorResponse(
+          "بيانات غير صحيحة",
+          errors.array().map((e: any) => e.msg)
+        )
       );
       return;
     }
 
     const { email, name } = req.body as { email: string; name?: string };
-
-    // Validate the email using mailboxlayer API
-    // If mailboxlayer is not configured, skip validation (don't block registration)
-    const validation = await emailService.validateEmail(email);
-    if (!validation.isValid) {
-      // Log the validation issue but continue with verification
-      console.warn(`Email validation failed for ${email}:`, validation);
-    }
 
     // Find user in database
     const dbUser = await User.findOne({ email });
@@ -48,7 +46,7 @@ export const requestVerification = async (
     const sent = await emailService.sendEmailVerificationLink(
       email,
       name || dbUser.firstname || "المستخدم",
-      verificationLink,
+      verificationLink
     );
 
     if (!sent) {
@@ -65,13 +63,16 @@ export const requestVerification = async (
 export const confirmVerification = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(400).json(
-        createErrorResponse("بيانات غير صحيحة", errors.array().map((e: any) => e.msg)),
+        createErrorResponse(
+          "بيانات غير صحيحة",
+          errors.array().map((e: any) => e.msg)
+        )
       );
       return;
     }
@@ -81,16 +82,21 @@ export const confirmVerification = async (
     // If token is provided, use token-based verification
     if (token) {
       // Hash the token to match database
-      const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+      const hashedToken = crypto
+        .createHash("sha256")
+        .update(token)
+        .digest("hex");
 
       // Find user by verification token
       const dbUser = await User.findOne({
         emailVerificationToken: hashedToken,
-        emailVerificationExpires: { $gt: new Date() } // Token not expired
+        emailVerificationExpires: { $gt: new Date() }, // Token not expired
       });
 
       if (!dbUser) {
-        res.status(400).json(createErrorResponse("رمز التحقق غير صالح أو منتهي الصلاحية"));
+        res
+          .status(400)
+          .json(createErrorResponse("رمز التحقق غير صالح أو منتهي الصلاحية"));
         return;
       }
 
@@ -105,7 +111,11 @@ export const confirmVerification = async (
 
       await dbUser.save();
 
-      res.json(createSuccessResponse("تم تأكيد البريد الإلكتروني بنجاح", { email: dbUser.email }));
+      res.json(
+        createSuccessResponse("تم تأكيد البريد الإلكتروني بنجاح", {
+          email: dbUser.email,
+        })
+      );
       return;
     }
 
@@ -118,7 +128,11 @@ export const confirmVerification = async (
       }
 
       if (dbUser.isEmailVerified) {
-        res.json(createSuccessResponse("البريد الإلكتروني مؤكد بالفعل", { email: dbUser.email }));
+        res.json(
+          createSuccessResponse("البريد الإلكتروني مؤكد بالفعل", {
+            email: dbUser.email,
+          })
+        );
         return;
       }
 
@@ -127,11 +141,17 @@ export const confirmVerification = async (
       dbUser.emailVerifiedAt = new Date();
       await dbUser.save();
 
-      res.json(createSuccessResponse("تم تأكيد البريد الإلكتروني بنجاح", { email: dbUser.email }));
+      res.json(
+        createSuccessResponse("تم تأكيد البريد الإلكتروني بنجاح", {
+          email: dbUser.email,
+        })
+      );
       return;
     }
 
-    res.status(400).json(createErrorResponse("يجب تزويد رمز التحقق أو البريد الإلكتروني"));
+    res
+      .status(400)
+      .json(createErrorResponse("يجب تزويد رمز التحقق أو البريد الإلكتروني"));
   } catch (error) {
     next(error);
   }
@@ -140,7 +160,7 @@ export const confirmVerification = async (
 export const getVerificationStatus = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const email = (req.query.email as string) || "";
@@ -152,21 +172,17 @@ export const getVerificationStatus = async (
     const dbUser = await User.findOne({ email });
 
     const verified = dbUser ? dbUser.isEmailVerified : false;
-    const verifiedAt = dbUser && dbUser.emailVerifiedAt ? dbUser.emailVerifiedAt : undefined;
+    const verifiedAt =
+      dbUser && dbUser.emailVerifiedAt ? dbUser.emailVerifiedAt : undefined;
 
-    res.json(createSuccessResponse("تم جلب حالة التحقق", {
-      email,
-      verified,
-      verifiedAt,
-    }));
+    res.json(
+      createSuccessResponse("تم جلب حالة التحقق", {
+        email,
+        verified,
+        verifiedAt,
+      })
+    );
   } catch (error) {
     next(error);
   }
 };
-
-export default {
-  requestVerification,
-  confirmVerification,
-  getVerificationStatus,
-};
-

@@ -125,3 +125,9 @@ frontend/out/
 frontend/build/
 frontend/coverage/
 frontend/.turbo/
+
+
+# Documentation
+docs/
+# pnpm
+.pnpm-store/

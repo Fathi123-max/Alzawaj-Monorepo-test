@@ -19,9 +19,8 @@ COPY . .
 # Install all dependencies for development, including TypeScript dependencies
 ENV NODE_ENV=development
 RUN pnpm install --ignore-scripts
-# Install TypeScript dependencies with workspace flag to avoid workspace root check error
-RUN pnpm add --save-dev typescript @types/react @types/node -w
 
+# Expose port (will be set by environment variable in docker-compose)
 EXPOSE 3000
 CMD ["pnpm", "run", "dev"]
 
@@ -71,6 +70,6 @@ ENV NODE_ENV=production
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://116.203.98.236:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))" || exit 1
+    CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))" || exit 1
 
 CMD ["node", "server.js"]

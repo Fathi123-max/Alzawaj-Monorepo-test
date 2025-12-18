@@ -11,10 +11,10 @@ export const seedUsers = async () => {
     // Create an admin user first
     const bcryptRounds = parseInt(process.env.BCRYPT_ROUNDS || "12");
     console.log('[SEEDER] Using bcrypt rounds:', bcryptRounds);
-    const adminPassword = 'Password123!';
+    const adminPassword = 'admin123@';
     console.log('[SEEDER] Admin password:', adminPassword);
     const adminUser = {
-      email: 'admin@example.com',
+      email: 'alzawajalsaeid1@gmail.com',
       password: adminPassword,
       phone: '+1234567890',
       firstname: 'Admin',

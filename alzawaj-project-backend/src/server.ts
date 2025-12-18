@@ -10,27 +10,30 @@ import { Server } from "socket.io";
 import dotenv from "dotenv";
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: "../.env.local" });
 
 // Import configurations and middleware
 import connectDB from "./config/database";
 import logger from "./config/logger";
 import { errorHandler, notFound } from "./middleware/errorMiddleware";
 import { rateLimitConfig } from "./config/rateLimiting";
-import { initializeSocketHandlers, ExtendedServer } from "./sockets/notificationHandler";
+import {
+  initializeSocketHandlers,
+  ExtendedServer,
+} from "./sockets/notificationHandler";
 
 // Import routes
 import authRoutes from "./routes/authRoutes";
-import profileRoutes from './routes/profileRoutes';
-import searchRoutes from './routes/searchRoutes';
-import requestRoutes from './routes/requestRoutes';
-import chatRoutes from './routes/chatRoutes';
-import notificationRoutes from './routes/notificationRoutes';
-import reportsRoutes from './routes/reportsRoutes';
-import adminRoutes from './routes/adminRoutes';
-import debugRoutes from './routes/debugRoutes';
-import verificationRoutes from './routes/verificationRoutes';
-import bookmarkRoutes from './routes/bookmarkRoutes';
+import profileRoutes from "./routes/profileRoutes";
+import searchRoutes from "./routes/searchRoutes";
+import requestRoutes from "./routes/requestRoutes";
+import chatRoutes from "./routes/chatRoutes";
+import notificationRoutes from "./routes/notificationRoutes";
+import reportsRoutes from "./routes/reportsRoutes";
+import adminRoutes from "./routes/adminRoutes";
+import debugRoutes from "./routes/debugRoutes";
+import verificationRoutes from "./routes/verificationRoutes";
+import bookmarkRoutes from "./routes/bookmarkRoutes";
 
 const app: Express = express();
 const server = createServer(app);
@@ -40,7 +43,9 @@ const io = new Server(server, {
   cors: {
     origin: (origin, callback) => {
       logger.debug(`Socket.IO CORS: Incoming origin: ${origin}`);
-      logger.debug(`Socket.IO CORS: Allowed origins: ${JSON.stringify(allowedOrigins)}`); // Using the same allowedOrigins for consistency
+      logger.debug(
+        `Socket.IO CORS: Allowed origins: ${JSON.stringify(allowedOrigins)}`
+      ); // Using the same allowedOrigins for consistency
 
       // Use the same logic as the main CORS configuration
       if (!origin) {
@@ -50,8 +55,8 @@ const io = new Server(server, {
       }
 
       // Check if the origin is in the allowed list or is a matching pattern
-      const isAllowed = allowedOrigins.some(allowedOrigin => {
-        if (typeof allowedOrigin === 'string') {
+      const isAllowed = allowedOrigins.some((allowedOrigin) => {
+        if (typeof allowedOrigin === "string") {
           return origin === allowedOrigin;
         } else if (allowedOrigin instanceof RegExp) {
           return allowedOrigin.test(origin);
@@ -77,19 +82,25 @@ logger.info("Connecting to MongoDB...");
 connectDB()
   .then(() => {
     logger.info("Successfully connected to MongoDB");
-    
+
     // Create search text index
-    import('./models/Profile')
+    import("./models/Profile")
       .then((ProfileModule) => {
         const Profile = ProfileModule.default || ProfileModule.Profile;
-        if (Profile && typeof (Profile as any).createSearchIndex === 'function') {
+        if (
+          Profile &&
+          typeof (Profile as any).createSearchIndex === "function"
+        ) {
           (Profile as any).createSearchIndex().catch((error: any) => {
             logger.error("Error creating search index:", error);
           });
         }
       })
       .catch((error: any) => {
-        logger.error("Error importing Profile model for index creation:", error);
+        logger.error(
+          "Error importing Profile model for index creation:",
+          error
+        );
       });
   })
   .catch((error) => {
@@ -106,12 +117,12 @@ let allowedOrigins: (string | RegExp)[] = [
   "http://localhost:3000",
   "http://116.203.98.236:3000",
   "http://127.0.0.1:3000",
-  "http://vw4ksss8cggwkgwwo8w4o8sk.116.203.98.236.sslip.io"
+  "http://vw4ksss8cggwkgwwo8w4o8sk.116.203.98.236.sslip.io",
 ];
 
 if (corsOriginEnv) {
   // Split the environment variable by comma and trim whitespace
-  allowedOrigins = corsOriginEnv.split(",").map(origin => origin.trim());
+  allowedOrigins = corsOriginEnv.split(",").map((origin) => origin.trim());
 }
 
 const corsOptions: CorsOptions = {
@@ -127,8 +138,8 @@ const corsOptions: CorsOptions = {
     }
 
     // Check if the origin is in the allowed list or is a matching pattern
-    const isAllowed = allowedOrigins.some(allowedOrigin => {
-      if (typeof allowedOrigin === 'string') {
+    const isAllowed = allowedOrigins.some((allowedOrigin) => {
+      if (typeof allowedOrigin === "string") {
         return origin === allowedOrigin;
       } else if (allowedOrigin instanceof RegExp) {
         return allowedOrigin.test(origin);
@@ -156,7 +167,7 @@ app.use(cors(corsOptions));
 
 // Add a middleware to set the Access-Control-Allow-Private-Network header
 app.use((req: Request, res: Response, next: NextFunction) => {
-  res.setHeader('Access-Control-Allow-Private-Network', 'true');
+  res.setHeader("Access-Control-Allow-Private-Network", "true");
   next();
 });
 
@@ -172,7 +183,7 @@ app.use(
         imgSrc: ["'self'", "data:", "https:"],
       },
     },
-  }),
+  })
 );
 
 // Compression
@@ -195,7 +206,7 @@ if (process.env.NODE_ENV === "development") {
       stream: {
         write: (message: string) => logger.info(message.trim()),
       },
-    }),
+    })
   );
 }
 
@@ -215,24 +226,24 @@ app.get("/health", (req, res) => {
 
 // API Routes
 app.use("/api/auth", rateLimitConfig.auth, authRoutes);
-app.use('/api/auth/verification', verificationRoutes);
-app.use('/api/profile', profileRoutes);
-app.use('/api/search', rateLimitConfig.search, searchRoutes);
-app.use('/api/requests', requestRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/reports', reportsRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/bookmarks', bookmarkRoutes);
+app.use("/api/auth/verification", verificationRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/search", rateLimitConfig.search, searchRoutes);
+app.use("/api/requests", requestRoutes);
+app.use("/api/chat", chatRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/reports", reportsRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/bookmarks", bookmarkRoutes);
 
-app.use('/api/debug', debugRoutes);
+app.use("/api/debug", debugRoutes);
 
 // Socket.IO integration
 app.set("io", io);
 initializeSocketHandlers(io);
 
 // Set the io instance in the notification service
-import { setIoInstance } from './services/notificationService';
+import { setIoInstance } from "./services/notificationService";
 
 setIoInstance(io as ExtendedServer);
 
@@ -243,7 +254,7 @@ try {
   const swaggerSpecs = swaggerModule.default || swaggerModule;
   // Serve the OpenAPI specification as JSON
   app.get("/api-docs/swagger.json", (req, res) => {
-    res.setHeader('Content-Type', 'application/json');
+    res.setHeader("Content-Type", "application/json");
     res.send(swaggerSpecs);
   });
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
@@ -324,7 +335,7 @@ logger.info("Environment variables:", {
 
 server.listen(PORT, () => {
   logger.info(
-    `🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`,
+    `🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`
   );
   logger.info(`📝 Process ID: ${process.pid}`);
 });

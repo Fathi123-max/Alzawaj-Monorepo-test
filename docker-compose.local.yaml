@@ -7,7 +7,7 @@ services:
       target: development
     container_name: alzawaj-frontend-local
     ports:
-      - "${FRONTEND_PORT:-3000}:5001"
+      - "${FRONTEND_PORT:-3000}:3000"
     env_file:
       - ./.env.local
     environment:
@@ -28,6 +28,8 @@ services:
       - NEXT_PUBLIC_FIREBASE_VAPID_KEY=${NEXT_PUBLIC_FIREBASE_VAPID_KEY}
       - NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY=${NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY}
       - NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT=${NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
     volumes:
       - ./alzawaj-project-frontend:/app
     networks:
@@ -55,7 +57,7 @@ services:
       - ./.env.local
     environment:
       - NODE_ENV=${NODE_ENV:-development}
-      - PORT=${PORT:-5001}
+      - PORT=${BACKEND_PORT:-5001}
       - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/alzawaj-dev}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
@@ -79,6 +81,7 @@ services:
       - API_TIMEOUT=${API_TIMEOUT:-30000}
       - ENABLE_REQUEST_LOGGING=${ENABLE_REQUEST_LOGGING:-true}
       - USE_MOCK_SERVICES=${USE_MOCK_SERVICES:-false}
+      - NODE_OPTIONS=--inspect=0.0.0.0:9229
       # ImageKit Configuration
       - IMAGEKIT_PUBLIC_KEY=${IMAGEKIT_PUBLIC_KEY}
       - IMAGEKIT_PRIVATE_KEY=${IMAGEKIT_PRIVATE_KEY}
@@ -95,6 +98,10 @@ services:
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
       - SMTP_SECURE=${SMTP_SECURE}
+      # Resend Email Service Configuration
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - RESEND_SENDER_EMAIL=${RESEND_SENDER_EMAIL}
+      - RESEND_SENDER_NAME=${RESEND_SENDER_NAME}
     volumes:
       - ./alzawaj-project-backend:/app
       - /app/node_modules
@@ -102,9 +109,9 @@ services:
     networks:
       - alzawaj-local-network
     restart: unless-stopped
-    command: npm run dev
+    command: pnpm run dev
     healthcheck:
-      test: [ "CMD", "node", "-e", "require('http').get('http://localhost:5001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))" ]
+      test: [ "CMD", "node", "-e", "require('http').get('http://localhost:${BACKEND_PORT:-5001}/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))" ]
       interval: 30s
       timeout: 10s
       retries: 3
