@@ -52,6 +52,7 @@ services:
       - ./.env
     environment:
       - NODE_ENV=${NODE_ENV:-production}
+      - DOCKER_ENV=true
       - PORT=${PORT:-5001}
       - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/alzawaj}
       - JWT_SECRET=${JWT_SECRET}
@@ -87,6 +88,10 @@ services:
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
       - SMTP_SECURE=${SMTP_SECURE}
+      # Resend Configuration
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - RESEND_SENDER_EMAIL=${RESEND_SENDER_EMAIL}
+      - RESEND_SENDER_NAME=${RESEND_SENDER_NAME}
     depends_on:
       mongodb:
         condition: service_healthy

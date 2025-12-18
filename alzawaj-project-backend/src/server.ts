@@ -9,8 +9,11 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import dotenv from "dotenv";
 
-// Load environment variables
-dotenv.config({ path: "../.env.local" });
+// Load environment variables if not in production Docker environment
+// In Docker, environment variables are provided through docker-compose.yml
+if (process.env.NODE_ENV !== 'production' || !process.env.DOCKER_ENV) {
+  dotenv.config({ path: "../.env.local" });
+}
 
 // Import configurations and middleware
 import connectDB from "./config/database";

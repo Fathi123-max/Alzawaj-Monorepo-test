@@ -3,9 +3,10 @@
  * Replaces Gmail SMTP with Resend for better deliverability and analytics
  */
 import { Resend } from "resend";
-import resendClient, {
+import getResendClient, {
   getDefaultSender,
   getDefaultSenderName,
+  isResendConfigured,
 } from "../config/resendConfig";
 
 export interface EmailOptions {
@@ -21,6 +22,15 @@ export interface EmailOptions {
  * Send email using Resend API
  */
 export const sendEmail = async (options: EmailOptions): Promise<boolean> => {
+  // Get the resend client
+  const resendClient = getResendClient();
+
+  // Check if resend client is available
+  if (!resendClient) {
+    console.warn("Resend client not configured. Skipping email sending.");
+    return false;
+  }
+
   try {
     const from = options.from || getDefaultSender();
     const fromName = options.fromName || getDefaultSenderName();
@@ -493,6 +503,8 @@ export const sendWelcomeEmail = async (
 مع تحياتنا،
 فريق منصة الزواج الإسلامية`,
     };
+
+    return await sendEmail(emailOptions);
   } catch (error) {
     console.error("Error sending welcome email:", error);
     return false;
