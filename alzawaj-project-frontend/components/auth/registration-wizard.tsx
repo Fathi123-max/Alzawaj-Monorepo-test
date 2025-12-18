@@ -249,7 +249,9 @@ export function RegistrationWizard({
           {validationErrors && validationErrors.length > 0 && (
             <Alert variant="destructive" className="mt-2">
               <AlertDescription>
-                <div className="text-sm font-medium mb-2">يرجى تصحيح الأخطاء التالية:</div>
+                <div className="text-sm font-medium mb-2">
+                  يرجى تصحيح الأخطاء التالية:
+                </div>
                 <ul className="list-disc list-inside space-y-1 text-sm">
                   {validationErrors.map((err, idx) => (
                     <li key={idx}>{err}</li>

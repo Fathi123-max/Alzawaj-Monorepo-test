@@ -51,12 +51,12 @@ const configValidation = validateFirebaseConfig();
 if (!configValidation.valid) {
   console.warn(
     `Firebase configuration incomplete. Missing variables: ${configValidation.missing.join(
-      ", "
-    )}`
+      ", ",
+    )}`,
   );
   if (isDevelopment) {
     console.info(
-      "Running in development mode - push notifications may not work without proper Firebase configuration."
+      "Running in development mode - push notifications may not work without proper Firebase configuration.",
     );
   }
 }
@@ -118,7 +118,7 @@ export const getFCMToken = async (): Promise<string | null> => {
     !isFirebaseMessagingSupported()
   ) {
     console.log(
-      "Firebase not initialized on server or missing app/messaging, or browser doesn't support required APIs"
+      "Firebase not initialized on server or missing app/messaging, or browser doesn't support required APIs",
     );
     return null;
   }
@@ -143,16 +143,16 @@ export const getFCMToken = async (): Promise<string | null> => {
           registration = existingRegistration;
           console.log(
             "Using existing service worker registration with scope:",
-            registration.scope
+            registration.scope,
           );
         } else {
           // Register new service worker
           registration = await navigator.serviceWorker.register(
-            "/firebase-messaging-sw.js"
+            "/firebase-messaging-sw.js",
           );
           console.log(
             "Firebase messaging service worker registered with scope:",
-            registration.scope
+            registration.scope,
           );
         }
 
@@ -160,7 +160,7 @@ export const getFCMToken = async (): Promise<string | null> => {
         const waitForActiveServiceWorker = async (
           registration: ServiceWorkerRegistration,
           maxRetries = 3,
-          retryDelay = 200
+          retryDelay = 200,
         ): Promise<boolean> => {
           for (let attempt = 1; attempt <= maxRetries; attempt++) {
             if (registration.active) {
@@ -179,7 +179,7 @@ export const getFCMToken = async (): Promise<string | null> => {
               } catch (activateError) {
                 console.warn(
                   "Could not send SKIP_WAITING message:",
-                  activateError
+                  activateError,
                 );
               }
             }
@@ -192,7 +192,7 @@ export const getFCMToken = async (): Promise<string | null> => {
                   const timeout = setTimeout(
                     () =>
                       reject(new Error("Service worker activation timeout")),
-                    5000
+                    5000,
                   );
 
                   const serviceWorker = registration.installing;
@@ -220,11 +220,11 @@ export const getFCMToken = async (): Promise<string | null> => {
               } catch (installError) {
                 console.warn(
                   `Service worker installation attempt ${attempt} failed:`,
-                  installError
+                  installError,
                 );
                 if (attempt < maxRetries) {
                   await new Promise((resolve) =>
-                    setTimeout(resolve, retryDelay)
+                    setTimeout(resolve, retryDelay),
                   );
                   continue;
                 }
@@ -243,7 +243,7 @@ export const getFCMToken = async (): Promise<string | null> => {
           await waitForActiveServiceWorker(registration);
         if (!serviceWorkerActive) {
           console.warn(
-            "Service worker failed to become active after multiple attempts"
+            "Service worker failed to become active after multiple attempts",
           );
           return null;
         }
@@ -253,7 +253,7 @@ export const getFCMToken = async (): Promise<string | null> => {
       } catch (swError) {
         console.warn(
           "Service worker registration failed, push notifications will not be available in this environment:",
-          swError
+          swError,
         );
 
         // Provide specific guidance based on error type
@@ -261,11 +261,11 @@ export const getFCMToken = async (): Promise<string | null> => {
           if (swError.message.includes("Failed to register a ServiceWorker")) {
             console.info(
               "Service worker registration failed. This often happens in development environments. " +
-                "For push notifications to work, you need HTTPS and proper service worker configuration."
+                "For push notifications to work, you need HTTPS and proper service worker configuration.",
             );
           } else if (swError.message.includes("network")) {
             console.info(
-              "Network error during service worker registration. Check your internet connection."
+              "Network error during service worker registration. Check your internet connection.",
             );
           }
         }
@@ -283,7 +283,7 @@ export const getFCMToken = async (): Promise<string | null> => {
     if (isDevelopment) {
       console.info(
         "Development mode detected. Push notifications may not work properly without HTTPS. " +
-          "Consider using a tool like ngrok for local HTTPS testing."
+          "Consider using a tool like ngrok for local HTTPS testing.",
       );
 
       // Check if we're on HTTP (common development issue)
@@ -293,7 +293,7 @@ export const getFCMToken = async (): Promise<string | null> => {
       ) {
         console.warn(
           "Running on HTTP in development mode. Firebase push notifications require HTTPS. " +
-            "This is expected in development, but notifications will only work via Socket.IO."
+            "This is expected in development, but notifications will only work via Socket.IO.",
         );
       }
     }
@@ -308,7 +308,7 @@ export const getFCMToken = async (): Promise<string | null> => {
       if (token) {
         console.log(
           `FCM token acquired successfully${isDevelopment ? " (development mode)" : ""}:`,
-          token.substring(0, 20) + "..."
+          token.substring(0, 20) + "...",
         );
       }
     } catch (tokenError) {
@@ -319,18 +319,18 @@ export const getFCMToken = async (): Promise<string | null> => {
         if (tokenError.message.includes("messaging/token-unavailable")) {
           console.info(
             "FCM token unavailable. This can happen if the service worker is not properly registered " +
-              "or if there are network connectivity issues."
+              "or if there are network connectivity issues.",
           );
         } else if (
           tokenError.message.includes("messaging/permission-blocked")
         ) {
           console.info(
             "Notification permission was blocked by the user. " +
-              "The user needs to manually enable notifications in browser settings."
+              "The user needs to manually enable notifications in browser settings.",
           );
         } else if (tokenError.message.includes("messaging/invalid-vapid-key")) {
           console.info(
-            "Invalid VAPID key. Check your NEXT_PUBLIC_FIREBASE_VAPID_KEY environment variable."
+            "Invalid VAPID key. Check your NEXT_PUBLIC_FIREBASE_VAPID_KEY environment variable.",
           );
         }
       }
@@ -345,7 +345,7 @@ export const getFCMToken = async (): Promise<string | null> => {
       return token;
     } else {
       console.log(
-        "No registration token available. Request permission to generate one."
+        "No registration token available. Request permission to generate one.",
       );
       return null;
     }
@@ -360,7 +360,7 @@ export const getFCMToken = async (): Promise<string | null> => {
     ) {
       console.log(
         "Service worker or messaging registration failed:",
-        err.message
+        err.message,
       );
       // This error can occur in certain environments (development, HTTP vs HTTPS)
       // Just return null instead of failing completely
@@ -381,7 +381,7 @@ export const deleteFCMToken = async (): Promise<boolean> => {
     !isFirebaseMessagingSupported()
   ) {
     console.log(
-      "Firebase not initialized on server or missing app/messaging, or browser doesn't support required APIs"
+      "Firebase not initialized on server or missing app/messaging, or browser doesn't support required APIs",
     );
     return false;
   }
@@ -407,7 +407,7 @@ export const onForegroundMessage = (): Promise<any> => {
     !isFirebaseMessagingSupported()
   ) {
     console.log(
-      "Firebase not initialized on server or missing app/messaging, or browser doesn't support required APIs"
+      "Firebase not initialized on server or missing app/messaging, or browser doesn't support required APIs",
     );
     return Promise.resolve(null);
   }

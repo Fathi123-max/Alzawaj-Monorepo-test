@@ -1,9 +1,26 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
-import { Notification } from "@/lib/types";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
 import { notificationsApi } from "@/lib/api";
 import { showToast } from "@/components/ui/toaster";
+
+// Define Notification interface locally to avoid import issues
+interface Notification {
+  id: string;
+  userId: string;
+  type: "marriage-request" | "message" | "profile-approved" | "system";
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+  data?: any;
+}
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -14,6 +31,8 @@ interface NotificationContextType {
   markAllAsRead: () => Promise<void>;
   addNotification: (notification: Notification) => void;
   removeNotification: (notificationId: string) => void;
+  notificationPermission: NotificationPermission;
+  checkNotificationPermission: () => NotificationPermission;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
@@ -28,6 +47,34 @@ export function NotificationProvider({
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [notificationPermission, setNotificationPermission] =
+    useState<NotificationPermission>("default");
+
+  // Check notification permission on mount and when window gains focus
+  const checkNotificationPermission =
+    useCallback((): NotificationPermission => {
+      if (typeof window !== "undefined" && "Notification" in window) {
+        const permission = Notification.permission;
+        setNotificationPermission(permission);
+        return permission;
+      }
+      return "denied";
+    }, []);
+
+  // Initialize notification permission on mount
+  useEffect(() => {
+    checkNotificationPermission();
+
+    // Listen for focus events to re-check permission
+    const handleFocus = () => {
+      checkNotificationPermission();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [checkNotificationPermission]);
 
   const fetchNotifications = useCallback(async () => {
     setIsLoading(true);
@@ -110,6 +157,8 @@ export function NotificationProvider({
     markAllAsRead,
     addNotification,
     removeNotification,
+    notificationPermission,
+    checkNotificationPermission,
   };
 
   return (
