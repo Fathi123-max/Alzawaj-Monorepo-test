@@ -173,7 +173,7 @@ const generalRateLimit = (() => {
     },
   };
 
-  return createRateLimiter(baseConfig)();
+  return createRateLimiter(baseConfig)({});
 })();
 
 // Authentication rate limiting (stricter)
@@ -201,7 +201,7 @@ const authRateLimit = (() => {
     },
   };
 
-  return createRateLimiter(baseConfig)();
+  return createRateLimiter(baseConfig)({});
 })();
 
 // Search rate limiting
@@ -227,7 +227,7 @@ const searchRateLimit = (() => {
     },
   };
 
-  return createRateLimiter(baseConfig)();
+  return createRateLimiter(baseConfig)({});
 })();
 
 // Message rate limiting (per user)
@@ -271,7 +271,7 @@ const messageRateLimit = (() => {
     },
   };
 
-  return createRateLimiter(baseConfig)();
+  return createRateLimiter(baseConfig)({});
 })();
 
 // Daily message rate limiting
@@ -315,7 +315,7 @@ const dailyMessageRateLimit = (() => {
     },
   };
 
-  return createRateLimiter(baseConfig)();
+  return createRateLimiter(baseConfig)({});
 })();
 
 // File upload rate limiting
@@ -339,7 +339,7 @@ const uploadRateLimit = (() => {
     },
   };
 
-  return createRateLimiter(baseConfig)();
+  return createRateLimiter(baseConfig)({});
 })();
 
 // Slow down middleware for registration
@@ -351,7 +351,7 @@ const registrationSlowDown = (() => {
     maxDelayMs: 5000, // Maximum delay of 5 seconds
   };
 
-  return createSlowDownMiddleware(baseConfig)();
+  return createSlowDownMiddleware(baseConfig)({});
 })();
 
 // Export rate limiters

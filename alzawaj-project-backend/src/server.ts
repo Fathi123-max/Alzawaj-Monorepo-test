@@ -9,9 +9,20 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import dotenv from "dotenv";
 
-// Load environment variables if not in production Docker environment
+// Load environment variables only if we're not in Docker and if environment variables are not already set
 // In Docker, environment variables are provided through docker-compose.yml
-if (process.env.NODE_ENV !== 'production' || !process.env.DOCKER_ENV) {
+// Check if critical environment variables are present to determine if they're properly set
+const isEnvAlreadySet = !!process.env.MONGODB_URI && !!process.env.JWT_SECRET;
+
+console.log("NODE_ENV:", process.env.NODE_ENV);
+console.log("MONGODB_URI:", process.env.MONGODB_URI);
+console.log("MONGODB_URI present:", !!process.env.MONGODB_URI);
+console.log("JWT_SECRET present:", !!process.env.JWT_SECRET);
+console.log("DOCKER_ENV:", process.env.DOCKER_ENV);
+console.log("isEnvAlreadySet:", isEnvAlreadySet);
+
+// Only load .env.local if environment variables are not already properly set (non-Docker environment)
+if (!isEnvAlreadySet) {
   dotenv.config({ path: "../.env.local" });
 }
 

@@ -159,13 +159,6 @@ interface ValidationResult {
   errors?: string[];
 }
 
-// Initialize ImageKit
-const imagekit = new ImageKit({
-  publicKey: process.env.IMAGEKIT_PUBLIC_KEY || "",
-  privateKey: process.env.IMAGEKIT_PRIVATE_KEY || "",
-  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT || "", // Use IMAGEKIT_URL_ENDPOINT as required
-});
-
 // ImageKit helper functions
 const uploadToImageKit = async (
   file: Express.Multer.File,
@@ -182,6 +175,13 @@ const uploadToImageKit = async (
       "ImageKit configuration is missing. Please set IMAGEKIT_PUBLIC_KEY, IMAGEKIT_PRIVATE_KEY, and IMAGEKIT_URL_ENDPOINT environment variables."
     );
   }
+
+  // Initialize ImageKit only when needed with validated configuration
+  const imagekit = new ImageKit({
+    publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+    privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+    urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
+  });
 
   try {
     const result = await imagekit.upload({
@@ -230,6 +230,13 @@ const deleteFromImageKit = async (fileId: string): Promise<void> => {
       "ImageKit configuration is missing. Please set IMAGEKIT_PUBLIC_KEY, IMAGEKIT_PRIVATE_KEY, and IMAGEKIT_URL_ENDPOINT environment variables."
     );
   }
+
+  // Initialize ImageKit only when needed with validated configuration
+  const imagekit = new ImageKit({
+    publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+    privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+    urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
+  });
 
   try {
     await imagekit.deleteFile(fileId);
