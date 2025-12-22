@@ -704,7 +704,7 @@ const useRegistration = (): UseRegistrationResult => {
             workAfterMarriage: regData.workAfterMarriage as
               | "yes"
               | "no"
-              | "maybe",
+              | "undecided",
           }),
         },
         familyInfo: {

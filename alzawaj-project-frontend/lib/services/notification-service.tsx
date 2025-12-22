@@ -1,81 +1,25 @@
-// lib/services/notificationService.tsx (frontend)
+// lib/services/notification-service.tsx (frontend)
 import { useEffect } from "react";
 import type { MessagePayload } from "firebase/messaging";
-import { app } from "./firebase"; // Your Firebase app configuration
-import { useNotifications } from "@/providers/notification-provider";
-
-/**
- * Request notification permission and get FCM token
- */
-export const requestNotificationPermission = async (): Promise<
-  string | null
-> => {
-  // Check if we're in a browser environment and if Firebase is supported
-  if (typeof window === "undefined" || !app) {
-    console.log("Firebase not initialized on server or missing app");
-    return null;
-  }
-
-  // Import Firebase messaging dynamically to ensure it's only imported in browser environment
-  const { getMessaging, isSupported } = await import("firebase/messaging");
-
-  // Check if Firebase Messaging is supported in the current environment
-  const messagingSupported = await isSupported();
-  if (!messagingSupported) {
-    console.log("Firebase Messaging is not supported in this browser");
-    return null;
-  }
-
-  try {
-    // Initialize messaging only in browser
-    const messaging = getMessaging(app);
-
-    // Request permission to show notifications
-    const permission = await Notification.requestPermission();
-
-    if (permission === "granted") {
-      let token: string | null = null;
-      try {
-        // Get registration token
-        token = await getToken(messaging, {
-          vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
-        });
-      } catch (tokenErr) {
-        console.warn(
-          "Failed to get FCM token (this is normal in development):",
-          tokenErr,
-        );
-        // In development, especially with HTTP or self-signed certs, token retrieval may fail
-        // but we can still use Socket.IO for real-time messaging
-      }
-
-      // Send token to your backend to store against user
-      if (token) {
-        await registerTokenWithBackend(token);
-      } else {
-        console.log(
-          "Notification permission granted, but no FCM token obtained (this is OK for development)",
-        );
-      }
-
-      return token;
-    } else {
-      console.log("Notification permission denied");
-      return null;
-    }
-  } catch (err) {
-    console.error("Error getting notification permission:", err);
-    // Still allow the app to function without notifications
-    return null;
-  }
-};
+import { app, getFCMToken } from "./firebase"; // Your Firebase app configuration
+import { useNotifications } from "../../providers/notification-provider";
+import { notificationsApi } from "../api";
 
 /**
  * Register the token with your backend
  */
-const registerTokenWithBackend = async (token: string): Promise<void> => {
+export const registerTokenWithBackend = async (token: string): Promise<void> => {
   try {
-    // Get the auth token from localStorage directly to ensure it's available
+    // Attempt to use the notificationsApi first as it's more standardized
+    try {
+      await notificationsApi.registerDeviceToken({ token });
+      console.log("FCM token registered with backend successfully via API client");
+      return;
+    } catch (apiError) {
+      console.warn("Failed to register token via API client, falling back to direct fetch:", apiError);
+    }
+
+    // Fallback to direct fetch if API client fails or behaves unexpectedly
     const authToken =
       typeof window !== "undefined"
         ? localStorage.getItem("zawaj_auth_token")
@@ -85,7 +29,6 @@ const registerTokenWithBackend = async (token: string): Promise<void> => {
       throw new Error("No auth token available for FCM token registration");
     }
 
-    // Use fetch directly with proper authorization header
     const response = await fetch("/api/notifications/register-token", {
       method: "POST",
       headers: {
@@ -104,13 +47,12 @@ const registerTokenWithBackend = async (token: string): Promise<void> => {
 
     const data = await response.json();
     if (data.success) {
-      console.log("FCM token registered with backend successfully");
+      console.log("FCM token registered with backend successfully via fallback fetch");
     } else {
-      console.error("Failed to register token with backend:", data);
+      console.error("Failed to register token with backend (fallback):", data);
     }
   } catch (error: any) {
     console.error("Error registering token with backend:", error);
-    // Enhanced error logging to track 401 errors specifically
     if (
       error.message?.includes("401") ||
       error.message?.includes("Unauthorized")
@@ -119,7 +61,64 @@ const registerTokenWithBackend = async (token: string): Promise<void> => {
         "Authentication error when registering FCM token - token may not be properly stored",
       );
     }
-    throw error; // Re-throw to be handled by the calling function
+  }
+};
+
+/**
+ * Request notification permission and get FCM token
+ */
+export const requestNotificationPermission = async (): Promise<
+  string | null
+> => {
+  if (typeof window === "undefined" || !app) {
+    console.log("Firebase not initialized on server or missing app");
+    return null;
+  }
+
+  try {
+    const { getMessaging, isSupported, getToken } = await import("firebase/messaging");
+
+    const messagingSupported = await isSupported();
+    if (!messagingSupported) {
+      console.log("Firebase Messaging is not supported in this browser");
+      return null;
+    }
+
+    const messaging = getMessaging(app);
+    const permission = await Notification.requestPermission();
+
+    if (permission === "granted") {
+      let token: string | null = null;
+      try {
+        const vapidKey = process.env["NEXT_PUBLIC_FIREBASE_VAPID_KEY"];
+        if (vapidKey) {
+          token = await getToken(messaging, { vapidKey });
+        } else {
+          token = await getToken(messaging);
+        }
+      } catch (tokenErr) {
+        console.warn(
+          "Failed to get FCM token (this is normal in development):",
+          tokenErr,
+        );
+      }
+
+      if (token) {
+        await registerTokenWithBackend(token);
+      } else {
+        console.log(
+          "Notification permission granted, but no FCM token obtained",
+        );
+      }
+
+      return token;
+    } else {
+      console.log("Notification permission denied");
+      return null;
+    }
+  } catch (err) {
+    console.error("Error getting notification permission:", err);
+    return null;
   }
 };
 
@@ -127,9 +126,7 @@ const registerTokenWithBackend = async (token: string): Promise<void> => {
  * Listen for foreground messages
  */
 export const listenForForegroundMessages = async (): Promise<void> => {
-  // Check if we're in a browser environment
   if (typeof window === "undefined" || !app) {
-    console.log("Firebase not initialized on server or missing app");
     return;
   }
 
@@ -137,18 +134,12 @@ export const listenForForegroundMessages = async (): Promise<void> => {
     const { getMessaging, onMessage, isSupported } =
       await import("firebase/messaging");
 
-    // Check if Firebase Messaging is supported in the current environment
     const messagingSupported = await isSupported();
-    if (!messagingSupported) {
-      console.log("Firebase Messaging is not supported in this browser");
-      return;
-    }
+    if (!messagingSupported) return;
 
     const messaging = getMessaging(app);
     onMessage(messaging, (payload: MessagePayload) => {
       console.log("Foreground message received: ", payload);
-
-      // Handle the message - you can show a toast notification, etc.
       showNotificationInUI(payload);
     });
   } catch (err) {
@@ -160,47 +151,50 @@ export const listenForForegroundMessages = async (): Promise<void> => {
  * Show notification in UI when received in foreground
  */
 const showNotificationInUI = (payload: MessagePayload): void => {
-  // Extract notification data
   const { notification, data } = payload;
-
-  // Use the notification provider to add to in-app notifications
-  // The exact implementation depends on your notification provider
   console.log("Foreground notification:", notification, data);
-
-  // Example of showing a toast notification
-  // toast.info(notification?.body || 'New notification received');
+  // Implementation for showing custom UI/toasts can be added here
 };
 
 /**
  * Hook to manage notification permissions and setup
  */
 export const useNotificationSetup = (): void => {
-  const { addNotification } = useNotifications();
+  const { fetchUnreadCount } = useNotifications();
 
   useEffect(() => {
     const setupNotifications = async () => {
-      // Check if we're in a browser environment
-      if (typeof window === "undefined") {
-        console.log("Notification setup only runs in browser environment");
-        return;
-      }
+      if (typeof window === "undefined") return;
 
-      // Request permission and get token
-      const token = await requestNotificationPermission();
+      // Only proceed if authenticated
+      const token = localStorage.getItem("zawaj_auth_token");
+      if (!token) return;
 
-      // Set up foreground message listener
+      await requestNotificationPermission();
       await listenForForegroundMessages();
-
-      console.log("Notification setup complete, token:", token);
+      
+      // Also fetch initial unread count
+      await fetchUnreadCount();
     };
 
     setupNotifications();
-  }, [addNotification]);
+  }, [fetchUnreadCount]);
 };
 
 /**
- * Send test notification to current user
- * This would typically only be used for testing purposes
+ * Handle incoming notification from Socket.IO
+ */
+export const handleSocketNotification = (notification: any): void => {
+  if (Notification.permission === "granted" && document.visibilityState !== "visible") {
+    new Notification(notification.title || "الزواج السعيد", {
+      body: notification.message || notification.body,
+      icon: "/logo.png",
+    });
+  }
+};
+
+/**
+ * Send test notification
  */
 export const sendTestNotification = async (
   title: string,
@@ -211,17 +205,22 @@ export const sendTestNotification = async (
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("auth_token")}`, // Include user's auth token
+        Authorization: `Bearer ${localStorage.getItem("zawaj_auth_token")}`,
       },
       body: JSON.stringify({ title, body }),
     });
 
-    if (!response.ok) {
-      throw new Error("Failed to send test notification");
-    }
-
+    if (!response.ok) throw new Error("Failed to send test notification");
     console.log("Test notification sent successfully");
   } catch (error) {
     console.error("Error sending test notification:", error);
   }
+};
+
+export const subscribeToTopics = async (topics: string[]): Promise<void> => {
+  console.log("Subscribing to topics:", topics);
+};
+
+export const unsubscribeFromTopics = async (topics: string[]): Promise<void> => {
+  console.log("Unsubscribing from topics:", topics);
 };

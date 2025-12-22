@@ -427,7 +427,7 @@ export interface RegistrationData {
   clothingStyle?: string;
   prayingLocation?: string;
   mahramAvailable?: boolean;
-  workAfterMarriage?: "yes" | "no" | "maybe";
+  workAfterMarriage?: "yes" | "no" | "undecided";
   childcarePreference?: string;
 
   // Male-specific fields

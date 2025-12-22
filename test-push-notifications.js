@@ -3,11 +3,11 @@ async function testPushNotifications() {
 
     // Configuration
     const BASE_URL = 'http://localhost:5001/api';
-    const USER_EMAIL = process.env.TEST_USER_EMAIL || 'test@example.com';
-    const USER_PASSWORD = process.env.TEST_USER_PASSWORD || 'testpassword';
-    const TARGET_USER_ID = process.env.TARGET_USER_ID || '507f1f77bcf86cd799439011';
+    const USER_EMAIL = process.env.TEST_USER_EMAIL || 'admin@alzawajalsaeid.com';
+    const USER_PASSWORD = process.env.TEST_USER_PASSWORD || 'AdminPass123!';
+    let TARGET_USER_ID = process.env.TARGET_USER_ID; 
 
-    console.log('User credentials:', { email: USER_EMAIL, password: '***', targetUserId: TARGET_USER_ID });
+    console.log('User credentials:', { email: USER_EMAIL, password: '***', targetUserId: TARGET_USER_ID || '(will use self)' });
     console.log('');
 
     try {
@@ -19,7 +19,7 @@ async function testPushNotifications() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                email: USER_EMAIL,
+                username: USER_EMAIL,
                 password: USER_PASSWORD
             })
         });
@@ -30,6 +30,11 @@ async function testPushNotifications() {
             const authToken = loginData.token;
             console.log('✓ Login successful');
             console.log(`✓ Token obtained: ${authToken.substring(0, 20)}...`);
+
+            if (!TARGET_USER_ID) {
+                TARGET_USER_ID = loginData.user.id;
+                console.log(`✓ Setting target user to self: ${TARGET_USER_ID}`);
+            }
 
             // Step 2: Send notification
             console.log('\n2. Sending test notification...');

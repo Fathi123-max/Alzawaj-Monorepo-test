@@ -169,8 +169,8 @@ function getRandomClothingStyle():
 }
 
 // Utility function for work after marriage
-function getRandomWorkAfterMarriage(): "yes" | "no" | "maybe" {
-  return getRandomElement(["yes", "no", "maybe"]);
+function getRandomWorkAfterMarriage(): "yes" | "no" | "undecided" {
+  return getRandomElement(["yes", "no", "undecided"]);
 }
 
 // Utility function for praying location

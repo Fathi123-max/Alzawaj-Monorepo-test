@@ -9,12 +9,16 @@ import { ChevronDown } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { NotificationBell } from "@/components/ui/notification-bell";
 import { isAdmin } from "@/lib/utils/jwt.utils";
+import { useNotificationSetup } from "@/lib/services/notification-service";
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
+  // Initialize notification setup (permissions, token registration, initial fetch)
+  useNotificationSetup();
+  
   const [showUserMenu, setShowUserMenu] = useState(false);
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

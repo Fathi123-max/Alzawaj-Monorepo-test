@@ -1002,7 +1002,7 @@ export default function NewStep2AllData({
                           workAfterMarriage: e.target.value as
                             | "yes"
                             | "no"
-                            | "maybe",
+                            | "undecided",
                         })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -1010,8 +1010,7 @@ export default function NewStep2AllData({
                       <option value="">اختر موقفك من العمل بعد الزواج</option>
                       <option value="yes">نعم، أريد الاستمرار في العمل</option>
                       <option value="no">لا، أفضل التفرغ للمنزل</option>
-                      <option value="maybe">حسب الظروف</option>
-                      <option value="discuss">سأناقش مع زوجي</option>
+                      <option value="undecided">حسب الظروف</option>
                     </select>
                   </div>
                 )}

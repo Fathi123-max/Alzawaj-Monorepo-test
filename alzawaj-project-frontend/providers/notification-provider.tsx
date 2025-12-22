@@ -33,6 +33,7 @@ interface NotificationContextType {
   removeNotification: (notificationId: string) => void;
   notificationPermission: NotificationPermission;
   checkNotificationPermission: () => NotificationPermission;
+  fetchUnreadCount: () => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
@@ -76,25 +77,31 @@ export function NotificationProvider({
     };
   }, [checkNotificationPermission]);
 
+  const fetchUnreadCount = useCallback(async () => {
+    try {
+      const response = await notificationsApi.getUnreadCount();
+      if (response.success && response.data) {
+        setUnreadCount(response.data.count);
+      }
+    } catch (error) {
+      console.error("Error fetching unread count:", error);
+    }
+  }, []);
+
   const fetchNotifications = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await notificationsApi.getNotifications();
       if (response.success && response.data) {
         setNotifications(response.data.notifications);
-
-        // Get unread count
-        const unreadResponse = await notificationsApi.getUnreadCount();
-        if (unreadResponse.success && unreadResponse.data) {
-          setUnreadCount(unreadResponse.data.count);
-        }
+        await fetchUnreadCount();
       }
     } catch (error: any) {
       showToast.error(error.message || "خطأ في تحميل الإشعارات");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [fetchUnreadCount]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
@@ -159,6 +166,7 @@ export function NotificationProvider({
     removeNotification,
     notificationPermission,
     checkNotificationPermission,
+    fetchUnreadCount,
   };
 
   return (

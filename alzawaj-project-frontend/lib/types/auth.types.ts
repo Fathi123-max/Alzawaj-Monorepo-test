@@ -429,7 +429,7 @@ export interface ApiProfile {
     | "hijab-modest"
     | "hijab-modern"
     | "loose-covering";
-  workAfterMarriage?: "yes" | "no" | "depends";
+  workAfterMarriage?: "yes" | "no" | "undecided";
   mahramAvailable?: boolean;
   guardianName?: string;
   guardianRelationship?: "father" | "brother" | "uncle" | "other";
@@ -809,7 +809,7 @@ export interface BackendRegisterRequest {
     relocationPlans: string;
     marriageTimeline: string;
     clothingStyle?: string;
-    workAfterMarriage?: "yes" | "no" | "maybe";
+    workAfterMarriage?: "yes" | "no" | "undecided";
   };
   familyInfo: {
     hasChildren: "yes" | "no";
@@ -886,7 +886,7 @@ export interface FlatBackendRegisterRequest {
   wearHijab?: boolean | undefined; // For females
   wearNiqab?: boolean | undefined; // For females
   clothingStyle?: string | undefined;
-  workAfterMarriage?: "yes" | "no" | "maybe" | undefined;
+  workAfterMarriage?: "yes" | "no" | "undecided" | undefined;
   preferences?: Record<string, any> | undefined;
 }
 

@@ -141,7 +141,7 @@ export const registrationStepMaleFinancialSchema = z.object({
 // Female-specific preferences step schema
 export const registrationStepFemalePreferencesSchema = z.object({
   workAfterMarriage: z.enum(
-    ["yes-same-field", "yes-different-field", "maybe", "no"],
+    ["yes", "no", "undecided"],
     {
       required_error: "موقف العمل بعد الزواج مطلوب",
     },
