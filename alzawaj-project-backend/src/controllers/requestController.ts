@@ -116,8 +116,8 @@ export const sendMarriageRequest = async (
       }
       
       if (setting === 'verified-only') {
-        // Check if sender is verified
-        if (!senderProfile.verification?.isVerified) {
+        // Check if sender is verified (skip this check for admin and moderator users)
+        if (req.user?.role !== "admin" && req.user?.role !== "moderator" && !senderProfile.verification?.isVerified) {
           res.status(403).json(createErrorResponse("يجب أن تكون موثقاً لإرسال طلب تواصل"));
           return;
         }

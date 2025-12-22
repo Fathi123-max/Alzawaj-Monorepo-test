@@ -43,8 +43,14 @@ export async function GET(request: NextRequest) {
       process.env["BACKEND_API_URL"] ||
       process.env["NEXT_PUBLIC_BACKEND_API_URL"] ||
       process.env["NEXT_PUBLIC_API_BASE_URL"] ||
-      "https://alzawaj-backend-staging.onrender.com/api";
-    const apiUrl = `${backendUrl}/admin/settings`;
+      "https://alzawaj-backend-staging.onrender.com";
+
+    // Check if BACKEND_URL already ends with '/api' to avoid double '/api' in URL
+    const normalizedBackendUrl = backendUrl.endsWith('/api')
+      ? backendUrl.slice(0, -'/api'.length) // Remove trailing '/api'
+      : backendUrl;
+
+    const apiUrl = `${normalizedBackendUrl}/api/admin/settings`;
 
     // Extract token from header for backend call
     const token = authHeader.replace("Bearer ", "");
@@ -141,8 +147,14 @@ export async function PUT(request: NextRequest) {
       process.env["BACKEND_API_URL"] ||
       process.env["NEXT_PUBLIC_BACKEND_API_URL"] ||
       process.env["NEXT_PUBLIC_API_BASE_URL"] ||
-      "https://alzawaj-backend-staging.onrender.com/api";
-    const apiUrl = `${backendUrl}/admin/settings`;
+      "https://alzawaj-backend-staging.onrender.com";
+
+    // Check if BACKEND_URL already ends with '/api' to avoid double '/api' in URL
+    const normalizedBackendUrl = backendUrl.endsWith('/api')
+      ? backendUrl.slice(0, -'/api'.length) // Remove trailing '/api'
+      : backendUrl;
+
+    const apiUrl = `${normalizedBackendUrl}/api/admin/settings`;
 
     console.log("🌐 Forwarding to backend:", apiUrl);
 

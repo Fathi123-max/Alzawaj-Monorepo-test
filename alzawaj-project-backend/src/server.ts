@@ -129,9 +129,7 @@ app.set("trust proxy", 1);
 const corsOriginEnv = process.env.CORS_ORIGIN;
 let allowedOrigins: (string | RegExp)[] = [
   "http://localhost:3000",
-  "http://116.203.98.236:3000",
   "http://127.0.0.1:3000",
-  "http://vw4ksss8cggwkgwwo8w4o8sk.116.203.98.236.sslip.io",
 ];
 
 if (corsOriginEnv) {

@@ -106,20 +106,19 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         return () => clearTimeout(retryConnection);
       }
 
-      // Determine the proper socket URL based on the NEXT_PUBLIC_BACKEND_URL
-      const backendUrl =
-        process.env["NEXT_PUBLIC_BACKEND_URL"] || "http://116.203.98.236:5001";
-      let socketUrl = "http://116.203.98.236:5001"; // default fallback
+      // Determine the proper socket URL based on the NEXT_PUBLIC_BACKEND_URL or NEXT_PUBLIC_API_BASE_URL
+      const rawBackendUrl = process.env["NEXT_PUBLIC_BACKEND_URL"] || process.env["NEXT_PUBLIC_API_BASE_URL"];
+      let socketUrl = rawBackendUrl;
 
-      if (backendUrl) {
-        // Extract the socket URL from backend URL
+      if (rawBackendUrl) {
+        // Extract the socket URL from backend URL (ensuring no trailing paths)
         try {
-          const backendUrlObj = new URL(backendUrl);
+          const backendUrlObj = new URL(rawBackendUrl);
           socketUrl = `${backendUrlObj.protocol}//${backendUrlObj.host}`;
         } catch (error) {
           console.warn(
-            "Invalid NEXT_PUBLIC_BACKEND_URL, using default socket URL:",
-            socketUrl,
+            "Invalid backend URL for socket, using as is:",
+            rawBackendUrl,
           );
         }
       }

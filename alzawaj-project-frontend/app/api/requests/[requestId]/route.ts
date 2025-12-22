@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requestIdParamSchema } from "@/lib/validation/requests.validation";
 import { getStoredToken } from "@/lib/utils/auth.utils";
+import { getBackendApiUrl } from "@/lib/utils/api-utils";
 
 export async function GET(
   request: NextRequest,
@@ -52,9 +53,7 @@ export async function GET(
     }
 
     // Forward to backend API
-    const backendUrl =
-      process.env["BACKEND_API_URL"] ||
-      "https://alzawaj-backend-staging.onrender.com/api";
+    const backendUrl = getBackendApiUrl();
     const apiUrl = `${backendUrl}/requests/${requestId}`;
 
     console.log("🌐 Forwarding to backend:", apiUrl);

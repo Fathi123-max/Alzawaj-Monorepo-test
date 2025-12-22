@@ -3,15 +3,17 @@ import { ApiResponse } from "@/lib/types";
 import { STORAGE_KEYS, ERROR_MESSAGES } from "@/lib/constants";
 import { showToast } from "@/components/ui/toaster";
 
+import { getBackendApiUrl } from "@/lib/utils/api-utils";
+
 // Create axios instance with default configuration
 const api: AxiosInstance = axios.create({
-  baseURL:
-    process.env["NEXT_PUBLIC_API_BASE_URL"] ||
-    (typeof window !== "undefined" &&
-      (window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1"))
-      ? "http://localhost:5001" // Backend runs on port 5001 in local development
-      : `${window.location.protocol}//${window.location.hostname}:5000`, // Backend runs on same host, port 5000 in deployment
+  // Use relative paths when NEXT_PUBLIC_API_BASE_URL contains "localhost"
+  // This allows Next.js proxy rewrites to forward requests to the backend service in Docker
+  baseURL: typeof window === "undefined"
+    ? getBackendApiUrl()
+    : process.env["NEXT_PUBLIC_API_BASE_URL"]?.includes("localhost")
+      ? "/api" // Use /api as base for browser requests to ensure they go through the proxy
+      : process.env["NEXT_PUBLIC_API_BASE_URL"] || "/api",
   timeout: 60000,
   headers: {
     "Content-Type": "application/json",
@@ -80,6 +82,16 @@ api.interceptors.request.use(
       if (csrfToken) {
         config.headers["X-CSRF-TOKEN"] = csrfToken;
       }
+    }
+
+    // Handle cases where BOTH baseURL and url share the /api prefix
+    // This happens when API_ENDPOINTS constants already have /api but baseURL also has /api
+    const normalizedBaseURL = config.baseURL?.replace(/\/$/, "");
+    if (config.url?.startsWith("/api/") && normalizedBaseURL?.endsWith("/api")) {
+      console.log("🔄 Normalizing URL: removing redundant /api prefix from:", config.url);
+      config.url = config.url.substring(4);
+    } else if (config.url === "/api" && normalizedBaseURL?.endsWith("/api")) {
+      config.url = "";
     }
 
     console.log(

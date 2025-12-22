@@ -1,6 +1,6 @@
 #!/bin/bash
-# Script to start local development environment with environment file loading
-# This script ensures environment variables from .env.local are properly loaded
+
+# Simple script to load .env.local and run the local Docker Compose setup
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
@@ -8,66 +8,9 @@ ENV_FILE="${1:-.env.local}"
 
 # Check if the environment file exists
 if [[ ! -f "$ENV_FILE" ]]; then
-    echo "Warning: Environment file $ENV_FILE does not exist."
-    echo "Creating a default one..."
-
-    cat > "$ENV_FILE" << 'EOF'
-# Environment variables for local development
-NODE_ENV=development
-
-# Ports
-FRONTEND_PORT=3000
-BACKEND_PORT=5001
-MONGODB_PORT=27017
-REDIS_PORT=6380
-
-# Application settings
-NEXT_PUBLIC_APP_NAME="Alzawaj Platform - Local"
-NEXT_PUBLIC_APP_DESCRIPTION="Islamic Marriage Platform - Local Dev"
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-NEXT_PUBLIC_API_BASE_URL="http://localhost:5001"
-
-# CORS
-CORS_ORIGIN="http://localhost:3000,http://127.0.0.1:3000"
-
-# Database
-MONGODB_URI="mongodb://localhost:27017/alzawaj-dev"
-
-# JWT
-JWT_SECRET="your-local-jwt-secret-key-change-in-production"
-JWT_REFRESH_SECRET="your-local-jwt-refresh-secret-key-change-in-production"
-
-# Redis
-REDIS_URL="redis://localhost:6380"
-
-# Logging
-LOG_LEVEL=debug
-
-# ImageKit (optional - set to empty if not using)
-IMAGEKIT_PUBLIC_KEY=""
-IMAGEKIT_PRIVATE_KEY=""
-IMAGEKIT_URL_ENDPOINT=""
-
-# Firebase (optional - set to empty if not using)
-FIREBASE_PROJECT_ID=""
-FIREBASE_CLIENT_EMAIL=""
-FIREBASE_PRIVATE_KEY_ID=""
-FIREBASE_PRIVATE_KEY=""
-
-# SMTP (optional - set to empty if not using)
-SMTP_HOST=""
-SMTP_PORT=""
-SMTP_USER=""
-SMTP_PASS=""
-SMTP_SECURE="false"
-
-# Resend (optional - set to empty if not using)
-RESEND_API_KEY=""
-RESEND_SENDER_EMAIL=""
-RESEND_SENDER_NAME=""
-EOF
-
-    echo "Default $ENV_FILE created. Please update the values according to your local setup."
+    echo "Error: Environment file $ENV_FILE does not exist."
+    echo "Please create it first or specify a different file as an argument."
+    exit 1
 fi
 
 echo "Loading environment variables from $ENV_FILE..."
@@ -113,7 +56,7 @@ echo "Using BACKEND_PORT=$BACKEND_PORT"
 echo "Using MONGODB_PORT=$MONGODB_PORT"
 echo "Using REDIS_PORT=$REDIS_PORT"
 
-# Start the local development environment
+# Run docker compose with the loaded environment
 docker compose -f docker-compose.local.yaml up -d
 
 echo "Local development environment started successfully!"

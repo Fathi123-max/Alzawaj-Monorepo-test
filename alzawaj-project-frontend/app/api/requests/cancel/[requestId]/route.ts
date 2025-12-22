@@ -7,6 +7,7 @@ import {
   type CancelRequestData,
 } from "@/lib/validation/requests.validation";
 import { getStoredToken } from "@/lib/utils/auth.utils";
+import { getBackendApiUrl } from "@/lib/utils/api-utils";
 
 export async function POST(
   request: NextRequest,
@@ -58,9 +59,7 @@ export async function POST(
     const validatedData: CancelRequestData = validationResult.data;
 
     // Forward to backend API
-    const backendUrl =
-      process.env["BACKEND_API_URL"] ||
-      "https://alzawaj-backend-staging.onrender.com/api";
+    const backendUrl = getBackendApiUrl();
     const apiUrl = `${backendUrl}/requests/cancel/${requestId}`;
 
     console.log("🌐 Forwarding to backend:", apiUrl);

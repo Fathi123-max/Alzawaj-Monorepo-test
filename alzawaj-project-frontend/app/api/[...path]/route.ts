@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL =
   process.env["BACKEND_API_URL"] ||
-  "https://alzawaj-backend-staging.onrender.com/api";
+  "https://alzawaj-backend-staging.onrender.com";
 
 console.log("[PROXY] Configuration:", {
   BACKEND_URL,
@@ -14,10 +14,29 @@ console.log("[PROXY] Configuration:", {
 
 // Helper function to get the backend URL for the given path
 function getBackendUrl(path: string[]): string {
-  // Remove the initial 'api' segment if it exists (to avoid double-api in URL)
-  const filteredPath = path[0] === "api" ? path.slice(1) : path;
-  const pathString = filteredPath.join("/");
-  return `${BACKEND_URL}/${pathString}`;
+  // Join the path segments
+  const pathString = path.join("/");
+
+  // If the request is for health check, it's at the root
+  if (path[0] === "health") {
+    return `${BACKEND_URL}/health`;
+  }
+
+  // Normalize the path: remove "api" prefix if it's there
+  // because we will add it back consistently
+  let subPath = pathString;
+  if (subPath.startsWith("api/")) {
+    subPath = subPath.substring(4);
+  } else if (subPath === "api") {
+    subPath = "";
+  }
+
+  // Remove leading/trailing slashes from normalized backend URL
+  const normalizedBackendUrl = BACKEND_URL.replace(/\/$/, "");
+  
+  const finalUrl = `${normalizedBackendUrl}/api/${subPath}`.replace(/\/$/, "");
+  
+  return finalUrl;
 }
 
 // Helper function to get the appropriate headers
@@ -49,7 +68,9 @@ async function handleRequest(
 ) {
   try {
     const { path } = await params;
-    const backendUrl = getBackendUrl(path);
+    const url = new URL(request.url);
+    const searchParams = url.search;
+    const backendUrl = `${getBackendUrl(path)}${searchParams}`;
 
     console.log(`[PROXY] ${request.method} ${request.url} -> ${backendUrl}`);
 

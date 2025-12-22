@@ -7,6 +7,7 @@ import {
   type SendRequestData,
 } from "@/lib/validation/requests.validation";
 import { getStoredToken } from "@/lib/utils/auth.utils";
+import { getBackendApiUrl } from "@/lib/utils/api-utils";
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,28 +51,7 @@ export async function POST(request: NextRequest) {
 
     const validatedData: SendRequestData = validationResult.data;
 
-    // Forward to backend API
-    console.log("🌐 Backend URL from env:", process.env["BACKEND_API_URL"]);
-    console.log(
-      "🌐 Next public backend URL:",
-      process.env["NEXT_PUBLIC_BACKEND_API_URL"],
-    );
-    console.log(
-      "🌐 Next public API base:",
-      process.env["NEXT_PUBLIC_API_BASE_URL"],
-    );
-    console.log(
-      "🌐 All env vars:",
-      Object.keys(process.env).filter(
-        (k) => k.includes("API") || k.includes("URL"),
-      ),
-    );
-
-    const backendUrl =
-      process.env["BACKEND_API_URL"] ||
-      process.env["NEXT_PUBLIC_BACKEND_API_URL"] ||
-      process.env["NEXT_PUBLIC_API_BASE_URL"] ||
-      "https://alzawaj-backend-staging.onrender.com/api";
+    const backendUrl = getBackendApiUrl();
     const apiUrl = `${backendUrl}/requests/send`;
 
     console.log("🌐 Final API URL:", apiUrl);

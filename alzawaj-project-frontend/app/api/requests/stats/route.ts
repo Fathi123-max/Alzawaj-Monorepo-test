@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getStoredToken } from "@/lib/utils/auth.utils";
+import { getBackendApiUrl } from "@/lib/utils/api-utils";
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,9 +26,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Forward to backend API
-    const backendUrl =
-      process.env["BACKEND_API_URL"] ||
-      "https://alzawaj-backend-staging.onrender.com/api";
+    const backendUrl = getBackendApiUrl();
     const apiUrl = `${backendUrl}/requests/stats`;
 
     console.log("🌐 Forwarding to backend:", apiUrl);

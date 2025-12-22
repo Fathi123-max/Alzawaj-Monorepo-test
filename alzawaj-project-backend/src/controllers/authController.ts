@@ -455,8 +455,8 @@ export const login = async (
       console.log("Profile verification:", (user.profile as any).verification);
     }
 
-    // Check if profile is verified by admin
-    if (user.profile && !(user.profile as any).verification?.isVerified) {
+    // Check if profile is verified by admin (skip this check for admin and moderator users)
+    if (user.role !== "admin" && user.role !== "moderator" && user.profile && !(user.profile as any).verification?.isVerified) {
       console.log("User profile is not verified by admin");
       res
         .status(403)

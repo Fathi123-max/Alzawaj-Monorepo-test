@@ -95,6 +95,36 @@ const nextConfig = {
     ];
   },
 
+  // API proxy configuration for Docker development
+  async rewrites() {
+    // Determine the backend URL based on environment
+    // In Docker, the backend service is accessible as 'backend:5001'
+    // For local development without Docker, it's 'localhost:5001'
+    const backendUrl = process.env.DOCKER_ENV
+      ? "http://backend:5001"
+      : (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001");
+
+    return [
+      /*
+      // Proxy API requests to the backend service
+      {
+        source: "/api/:path*",
+        destination: `${backendUrl}/api/:path*`,
+      },
+      */
+      // Proxy admin API requests to the backend service
+      {
+        source: "/admin/:path*",
+        destination: `${backendUrl}/admin/:path*`,
+      },
+      // Proxy auth API requests to the backend service
+      {
+        source: "/auth/:path*",
+        destination: `${backendUrl}/auth/:path*`,
+      },
+    ];
+  },
+
   // Output configuration for deployment
   output: "standalone",
 

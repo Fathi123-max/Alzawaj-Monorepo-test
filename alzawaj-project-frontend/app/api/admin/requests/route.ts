@@ -101,8 +101,14 @@ export async function GET(request: NextRequest) {
     // Forward to backend API
     const backendUrl =
       process.env["BACKEND_API_URL"] ||
-      "https://alzawaj-backend-staging.onrender.com/api";
-    const apiUrl = `${backendUrl}/admin/requests?${queryString.toString()}`;
+      "https://alzawaj-backend-staging.onrender.com";
+
+    // Check if BACKEND_URL already ends with '/api' to avoid double '/api' in URL
+    const normalizedBackendUrl = backendUrl.endsWith('/api')
+      ? backendUrl.slice(0, -'/api'.length) // Remove trailing '/api'
+      : backendUrl;
+
+    const apiUrl = `${normalizedBackendUrl}/api/admin/requests?${queryString.toString()}`;
 
     // Extract token from header for backend call
     const token = authHeader.replace("Bearer ", "");

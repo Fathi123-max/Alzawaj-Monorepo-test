@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { extractUserFromToken, isAdmin } from "@/lib/utils/jwt.utils";
+import { getBackendApiUrl } from "@/lib/utils/api-utils";
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,11 +46,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status");
 
     // Forward to backend API
-    const backendUrl =
-      process.env["BACKEND_API_URL"] ||
-      process.env["NEXT_PUBLIC_BACKEND_API_URL"] ||
-      process.env["NEXT_PUBLIC_API_BASE_URL"] ||
-      "https://alzawaj-backend-staging.onrender.com/api";
+    const backendUrl = getBackendApiUrl();
 
     // Build query string
     const queryParams = new URLSearchParams({

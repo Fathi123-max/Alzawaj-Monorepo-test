@@ -82,8 +82,14 @@ export async function POST(
       process.env["BACKEND_API_URL"] ||
       process.env["NEXT_PUBLIC_BACKEND_API_URL"] ||
       process.env["NEXT_PUBLIC_API_BASE_URL"] ||
-      "https://alzawaj-backend-staging.onrender.com/api";
-    const apiUrl = `${backendUrl}/admin/reports/${reportId}/action`;
+      "https://alzawaj-backend-staging.onrender.com";
+
+    // Check if BACKEND_URL already ends with '/api' to avoid double '/api' in URL
+    const normalizedBackendUrl = backendUrl.endsWith('/api')
+      ? backendUrl.slice(0, -'/api'.length) // Remove trailing '/api'
+      : backendUrl;
+
+    const apiUrl = `${normalizedBackendUrl}/api/admin/reports/${reportId}/action`;
 
     // Extract token from header for backend call
     const token = authHeader.replace("Bearer ", "");

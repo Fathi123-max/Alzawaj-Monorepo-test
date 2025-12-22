@@ -8,6 +8,7 @@ import {
   type RespondToRequestData,
 } from "@/lib/validation/requests.validation";
 import { getStoredToken } from "@/lib/utils/auth.utils";
+import { getBackendApiUrl } from "@/lib/utils/api-utils";
 
 export async function POST(
   request: NextRequest,
@@ -74,9 +75,7 @@ export async function POST(
     const validatedData: RespondToRequestData = validationResult.data;
 
     // Forward to backend API
-    const backendUrl =
-      process.env["BACKEND_API_URL"] ||
-      "https://alzawaj-backend-staging.onrender.com/api";
+    const backendUrl = getBackendApiUrl();
     const apiUrl = `${backendUrl}/requests/respond/${requestId}/${action}`;
 
     console.log("🌐 Forwarding to backend:", apiUrl);
