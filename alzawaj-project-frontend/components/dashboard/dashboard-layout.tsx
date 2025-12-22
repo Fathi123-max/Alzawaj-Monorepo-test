@@ -8,6 +8,7 @@ import { MobileBottomNav } from "./mobile-bottom-nav";
 import { ChevronDown } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { NotificationBell } from "@/components/ui/notification-bell";
+import { isAdmin } from "@/lib/utils/jwt.utils";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -48,15 +49,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: "المحفوظات", href: "/dashboard/bookmarks", icon: "bookmark" },
     { name: "الطلبات", href: "/dashboard/requests", icon: "heart" },
     { name: "المحادثات", href: "/dashboard/chat", icon: "message-circle" },
-    {
-      name: "الإدارة",
-      href: "/dashboard/admin/reports",
-      icon: "shield",
-      submenu: [
-        { name: "التقارير", href: "/dashboard/admin/reports" },
-        // Add more admin links here as needed
-      ],
-    },
+    ...(isAdmin(user)
+      ? [
+          {
+            name: "الإدارة",
+            href: "/dashboard/admin/reports",
+            icon: "shield",
+            submenu: [{ name: "التقارير", href: "/dashboard/admin/reports" }],
+          },
+        ]
+      : []),
     { name: "الإعدادات", href: "/dashboard/settings", icon: "settings" },
   ];
 
