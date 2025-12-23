@@ -96,6 +96,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     toggleDarkMode,
   };
 
+  if (!mounted) {
+    return null;
+  }
+
   return (
     <ThemeContext.Provider value={value}>
       {children}

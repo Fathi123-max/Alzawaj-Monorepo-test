@@ -98,17 +98,18 @@ const nextConfig = {
   // API proxy configuration for Docker development
   async rewrites() {
     // Determine the backend URL based on environment
-    // 1. Use BACKEND_INTERNAL_URL if provided (highest priority)
-    // 2. Use NEXT_PUBLIC_API_BASE_URL if provided (your production link)
-    // 3. Fallback to internal Docker name if in Docker/Production
-    // 4. Fallback to localhost for local dev
+    // In production Docker (Coolify), try internal service name first for reliability
+    const isProd = process.env.NODE_ENV === "production" || process.env.DOCKER_ENV === "true";
+    
     let backendUrl = process.env.BACKEND_INTERNAL_URL || 
-                     process.env.NEXT_PUBLIC_API_BASE_URL || 
-                     (process.env.DOCKER_ENV === "true" || process.env.NODE_ENV === "production"
-                       ? "http://backend:5001"
-                       : "http://localhost:5001");
+                     (isProd ? "http://backend:5001" : "");
 
-    // Remove trailing slash to avoid double slashes in proxied URLs
+    // If no internal URL or fallback failed, use the public API base URL
+    if (!backendUrl) {
+      backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001";
+    }
+
+    // Remove trailing slash
     backendUrl = backendUrl.replace(/\/$/, "");
 
     console.log(`📡 Proxying /api/* requests to: ${backendUrl}`);
