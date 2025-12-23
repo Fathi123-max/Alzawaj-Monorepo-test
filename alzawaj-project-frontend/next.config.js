@@ -95,24 +95,16 @@ const nextConfig = {
     ];
   },
 
-  // API proxy configuration for Docker development
+  // API proxy configuration for production and development
   async rewrites() {
-    // Determine the backend URL based on environment
-    // In production Docker (Coolify), try internal service name first for reliability
-    const isProd = process.env.NODE_ENV === "production" || process.env.DOCKER_ENV === "true";
-    
-    let backendUrl = process.env.BACKEND_INTERNAL_URL || 
-                     (isProd ? "http://backend:5001" : "");
+    // Determine the backend URL based on environment variables
+    // Use NEXT_PUBLIC_API_BASE_URL as the primary source for the backend location
+    let backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001";
 
-    // If no internal URL or fallback failed, use the public API base URL
-    if (!backendUrl) {
-      backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001";
-    }
-
-    // Remove trailing slash
+    // Remove trailing slash to avoid double slashes
     backendUrl = backendUrl.replace(/\/$/, "");
 
-    console.log(`📡 Proxying /api/* requests to: ${backendUrl}`);
+    console.log(`📡 Proxying API requests to: ${backendUrl}`);
 
     return [
       // Proxy API requests to the backend service
@@ -122,13 +114,13 @@ const nextConfig = {
       },
       // Proxy admin API requests to the backend service
       {
-        source: "/admin/:path*",
-        destination: `${backendUrl}/admin/:path*`,
-      },
-      // Proxy auth API requests to the backend service
-      {
         source: "/auth/:path*",
         destination: `${backendUrl}/auth/:path*`,
+      },
+      // Proxy admin routes
+      {
+        source: "/admin-api/:path*",
+        destination: `${backendUrl}/admin/:path*`,
       },
     ];
   },
