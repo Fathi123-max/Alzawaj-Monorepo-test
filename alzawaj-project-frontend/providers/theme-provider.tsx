@@ -17,9 +17,11 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<ThemeConfig>(DEFAULT_THEME);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   // Load theme from localStorage on mount
   useEffect(() => {
+    setMounted(true);
     try {
       const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME_SETTINGS);
       if (savedTheme) {
@@ -33,6 +35,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Apply theme variables to CSS
   useEffect(() => {
+    if (!mounted) return;
+    
     const root = document.documentElement;
 
     // Apply color variables
@@ -49,7 +53,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     Object.entries(theme.spacing).forEach(([key, value]) => {
       root.style.setProperty(`--spacing-${key}`, value);
     });
-  }, [theme]);
+  }, [theme, mounted]);
 
   const updateTheme = (newTheme: Partial<ThemeConfig>) => {
     const updatedTheme = {
@@ -93,7 +97,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+    <ThemeContext.Provider value={value}>
+      <div style={{ visibility: mounted ? "visible" : "hidden" }}>
+        {children}
+      </div>
+    </ThemeContext.Provider>
   );
 }
 

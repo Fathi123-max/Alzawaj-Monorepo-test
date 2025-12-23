@@ -265,29 +265,6 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        {/* Preload Critical Local Fonts */}
-        <link
-          rel="preload"
-          href="/fonts/Noto_Kufi_Arabic/static/NotoKufiArabic-Regular.ttf"
-          as="font"
-          type="font/ttf"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preload"
-          href="/fonts/Noto_Kufi_Arabic/static/NotoKufiArabic-Medium.ttf"
-          as="font"
-          type="font/ttf"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preload"
-          href="/fonts/Amiri/Amiri-Regular.ttf"
-          as="font"
-          type="font/ttf"
-          crossOrigin="anonymous"
-        />
-
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
