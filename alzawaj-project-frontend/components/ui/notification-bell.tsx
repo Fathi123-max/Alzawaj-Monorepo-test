@@ -66,7 +66,8 @@ export function NotificationBell() {
     } else if (notification.data?.requestId) {
       router.push(`/dashboard/requests/${notification.data.requestId}`);
     } else if (notification.data?.chatRoomId) {
-      router.push(`/dashboard/chat/${notification.data.chatRoomId}`);
+      // Use query parameter format for chat room navigation
+      router.push(`/dashboard/chat?chatRoomId=${notification.data.chatRoomId}`);
     } else if (notification.data?.profileId) {
       router.push(`/dashboard/profile/${notification.data.profileId}`);
     }
