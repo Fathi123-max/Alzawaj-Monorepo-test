@@ -445,6 +445,35 @@ export const sendMessage = async (
     // Populate sender info
     await message.populate("sender", "firstname lastname");
 
+    // Send notification for the new message
+    try {
+      // Import notification service to send message notifications
+      const { createMessageNotification } = await import("../services/notificationService");
+
+      // Get the other participant to send notification to
+      const otherParticipant = chatRoom.participants.find(
+        (p) => (p.user as any)._id?.toString() !== userId.toString()
+      );
+
+      if (otherParticipant) {
+        const otherUserId = (otherParticipant.user as any)._id?.toString() || otherParticipant.user.toString();
+
+        await createMessageNotification(
+          userId.toString(), // senderId
+          otherUserId, // receiverId
+          {
+            messageId: message._id.toString(),
+            chatRoomId: chatRoomId,
+            senderName: `${(message.sender as any).firstname || 'Unknown'} ${(message.sender as any).lastname || 'User'}`,
+            messageContent: content
+          }
+        );
+      }
+    } catch (notificationError) {
+      console.error("Error sending message notification:", notificationError);
+      // Don't fail the entire operation if notification fails
+    }
+
     // Primary: Emit message to socket
     const io = req.app.get("io");
     let socketEmissionSuccessful = false;

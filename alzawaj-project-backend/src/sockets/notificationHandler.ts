@@ -87,6 +87,8 @@ export const initializeSocketHandlers = (io: Server) => {
         // We need to import the necessary models and controllers
         const { Message } = await import('../models/Message');
         const { ChatRoom } = await import('../models/ChatRoom');
+        const { User } = await import('../models/User');
+        const { sendPushNotification } = await import('../services/fcmService');
         const mongoose = await import('mongoose');
 
         // Find the chat room
@@ -139,6 +141,10 @@ export const initializeSocketHandlers = (io: Server) => {
         // Populate sender info
         await message.populate("sender", "firstname lastname");
 
+        // Get sender info for notifications
+        const sender = await User.findById(userId).select('firstname lastname');
+        const senderName = sender ? `${sender.firstname} ${sender.lastname}` : 'مستخدم';
+
         // Emit to all participants except sender
         for (const participant of chatRoom.participants) {
           const participantUserId = (participant.user as any)._id || participant.user;
@@ -152,7 +158,10 @@ export const initializeSocketHandlers = (io: Server) => {
                 sock.rooms.has(`user_${participantStringId}`)
               );
 
-              if (recipientSocket) {
+              const isOnline = !!recipientSocket;
+
+              // Send real-time message via Socket.IO if user is online
+              if (isOnline) {
                 io.to(`user_${participantStringId}`).emit("message", {
                   id: (message._id as any).toString(),
                   chatRoomId: (chatRoom._id as any).toString(),
@@ -168,12 +177,50 @@ export const initializeSocketHandlers = (io: Server) => {
                   islamicCompliance: message.islamicCompliance,
                 });
 
-                console.log(`[SocketIO-Debug] Successfully emitted message to recipient: ${participantStringId}`);
+                logger.info(`[Message-Delivery] Real-time message delivered to online user ${participantStringId} via Socket.IO`);
               } else {
-                console.log(`[SocketIO-Debug] Recipient ${participantStringId} is not connected, message will be available when they connect`);
+                logger.info(`[Message-Delivery] Recipient ${participantStringId} is offline`);
+              }
+
+              // Always send FCM notification (for both online and offline users)
+              try {
+                // Get recipient user to check for FCM token
+                const recipientUser = await User.findById(participantStringId);
+                
+                if (!recipientUser) {
+                  logger.error(`[FCM-Notification] Failed to send notification: Recipient user ${participantStringId} not found in database`);
+                } else if (!recipientUser.fcmToken) {
+                  logger.warn(`[FCM-Notification] Cannot send notification to user ${participantStringId}: No FCM token registered. User needs to enable notifications.`);
+                } else {
+                  logger.info(`[FCM-Notification] Attempting to send FCM notification to ${isOnline ? 'online' : 'offline'} user ${participantStringId} with token: ${recipientUser.fcmToken.substring(0, 20)}...`);
+                  
+                  const notificationTitle = 'رسالة جديدة';
+                  const notificationBody = `${senderName}: ${data.content.substring(0, 100)}${data.content.length > 100 ? '...' : ''}`;
+                  
+                  const fcmResult = await sendPushNotification(
+                    participantStringId,
+                    notificationTitle,
+                    notificationBody,
+                    {
+                      type: 'message',
+                      chatRoomId: (chatRoom._id as any).toString(),
+                      messageId: (message._id as any).toString(),
+                      senderId: userId,
+                      senderName: senderName,
+                    }
+                  );
+
+                  if (fcmResult) {
+                    logger.info(`[FCM-Notification] ✓ Successfully sent FCM notification to ${isOnline ? 'online' : 'offline'} user ${participantStringId} for message from ${senderName}`);
+                  } else {
+                    logger.error(`[FCM-Notification] ✗ Failed to send FCM notification to user ${participantStringId}. Check FCM service logs for details.`);
+                  }
+                }
+              } catch (fcmError) {
+                logger.error(`[FCM-Notification] Exception while sending FCM notification to user ${participantStringId}:`, fcmError);
               }
             } catch (emitError) {
-              console.error(`[SocketIO-Error] Error emitting message to ${participantStringId}:`, emitError);
+              logger.error(`[Message-Delivery] Error processing message delivery to ${participantStringId}:`, emitError);
             }
           }
         }

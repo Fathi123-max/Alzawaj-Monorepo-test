@@ -72,7 +72,8 @@ export const sendPushNotification = async (
     const messaging = initializeFirebase();
 
     if (!messaging) {
-      logger.error(`Firebase not initialized. Cannot send notification to user ${userId}`);
+      logger.error(`[FCM-Service] Firebase not initialized. Cannot send notification to user ${userId}`);
+      logger.error(`[FCM-Service] Please check Firebase environment variables: FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY, FIREBASE_CLIENT_EMAIL`);
       return false;
     }
 
@@ -80,10 +81,18 @@ export const sendPushNotification = async (
     const User = (await import('../models/User')).User;
     const user = await User.findById(userId);
 
-    if (!user || !user.fcmToken) {
-      logger.warn(`No FCM token found for user ${userId}`);
+    if (!user) {
+      logger.error(`[FCM-Service] User ${userId} not found in database. Cannot send notification.`);
       return false;
     }
+
+    if (!user.fcmToken) {
+      logger.warn(`[FCM-Service] No FCM token found for user ${userId} (${user.firstname} ${user.lastname}). User has not registered for push notifications.`);
+      return false;
+    }
+
+    logger.info(`[FCM-Service] Preparing to send notification to user ${userId} (${user.firstname} ${user.lastname})`);
+    logger.info(`[FCM-Service] Notification details - Title: "${title}", Body: "${body.substring(0, 50)}${body.length > 50 ? '...' : ''}"`);
 
     const message = {
       notification: {
@@ -98,10 +107,21 @@ export const sendPushNotification = async (
     };
 
     const response = await messaging.send(message);
-    logger.info(`Successfully sent message to user ${userId}: ${response}`);
+    logger.info(`[FCM-Service] ✓ Successfully sent FCM notification to user ${userId} (${user.firstname} ${user.lastname}). Message ID: ${response}`);
     return true;
-  } catch (error) {
-    logger.error(`Error sending push notification to user ${userId}:`, error);
+  } catch (error: any) {
+    logger.error(`[FCM-Service] ✗ Error sending push notification to user ${userId}:`, error);
+    
+    // Provide more specific error information
+    if (error.code === 'messaging/invalid-registration-token' || 
+        error.code === 'messaging/registration-token-not-registered') {
+      logger.error(`[FCM-Service] FCM token for user ${userId} is invalid or expired. User needs to re-register for notifications.`);
+    } else if (error.code === 'messaging/invalid-argument') {
+      logger.error(`[FCM-Service] Invalid notification payload for user ${userId}. Check notification format.`);
+    } else if (error.code) {
+      logger.error(`[FCM-Service] FCM error code: ${error.code}, message: ${error.message}`);
+    }
+    
     return false;
   }
 };
@@ -116,10 +136,11 @@ export const sendMulticastNotification = async (
   data?: Record<string, string>
 ): Promise<{ successCount: number; failureCount: number }> => {
   try {
+    logger.info(`[FCM-Service] Attempting to send multicast notification to ${userIds.length} users`);
     const messaging = initializeFirebase();
 
     if (!messaging) {
-      logger.error('Firebase not initialized. Cannot send multicast notification');
+      logger.error('[FCM-Service] Firebase not initialized. Cannot send multicast notification');
       return { successCount: 0, failureCount: userIds.length };
     }
 
@@ -133,9 +154,11 @@ export const sendMulticastNotification = async (
       .map(user => user.fcmToken as string);
 
     if (tokens.length === 0) {
-      logger.warn(`No FCM tokens found for any of the ${userIds.length} users`);
+      logger.warn(`[FCM-Service] No FCM tokens found for any of the ${userIds.length} users`);
       return { successCount: 0, failureCount: userIds.length };
     }
+
+    logger.info(`[FCM-Service] Found ${tokens.length} valid FCM tokens out of ${userIds.length} users`);
 
     // For multiple tokens, we need to send individual notifications
     const results = await Promise.allSettled(
@@ -154,14 +177,17 @@ export const sendMulticastNotification = async (
     const successCount = results.filter(result => result.status === 'fulfilled').length;
     const failureCount = results.filter(result => result.status === 'rejected').length;
 
-    logger.info(`Successfully sent ${successCount} out of ${tokens.length} multicast notifications`);
+    logger.info(`[FCM-Service] ✓ Successfully sent ${successCount} out of ${tokens.length} multicast notifications`);
+    if (failureCount > 0) {
+      logger.warn(`[FCM-Service] ✗ Failed to send ${failureCount} multicast notifications`);
+    }
 
     return {
       successCount,
       failureCount,
     };
   } catch (error) {
-    logger.error(`Error sending multicast notification:`, error);
+    logger.error(`[FCM-Service] Error sending multicast notification:`, error);
     return { successCount: 0, failureCount: userIds.length };
   }
 };
