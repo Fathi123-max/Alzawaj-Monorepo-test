@@ -7,13 +7,10 @@ import { getBackendApiUrl } from "@/lib/utils/api-utils";
 
 // Create axios instance with default configuration
 const api: AxiosInstance = axios.create({
-  // Use relative paths when NEXT_PUBLIC_API_BASE_URL contains "localhost"
-  // This allows Next.js proxy rewrites to forward requests to the backend service in Docker
-  baseURL: typeof window === "undefined"
-    ? getBackendApiUrl()
-    : process.env["NEXT_PUBLIC_API_BASE_URL"]?.includes("localhost")
-      ? "/api" // Use /api as base for browser requests to ensure they go through the proxy
-      : process.env["NEXT_PUBLIC_API_BASE_URL"] || "/api",
+  // In the browser, ALWAYS use relative /api path to go through the Next.js proxy.
+  // This bypasses port 5001 firewall issues and CORS problems.
+  // On the server (SSR), use the full backend URL.
+  baseURL: typeof window === "undefined" ? getBackendApiUrl() : "/api",
   timeout: 60000,
   headers: {
     "Content-Type": "application/json",
@@ -29,44 +26,12 @@ api.interceptors.request.use(
     if (typeof window !== "undefined") {
       const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
       console.log("🔍 ApiClient Interceptor: Checking for token...");
-      console.log(
-        "🔑 ApiClient Interceptor: Token found:",
-        token ? "***present***" : "missing",
-      );
       console.log("🌐 ApiClient Interceptor: Making request to:", config.url);
-      console.log(
-        "🌐 ApiClient Interceptor: Full URL:",
-        `${config.baseURL}${config.url}`,
-      );
+      console.log("🌐 ApiClient Interceptor: Full URL:", `${config.baseURL}${config.url}`);
 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-        console.log("✅ ApiClient Interceptor: Authorization header set");
-
-        // Decode and log token info for debugging
-        try {
-          const parts = token.split(".");
-          if (parts.length === 3 && parts[1]) {
-            const payload = JSON.parse(
-              atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
-            );
-            console.log("👤 Token userId:", payload.userId);
-            console.log("👑 Token role:", payload.role);
-            console.log("⏰ Token expires at:", new Date(payload.exp * 1000));
-            console.log("❓ Token expired?", payload.exp * 1000 < Date.now());
-          }
-        } catch (e) {
-          console.warn("⚠️ Could not decode token for debugging");
-        }
-      } else {
-        console.warn(
-          "❌ ApiClient Interceptor: No auth token found in localStorage",
-        );
       }
-    } else {
-      console.warn(
-        "⚠️ ApiClient Interceptor: Window is undefined, cannot access localStorage",
-      );
     }
 
     // Add CSRF token for state-changing requests
@@ -84,14 +49,11 @@ api.interceptors.request.use(
       }
     }
 
-    // Handle cases where BOTH baseURL and url share the /api prefix
-    // This happens when API_ENDPOINTS constants already have /api but baseURL also has /api
-    const normalizedBaseURL = config.baseURL?.replace(/\/$/, "");
-    if (config.url?.startsWith("/api/") && normalizedBaseURL?.endsWith("/api")) {
+    // IMPORTANT: Remove redundant /api prefix if it exists in the url
+    // This handles cases where endpoint constants might still have /api
+    if (config.url?.startsWith("/api/")) {
       console.log("🔄 Normalizing URL: removing redundant /api prefix from:", config.url);
       config.url = config.url.substring(4);
-    } else if (config.url === "/api" && normalizedBaseURL?.endsWith("/api")) {
-      config.url = "";
     }
 
     console.log(
@@ -110,14 +72,6 @@ api.interceptors.request.use(
 // Response interceptor to handle common scenarios
 api.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
-    console.log(
-      "✅ ApiClient Response:",
-      response.config.method?.toUpperCase(),
-      response.config.url,
-      "Status:",
-      response.status,
-    );
-    console.log("📦 Response data:", response.data);
     return response;
   },
   async (error) => {
@@ -128,10 +82,9 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // Try to refresh token using the API proxy to avoid direct backend calls
+        // Try to refresh token using the API proxy
         const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
         if (refreshToken) {
-          console.log("🔄 Attempting to refresh token...");
           const response = await axios.post(
             `/api/auth/refresh-token`,
             {
@@ -144,89 +97,42 @@ api.interceptors.response.use(
             },
           );
 
-          console.log("✅ Token refresh response:", response.data);
-
-          // Backend returns: { success: true, data: { tokens: { accessToken, refreshToken, expiresIn } } }
-          const tokens =
-            response.data.data?.tokens || response.data.data || response.data;
+          const tokens = response.data.data?.tokens || response.data.data || response.data;
           const newAccessToken = tokens.accessToken || tokens.token;
 
-          if (!newAccessToken) {
-            throw new Error("No access token in refresh response");
+          if (newAccessToken) {
+            localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, newAccessToken);
+            if (tokens.refreshToken) {
+              localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokens.refreshToken);
+            }
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+            return api(originalRequest);
           }
-
-          localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, newAccessToken);
-
-          // Update refresh token if a new one was provided
-          if (tokens.refreshToken) {
-            localStorage.setItem(
-              STORAGE_KEYS.REFRESH_TOKEN,
-              tokens.refreshToken,
-            );
-          }
-
-          console.log("🔑 New access token stored, retrying original request");
-
-          // Retry original request with new token
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-          return api(originalRequest);
         }
       } catch (refreshError: any) {
-        // Refresh failed - check for specific error types
-        console.warn(
-          "❌ Token refresh failed:",
-          refreshError?.response?.data || refreshError,
-        );
-
-        if (
-          refreshError.response?.status === 401 ||
-          refreshError.response?.data?.error === "TOKEN_EXPIRED" ||
-          refreshError.response?.data?.message?.includes("TOKEN_EXPIRED") ||
-          refreshError.response?.data?.message?.includes("VALIDATION_ERROR") ||
-          refreshError.response?.data?.message?.includes("رمز التحديث")
-        ) {
-          console.warn("Token is expired or invalid, clearing auth data");
-          // Clear auth data for token-related errors
-          localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-          localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
-          localStorage.removeItem(STORAGE_KEYS.USER_DATA);
-        }
-
-        console.log(
-          "Authentication issue detected. Redirecting to login page...",
-        );
-
-        // Clear all auth data
         localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
         localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
         localStorage.removeItem(STORAGE_KEYS.USER_DATA);
-
-        // Redirect to login page and show message
+        
         if (typeof window !== "undefined") {
-          // Show toast notification before redirect
-          showToast.error(
-            "انتهت صلاحية الجلسة، سيتم إعادة توجيهك لتسجيل الدخول",
-          );
-          // Redirect after a short delay to allow toast to show
-          setTimeout(() => {
-            window.location.href = "/auth/login";
-          }, 2000);
+          window.location.href = "/auth/login";
         }
-
-        // Don't retry again to avoid infinite loop
         return Promise.reject(error);
       }
     }
 
     // Transform error response
-    const errorMessage =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      getErrorMessage(error.response?.status) ||
-      ERROR_MESSAGES.GENERIC;
+    let errorMessage = 
+      error.response?.data?.message || 
+      error.response?.data?.error || 
+      getErrorMessage(error.response?.status);
+
+    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      errorMessage = "انتهت مهلة الطلب، يرجى المحاولة مرة أخرى.";
+    }
 
     return Promise.reject({
-      message: errorMessage,
+      message: errorMessage || ERROR_MESSAGES.GENERIC,
       status: error.response?.status,
       data: error.response?.data,
       original: error,

@@ -295,7 +295,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-background font-arabic arabic-optimized antialiased">
+      <body 
+        className="min-h-screen bg-background font-arabic arabic-optimized antialiased"
+        suppressHydrationWarning
+      >
         <Providers>
           {children}
           <Toaster />

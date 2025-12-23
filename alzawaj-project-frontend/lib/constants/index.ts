@@ -3,81 +3,81 @@
 export const API_ENDPOINTS = {
   // Authentication
   AUTH: {
-    REGISTER: "/api/auth/register",
-    LOGIN: "/api/auth/login",
-    LOGOUT: "/api/auth/logout",
-    VERIFY_OTP: "/api/auth/verify-phone",
-    RESEND_OTP: "/api/auth/send-phone-verification",
-    VERIFY_EMAIL: "/api/auth/verify-email",
-    SEND_EMAIL_VERIFICATION: "/api/auth/send-email-verification",
-    FORGOT_PASSWORD: "/api/auth/forgot-password",
-    RESET_PASSWORD: "/api/auth/reset-password",
-    REFRESH_TOKEN: "/api/auth/refresh-token",
-    CHANGE_PASSWORD: "/api/auth/change-password",
-    ME: "/api/auth/me",
+    REGISTER: "/auth/register",
+    LOGIN: "/auth/login",
+    LOGOUT: "/auth/logout",
+    VERIFY_OTP: "/auth/verify-phone",
+    RESEND_OTP: "/auth/send-phone-verification",
+    VERIFY_EMAIL: "/auth/verify-email",
+    SEND_EMAIL_VERIFICATION: "/auth/send-email-verification",
+    FORGOT_PASSWORD: "/auth/forgot-password",
+    RESET_PASSWORD: "/auth/reset-password",
+    REFRESH_TOKEN: "/auth/refresh-token",
+    CHANGE_PASSWORD: "/auth/change-password",
+    ME: "/auth/me",
   },
 
   // Profile
   PROFILE: {
-    GET: "/api/profile",
-    UPDATE: "/api/profile",
-    UPLOAD_PICTURE: "/api/profile/picture",
-    DELETE_PICTURE: "/api/profile/picture",
-    COMPLETE: "/api/profile/complete",
+    GET: "/profile",
+    UPDATE: "/profile",
+    UPLOAD_PICTURE: "/profile/picture",
+    DELETE_PICTURE: "/profile/picture",
+    COMPLETE: "/profile/complete",
   },
 
   // Search
   SEARCH: {
-    PROFILES: "/api/search", // Backend uses GET /api/search with query params
-    FILTERS: "/api/search/filters",
-    QUICK: "/api/search/quick",
-    RECOMMENDATIONS: "/api/search/recommendations",
+    PROFILES: "/search", // Backend uses GET /api/search with query params
+    FILTERS: "/search/filters",
+    QUICK: "/search/quick",
+    RECOMMENDATIONS: "/search/recommendations",
   },
 
   // Marriage Requests
   REQUESTS: {
-    SEND: "/api/requests/send",
-    GET_RECEIVED: "/api/requests/received",
-    GET_SENT: "/api/requests/sent",
-    RESPOND: "/api/requests/respond",
-    GET_BY_ID: "/api/requests",
+    SEND: "/requests/send",
+    GET_RECEIVED: "/requests/received",
+    GET_SENT: "/requests/sent",
+    RESPOND: "/requests/respond",
+    GET_BY_ID: "/requests",
   },
 
   // Chat
   CHAT: {
-    GET_ROOMS: "/api/chat/rooms",
-    GET_ROOM_BY_REQUEST: "/api/chat/room-by-request",
-    GET_MESSAGES: "/api/chat/messages",
-    SEND_MESSAGE: "/api/chat/send",
-    SEND_GUARDIAN_INFO: "/api/chat/send-guardian-info",
-    GET_LIMITS: "/api/chat/limits",
+    GET_ROOMS: "/chat/rooms",
+    GET_ROOM_BY_REQUEST: "/chat/room-by-request",
+    GET_MESSAGES: "/chat/messages",
+    SEND_MESSAGE: "/chat/send",
+    SEND_GUARDIAN_INFO: "/chat/send-guardian-info",
+    GET_LIMITS: "/chat/limits",
   },
 
   // Admin
   ADMIN: {
-    USERS: "/api/admin/users",
-    REQUESTS: "/api/admin/requests",
-    MESSAGES: "/api/admin/messages",
-    REPORTS: "/api/admin/reports",
-    SETTINGS: "/api/admin/settings",
-    STATS: "/api/admin/stats",
+    USERS: "/admin/users",
+    REQUESTS: "/admin/requests",
+    MESSAGES: "/admin/messages",
+    REPORTS: "/admin/reports",
+    SETTINGS: "/admin/settings",
+    STATS: "/admin/stats",
   },
 
   // Notifications
   NOTIFICATIONS: {
-    GET: "/api/notifications",
-    MARK_READ: "/api/notifications/read",
-    GET_UNREAD_COUNT: "/api/notifications/unread-count",
-    REGISTER_TOKEN: "/api/notifications/register-token",
-    SEND: "/api/notifications/send",
+    GET: "/notifications",
+    MARK_READ: "/notifications/read",
+    GET_UNREAD_COUNT: "/notifications/unread-count",
+    REGISTER_TOKEN: "/notifications/register-token",
+    SEND: "/notifications/send",
   },
 
   // Reports
   REPORTS: {
-    SUBMIT: "/api/reports",
-    GET_MY: "/api/reports/my",
-    GET_ALL: "/api/reports",
-    GET_STATS: "/api/reports/stats",
+    SUBMIT: "/reports",
+    GET_MY: "/reports/my",
+    GET_ALL: "/reports",
+    GET_STATS: "/reports/stats",
   },
 } as const;
 
