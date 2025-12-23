@@ -98,20 +98,24 @@ const nextConfig = {
   // API proxy configuration for Docker development
   async rewrites() {
     // Determine the backend URL based on environment
-    // In Docker, the backend service is accessible as 'backend:5001'
-    // For local development without Docker, it's 'localhost:5001'
-    const backendUrl = process.env.DOCKER_ENV
-      ? "http://backend:5001"
-      : (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001");
+    // Use BACKEND_INTERNAL_URL if provided (useful for Coolify internal networking)
+    // Otherwise fallback to 'backend:5001' in production/docker or localhost in dev
+    let backendUrl = process.env.BACKEND_INTERNAL_URL || 
+      (process.env.DOCKER_ENV === "true" || process.env.NODE_ENV === "production"
+        ? "http://backend:5001"
+        : (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001"));
+
+    // Remove trailing slash to avoid double slashes in proxied URLs
+    backendUrl = backendUrl.replace(/\/$/, "");
+
+    console.log(`📡 Proxying /api/* requests to: ${backendUrl}/api/*`);
 
     return [
-      /*
       // Proxy API requests to the backend service
       {
         source: "/api/:path*",
         destination: `${backendUrl}/api/:path*`,
       },
-      */
       // Proxy admin API requests to the backend service
       {
         source: "/admin/:path*",
