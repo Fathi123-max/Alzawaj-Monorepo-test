@@ -177,7 +177,31 @@ export const useNotificationSetup = (): void => {
       await fetchUnreadCount();
     };
 
+    // Listen for messages from service worker (notification clicks)
+    const handleServiceWorkerMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === "NOTIFICATION_CLICK") {
+        console.log("Received notification click message from service worker:", event.data);
+        const { url, data } = event.data;
+        
+        // Navigate to the URL
+        if (url) {
+          window.location.href = url;
+        }
+      }
+    };
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener("message", handleServiceWorkerMessage);
+    }
+
     setupNotifications();
+
+    // Cleanup
+    return () => {
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.removeEventListener("message", handleServiceWorkerMessage);
+      }
+    };
   }, [fetchUnreadCount]);
 };
 

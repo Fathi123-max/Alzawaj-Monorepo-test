@@ -60,12 +60,74 @@ self.addEventListener("push", function (event) {
 
 // Handle notification click
 self.addEventListener("notificationclick", function (event) {
-  console.log("Notification click received.");
+  console.log("Notification click received.", event.notification);
+  console.log("Notification data:", event.notification.data);
 
   event.notification.close();
 
-  // Open the app when notification is clicked
-  const urlToOpen = event.notification.data?.url || "/";
+  // Determine the URL to open based on notification type
+  let urlPath = "/dashboard";
+  
+  const notificationData = event.notification.data || {};
+  const notificationType = notificationData.type;
+  
+  // Handle different notification types
+  if (notificationType === "message" && notificationData.chatRoomId) {
+    // Navigate to the specific chat room
+    urlPath = `/dashboard/chat?chatRoomId=${notificationData.chatRoomId}`;
+    console.log("Opening chat room:", notificationData.chatRoomId);
+  } else if (notificationData.url) {
+    // Use custom URL if provided
+    urlPath = notificationData.url;
+  }
 
-  event.waitUntil(clients.openWindow(urlToOpen));
+  // Try to focus an existing window/tab if the app is already open
+  event.waitUntil(
+    clients.matchAll({ 
+      type: "window", 
+      includeUncontrolled: true 
+    })
+      .then(function (clientList) {
+        console.log("Found", clientList.length, "open windows");
+        
+        // Check if there's already a window open with our app
+        for (let i = 0; i < clientList.length; i++) {
+          const client = clientList[i];
+          const clientUrl = new URL(client.url);
+          console.log("Checking client:", client.url);
+          
+          // Check if this is our app (same origin) and user is likely authenticated
+          // (not on login page)
+          if (clientUrl.origin === self.location.origin && 
+              !clientUrl.pathname.includes('/login') &&
+              !clientUrl.pathname.includes('/register')) {
+            console.log("Found authenticated window, focusing and navigating to:", urlPath);
+            
+            return client.focus().then(() => {
+              // Send message to client to navigate
+              client.postMessage({
+                type: "NOTIFICATION_CLICK",
+                url: urlPath,
+                data: notificationData
+              });
+              return client;
+            });
+          }
+        }
+        
+        // If no authenticated window found, open new one
+        // Use full URL to ensure proper navigation
+        const fullUrl = self.location.origin + urlPath;
+        console.log("No authenticated window found, opening new window:", fullUrl);
+        return clients.openWindow(fullUrl);
+      })
+      .catch(function (error) {
+        console.error("Error handling notification click:", error);
+        // Fallback: open the URL
+        const fullUrl = self.location.origin + urlPath;
+        return clients.openWindow(fullUrl);
+      })
+  );
 });
+
+
