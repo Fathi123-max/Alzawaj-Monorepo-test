@@ -80,13 +80,11 @@ if (!fs.existsSync(logsDir)) {
 const transports: winston.transport[] = [];
 
 // Console transport
-if (process.env.NODE_ENV === "development") {
-  transports.push(
-    new winston.transports.Console({
-      format: consoleFormat,
-    }),
-  );
-}
+transports.push(
+  new winston.transports.Console({
+    format: process.env.NODE_ENV === "development" ? consoleFormat : logFormat,
+  }),
+);
 
 // File transports
 if (process.env.NODE_ENV !== "test") {

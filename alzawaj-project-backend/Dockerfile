@@ -53,19 +53,19 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
 
-# Copy package files and install pnpm dependencies
+# Copy package files
 COPY package.json package-lock.json* pnpm-lock.yaml* ./
-RUN pnpm install --prod --ignore-scripts
 
-# Copy built app from builder
+# Copy built app and pruned node_modules from builder
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 
 # Change ownership of the app directory
 RUN chown -R nodejs:nodejs /app
 
 USER nodejs
 
-EXPOSE 5000
+EXPOSE 5001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \

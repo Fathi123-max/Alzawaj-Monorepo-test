@@ -23,20 +23,27 @@ console.log("isEnvAlreadySet:", isEnvAlreadySet);
 
 // Only load .env.local if environment variables are not already properly set (non-Docker environment)
 if (!isEnvAlreadySet) {
+  console.log("Loading .env.local...");
   dotenv.config({ path: "../.env.local" });
 }
 
+console.log("Importing configurations and middleware...");
 // Import configurations and middleware
 import connectDB from "./config/database";
 import logger from "./config/logger";
+console.log("Logger and DB config imported.");
 import { errorHandler, notFound } from "./middleware/errorMiddleware";
+console.log("Error middleware imported.");
 import { rateLimitConfig } from "./config/rateLimiting";
+console.log("Rate limiting config imported.");
 import {
   initializeSocketHandlers,
   ExtendedServer,
 } from "./sockets/notificationHandler";
+console.log("Socket handlers imported.");
 
 // Import routes
+console.log("Importing routes...");
 import authRoutes from "./routes/authRoutes";
 import profileRoutes from "./routes/profileRoutes";
 import searchRoutes from "./routes/searchRoutes";
@@ -48,9 +55,11 @@ import adminRoutes from "./routes/adminRoutes";
 import debugRoutes from "./routes/debugRoutes";
 import verificationRoutes from "./routes/verificationRoutes";
 import bookmarkRoutes from "./routes/bookmarkRoutes";
+console.log("All routes imported.");
 
 const app: Express = express();
 const server = createServer(app);
+console.log("Express app and HTTP server created.");
 
 // Initialize Socket.IO
 const io = new Server(server, {
