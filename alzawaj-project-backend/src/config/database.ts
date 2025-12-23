@@ -43,6 +43,15 @@ export const connectDB = async (): Promise<void> => {
 
     if (mongoURI) {
       mongoURI = mongoURI.replace(/\s/g, "");
+      
+      // Check for potentially unencoded special characters in the password part
+      const passwordMatch = mongoURI.match(/:([^:@]+)@/);
+      if (passwordMatch && passwordMatch[1]) {
+        const password = passwordMatch[1];
+        if (/[#?\[\]@:/]/.test(password)) {
+          logger.warn("⚠️ Your MongoDB password contains special characters that might need URL encoding (e.g. @ should be %40). This could cause authentication to fail.");
+        }
+      }
     }
 
     if (!mongoURI) {
