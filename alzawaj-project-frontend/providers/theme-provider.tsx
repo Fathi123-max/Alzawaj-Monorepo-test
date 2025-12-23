@@ -88,6 +88,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // This is a placeholder for future dark mode support
   };
 
+  if (!mounted) {
+    return <>{children}</>;
+  }
+
   const value: ThemeContextType = {
     theme,
     updateTheme,

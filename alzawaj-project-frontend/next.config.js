@@ -98,7 +98,7 @@ const nextConfig = {
   // API proxy configuration for production and development
   async rewrites() {
     // Determine the backend URL based on environment variables
-    // 1. BACKEND_INTERNAL_URL is the highest priority for server-to-server communication
+    // 1. BACKEND_INTERNAL_URL is the highest priority (if you set it to a working internal IP)
     // 2. NEXT_PUBLIC_API_BASE_URL is the public link provided by the user
     // 3. Fallback to localhost for local dev
     let backendUrl = process.env.BACKEND_INTERNAL_URL || 
@@ -112,11 +112,15 @@ const nextConfig = {
 
     return [
       // Proxy ALL /api requests to the backend service
-      // This includes /api/auth, /api/profile, etc.
       {
         source: "/api/:path*",
         destination: `${backendUrl}/api/:path*`,
       },
+      // Ensure specific auth paths are also proxied correctly
+      {
+        source: "/auth/:path*",
+        destination: `${backendUrl}/api/auth/:path*`,
+      }
     ];
   },
 
