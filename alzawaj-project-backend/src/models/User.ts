@@ -5,6 +5,7 @@ import crypto from "crypto";
 
 // User interface extending the IUser from types
 export interface IUser extends Document {
+  id: string; // Virtual id property
   email: string;
   phone?: string; // Made optional
   password: string;

@@ -1190,3 +1190,23 @@ export const getMe = async (
     next(error);
   }
 };
+
+const authController = {
+  register,
+  login,
+  refreshToken,
+  logout,
+  logoutAll,
+  sendEmailVerification,
+  verifyEmail,
+  sendPhoneVerification,
+  verifyPhone,
+  devConfirmEmail,
+  devConfirmPhone,
+  forgotPassword,
+  resetPassword,
+  changePassword,
+  getMe,
+};
+
+export default authController;

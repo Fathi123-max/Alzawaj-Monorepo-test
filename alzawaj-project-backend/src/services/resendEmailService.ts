@@ -518,3 +518,5 @@ export const emailService = {
   sendPasswordReset,
   sendWelcomeEmail,
 };
+
+export default emailService;

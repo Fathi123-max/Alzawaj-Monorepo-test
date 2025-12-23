@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 
 // Profile interfaces
 export interface IProfile extends Document {
+  id: string; // Virtual id property
   userId: mongoose.Types.ObjectId;
   name: string;
   age: number;

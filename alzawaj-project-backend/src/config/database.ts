@@ -3,26 +3,31 @@ import logger from "./logger";
 
 export const connectDB = async (): Promise<void> => {
   try {
-    const mongoURI: string | undefined =
+    let mongoURI: string | undefined =
       process.env.NODE_ENV === "test"
         ? process.env.MONGODB_TEST_URI
         : process.env.MONGODB_URI;
 
-    logger.info(
-      "Database connection. attempt with NODE_ENV:",
-      process.env.NODE_ENV
-    );
-    logger.info("MongoDB URI is set:", !!mongoURI);
+    // Sanitize URI: remove any whitespace that might have been accidentally added
+    if (mongoURI) {
+      const originalURI = mongoURI;
+      mongoURI = mongoURI.replace(/\s/g, "");
+      if (originalURI !== mongoURI) {
+        logger.info("Removed whitespace from MONGODB_URI");
+      }
+    }
+
+    logger.info("Database connection attempt with NODE_ENV:", {
+      env: process.env.NODE_ENV,
+    });
+    logger.info("MongoDB URI is set:", { isSet: !!mongoURI });
 
     if (!mongoURI) {
       throw new Error("MongoDB URI is not defined in environment variables");
     }
 
     // Mask password in URI for logging
-    const maskedURI = mongoURI.replace(
-      /:([^:@]+)@/,
-      ":****@"
-    );
+    const maskedURI = mongoURI.replace(/:([^:@]+)@/, ":****@");
     logger.info(`Attempting to connect to MongoDB with URI: ${maskedURI}`);
 
     // Modern Mongoose connection options
@@ -38,7 +43,7 @@ export const connectDB = async (): Promise<void> => {
 
     // Connection event listeners
     mongoose.connection.on("error", (err: Error) => {
-      logger.error("MongoDB connection error:", err);
+      logger.error(`MongoDB connection error: ${err.message}`, { stack: err.stack });
     });
 
     mongoose.connection.on("disconnected", () => {
@@ -60,10 +65,9 @@ export const connectDB = async (): Promise<void> => {
       error instanceof Error
         ? error.message
         : "Unknown database connection error";
-    logger.error("Database connection failed:", errorMessage);
-    if (error instanceof Error) {
-      logger.error("Database connection error stack:", error.stack);
-    }
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    logger.error(`Database connection failed: ${errorMessage}`, { stack: errorStack });
     process.exit(1);
   }
 };
