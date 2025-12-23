@@ -68,6 +68,11 @@ export const connectDB = async (): Promise<void> => {
     const errorStack = error instanceof Error ? error.stack : undefined;
     
     logger.error(`Database connection failed: ${errorMessage}`, { stack: errorStack });
+
+    if (errorMessage.includes("Authentication failed")) {
+      logger.info("💡 TIP: Check if your MONGODB_URI contains the correct password. If using 'root' user, you might need to append '?authSource=admin' to your URI.");
+    }
+
     process.exit(1);
   }
 };
