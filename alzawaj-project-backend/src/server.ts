@@ -188,6 +188,10 @@ app.use(cors(corsOptions));
 
 // Add a middleware to set the Access-Control-Allow-Private-Network header
 app.use((req: Request, res: Response, next: NextFunction) => {
+  // Diagnostic log for all incoming requests in production
+  if (process.env.NODE_ENV === "production") {
+    logger.info(`📥 Request Received: ${req.method} ${req.url} [Origin: ${req.get('origin') || 'no-origin'}]`);
+  }
   res.setHeader("Access-Control-Allow-Private-Network", "true");
   next();
 });

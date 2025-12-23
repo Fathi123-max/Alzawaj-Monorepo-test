@@ -107,20 +107,11 @@ const nextConfig = {
     console.log(`📡 Proxying API requests to: ${backendUrl}`);
 
     return [
-      // Proxy API requests to the backend service
+      // Proxy ALL /api requests to the backend service
+      // This includes /api/auth, /api/profile, etc.
       {
         source: "/api/:path*",
         destination: `${backendUrl}/api/:path*`,
-      },
-      // Proxy admin API requests to the backend service
-      {
-        source: "/auth/:path*",
-        destination: `${backendUrl}/auth/:path*`,
-      },
-      // Proxy admin routes
-      {
-        source: "/admin-api/:path*",
-        destination: `${backendUrl}/admin/:path*`,
       },
     ];
   },
