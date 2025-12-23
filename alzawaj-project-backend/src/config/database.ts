@@ -2,44 +2,59 @@ import mongoose from "mongoose";
 import logger from "./logger";
 
 export const connectDB = async (): Promise<void> => {
+  const options = {
+    maxPoolSize: 10,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+  };
+
+  const attemptConnection = async (uri: string, isRetry = false): Promise<boolean> => {
+    try {
+      const maskedURI = uri.replace(/:([^:@]+)@/, ":****@");
+      logger.info(`${isRetry ? "Retrying" : "Attempting"} to connect to MongoDB...`);
+      
+      await mongoose.connect(uri, options);
+      logger.info(`✅ MongoDB Connected: ${mongoose.connection.host}`);
+      return true;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      
+      if (errorMessage.includes("Authentication failed") && !isRetry) {
+        logger.warn("Authentication failed. Checking if 'authSource=admin' is needed...");
+        
+        // If it's an auth failure and we haven't tried authSource=admin yet
+        if (!uri.includes("authSource=")) {
+          const separator = uri.includes("?") ? "&" : "?";
+          const retryURI = `${uri}${separator}authSource=admin`;
+          return await attemptConnection(retryURI, true);
+        }
+      }
+      
+      logger.error(`Database connection failed: ${errorMessage}`);
+      return false;
+    }
+  };
+
   try {
     let mongoURI: string | undefined =
       process.env.NODE_ENV === "test"
         ? process.env.MONGODB_TEST_URI
         : process.env.MONGODB_URI;
 
-    // Sanitize URI: remove any whitespace that might have been accidentally added
     if (mongoURI) {
-      const originalURI = mongoURI;
       mongoURI = mongoURI.replace(/\s/g, "");
-      if (originalURI !== mongoURI) {
-        logger.info("Removed whitespace from MONGODB_URI");
-      }
     }
-
-    logger.info("Database connection attempt with NODE_ENV:", {
-      env: process.env.NODE_ENV,
-    });
-    logger.info("MongoDB URI is set:", { isSet: !!mongoURI });
 
     if (!mongoURI) {
       throw new Error("MongoDB URI is not defined in environment variables");
     }
 
-    // Mask password in URI for logging
-    const maskedURI = mongoURI.replace(/:([^:@]+)@/, ":****@");
-    logger.info(`Attempting to connect to MongoDB with URI: ${maskedURI}`);
-
-    // Modern Mongoose connection options
-    const options = {
-      maxPoolSize: 10, // Maintain up to 10 socket connections
-      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-    };
-
-    const conn = await mongoose.connect(mongoURI, options);
-
-    logger.info(`✅ MongoDB Connected: ${conn.connection.host}`);
+    const success = await attemptConnection(mongoURI);
+    
+    if (!success) {
+      logger.info("💡 TIP: If using 'root' user, ensure your password is correct and URL-encoded if it contains special characters.");
+      process.exit(1);
+    }
 
     // Connection event listeners
     mongoose.connection.on("error", (err: Error) => {
@@ -61,18 +76,7 @@ export const connectDB = async (): Promise<void> => {
       process.exit(0);
     });
   } catch (error) {
-    const errorMessage =
-      error instanceof Error
-        ? error.message
-        : "Unknown database connection error";
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    
-    logger.error(`Database connection failed: ${errorMessage}`, { stack: errorStack });
-
-    if (errorMessage.includes("Authentication failed")) {
-      logger.info("💡 TIP: Check if your MONGODB_URI contains the correct password. If using 'root' user, you might need to append '?authSource=admin' to your URI.");
-    }
-
+    logger.error("Critical error during database setup:", error);
     process.exit(1);
   }
 };
