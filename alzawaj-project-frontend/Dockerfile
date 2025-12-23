@@ -29,15 +29,17 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json package-lock.json* pnpm-lock.yaml* ./
+# Use development to ensure devDependencies (typescript, etc) are installed for building
+ENV NODE_ENV=development
 RUN pnpm install --ignore-scripts
 COPY . .
 
 # Build application for production using webpack instead of Turbopack
-ENV NODE_ENV=production
 # Force Next.js to use webpack instead of Turbopack
 ENV NEXT_PRIVATE_LOCAL_WEBPACK=1
 ENV NEXT_USE_LOCAL_WEBPACK=1
-RUN pnpm run build
+# Set to production ONLY for the build command itself
+RUN NODE_ENV=production pnpm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner

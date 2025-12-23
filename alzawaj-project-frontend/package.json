@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/generate-sw.js && npx prettier . --write && cross-env NEXT_PRIVATE_LOCAL_WEBPACK=1 NEXT_USE_LOCAL_WEBPACK=1 npx next build",
+    "build": "node scripts/generate-sw.js && npx prettier . --write && npx next build",
     "predev": "node scripts/generate-sw.js",
     "start": "next start",
     "lint": "next lint",
