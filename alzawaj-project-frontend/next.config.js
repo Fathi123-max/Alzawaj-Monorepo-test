@@ -98,8 +98,12 @@ const nextConfig = {
   // API proxy configuration for production and development
   async rewrites() {
     // Determine the backend URL based on environment variables
-    // Use NEXT_PUBLIC_API_BASE_URL as the primary source for the backend location
-    let backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001";
+    // 1. BACKEND_INTERNAL_URL is the highest priority for server-to-server communication
+    // 2. NEXT_PUBLIC_API_BASE_URL is the public link provided by the user
+    // 3. Fallback to localhost for local dev
+    let backendUrl = process.env.BACKEND_INTERNAL_URL || 
+                     process.env.NEXT_PUBLIC_API_BASE_URL || 
+                     "http://localhost:5001";
 
     // Remove trailing slash to avoid double slashes
     backendUrl = backendUrl.replace(/\/$/, "");
