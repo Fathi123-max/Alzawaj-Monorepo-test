@@ -20,7 +20,7 @@ const firebaseConfig = {
 };
 
 // Check if we're in development environment
-const isDevelopment = process.env.NODE_ENV === "development";
+const isDevelopment = process.env["NODE_ENV"] === "development";
 
 // Validate Firebase configuration
 const validateFirebaseConfig = (): { valid: boolean; missing: string[] } => {

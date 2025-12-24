@@ -5,7 +5,7 @@ const nextConfig = {
 
   // Performance optimizations
   compiler: {
-    removeConsole: process.env.NODE_ENV === "production",
+    removeConsole: process.env["NODE_ENV"] === "production",
   },
 
   // Enable experimental features without invalid keys
@@ -101,10 +101,10 @@ const nextConfig = {
     // 1. BACKEND_INTERNAL_URL (Internal IP/Host)
     // 2. BACKEND_API_URL / NEXT_PUBLIC_BACKEND_API_URL (Common dev/local envs)
     // 3. NEXT_PUBLIC_API_BASE_URL (Public backend URL)
-    let backendUrl = process.env.BACKEND_INTERNAL_URL || 
-                     process.env.BACKEND_API_URL ||
-                     process.env.NEXT_PUBLIC_BACKEND_API_URL ||
-                     process.env.NEXT_PUBLIC_API_BASE_URL;
+    let backendUrl = process.env["BACKEND_INTERNAL_URL"] || 
+                     process.env["BACKEND_API_URL"] ||
+                     process.env["NEXT_PUBLIC_BACKEND_API_URL"] ||
+                     process.env["NEXT_PUBLIC_API_BASE_URL"];
 
     if (!backendUrl) {
       // If no URL is provided, we default to localhost:5001

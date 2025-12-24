@@ -22,7 +22,7 @@ export function getBackendApiUrl(): string {
     }
     
     // During SSR, determine default based on environment
-    if (process.env.DOCKER_ENV === "true") {
+    if (process.env["DOCKER_ENV"] === "true") {
       baseUrl = "http://backend:5001";
     } else {
       baseUrl = "http://localhost:5001";
