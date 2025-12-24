@@ -47,9 +47,13 @@ async function handleRequest(
 
     // Forward body for relevant methods
     if (["POST", "PUT", "PATCH", "DELETE"].includes(request.method)) {
-      const body = await request.text();
-      if (body) {
-        requestInit.body = body;
+      try {
+        const body = await request.text();
+        if (body) {
+          requestInit.body = body;
+        }
+      } catch (e) {
+        // No body or error reading it
       }
     }
 
@@ -60,10 +64,14 @@ async function handleRequest(
     const contentType = response.headers.get("content-type");
     let responseData;
     
-    if (contentType?.includes("application/json")) {
-      responseData = await response.json();
-    } else {
-      responseData = await response.text();
+    try {
+      if (contentType?.includes("application/json")) {
+        responseData = await response.json();
+      } else {
+        responseData = await response.text();
+      }
+    } catch (e) {
+      responseData = "No content";
     }
 
     // Build the response
