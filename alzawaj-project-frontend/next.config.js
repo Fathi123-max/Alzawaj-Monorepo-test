@@ -98,12 +98,20 @@ const nextConfig = {
   // API proxy configuration for production and development
   async rewrites() {
     // Determine the backend URL based on environment variables
-    // 1. BACKEND_INTERNAL_URL is the highest priority (if you set it to a working internal IP)
-    // 2. NEXT_PUBLIC_API_BASE_URL is the public link provided by the user
-    // 3. Fallback to localhost for local dev
+    // 1. BACKEND_INTERNAL_URL (Internal IP/Host)
+    // 2. BACKEND_API_URL / NEXT_PUBLIC_BACKEND_API_URL (Common dev/local envs)
+    // 3. NEXT_PUBLIC_API_BASE_URL (Public backend URL)
     let backendUrl = process.env.BACKEND_INTERNAL_URL || 
-                     process.env.NEXT_PUBLIC_API_BASE_URL || 
-                     "http://localhost:5001";
+                     process.env.BACKEND_API_URL ||
+                     process.env.NEXT_PUBLIC_BACKEND_API_URL ||
+                     process.env.NEXT_PUBLIC_API_BASE_URL;
+
+    if (!backendUrl) {
+      // If no URL is provided, we default to localhost:5001
+      // In standalone Docker, this will likely fail unless using host networking
+      backendUrl = "http://localhost:5001";
+      console.warn("⚠️ No backend URL provided via environment variables. Defaulting to http://localhost:5001");
+    }
 
     // Remove trailing slash to avoid double slashes
     backendUrl = backendUrl.replace(/\/$/, "");

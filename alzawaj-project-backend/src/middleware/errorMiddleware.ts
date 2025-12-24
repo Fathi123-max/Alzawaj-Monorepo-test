@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-// import logger from '../config/logger';
+import logger from '../config/logger';
 
 /**
  * Error handling middleware for the application
@@ -32,7 +32,7 @@ export class AppError extends Error {
 export const notFound = (req: Request, res: Response, next: NextFunction) => {
   const error = new Error(`Resource not found - ${req.originalUrl}`);
   (error as any).statusCode = 404;
-  // logger.apiError(error, req);
+  logger.apiError(error, req);
   next(error);
 };
 
@@ -47,8 +47,8 @@ export const errorHandler = (
   error.message = err.message;
   error.statusCode = err.statusCode || 500;
 
-  // Log error
-  // logger.apiError(error, req);
+  // Log error using specialized logger
+  logger.apiError(err, req);
 
   // Mongoose bad ObjectId
   if (err.name === "CastError") {

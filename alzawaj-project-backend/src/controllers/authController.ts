@@ -10,6 +10,7 @@ import {
 } from "../utils/responseHelper";
 import { emailService } from "../services/resendEmailService";
 import smsService from "../services/smsService";
+import logger from "../config/logger";
 
 // Extend Request interface for authentication
 interface AuthenticatedRequest extends Request {
@@ -376,15 +377,13 @@ export const login = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    console.log("Login attempt started");
+    logger.info("Login attempt started", { body: { username: req.body.username } });
     const { username, password }: LoginData = req.body;
-    console.log("Login data received:", { username });
 
     // Validate input data
     const errors = validationResult(req);
-    console.log("Validation errors:", errors.array());
     if (!errors.isEmpty()) {
-      console.log("Validation failed");
+      logger.warn("Login validation failed", { errors: errors.array(), username });
       res.status(400).json(
         createErrorResponse(
           "بيانات تسجيل الدخول غير صحيحة",
@@ -394,53 +393,42 @@ export const login = async (
       return;
     }
 
-    console.log("Validation passed, searching for user");
     // Find user by email or phone
     const user = await User.findOne({
       $or: [{ email: username }, { phone: username }],
     })
       .select("+password")
       .populate("profile");
-    console.log("User search completed, user found:", !!user);
-
-    if (user) {
-      console.log("User details:", {
-        email: user.email,
-        hasPassword: !!user.password,
-        passwordLength: user.password ? user.password.length : 0,
-        id: user._id,
-      });
-
-      // Additional check for password field
-      if (!user.password) {
-        console.log("ERROR: User found but password field is missing or empty");
-        res
-          .status(500)
-          .json(createErrorResponse("خطأ في النظام. يرجى التواصل مع الإدارة"));
-        return;
-      }
-    }
 
     if (!user) {
-      console.log("User not found");
+      logger.warn("Login failed: User not found", { username });
       res.status(401).json(createErrorResponse("بيانات الدخول غير صحيحة"));
       return;
     }
 
-    console.log("User found, checking if user is active");
+    logger.debug("User found, validating account state", { userId: user._id, email: user.email });
+
+    // Additional check for password field
+    if (!user.password) {
+      logger.error("ERROR: User found but password field is missing or empty", { userId: user._id });
+      res
+        .status(500)
+        .json(createErrorResponse("خطأ في النظام. يرجى التواصل مع الإدارة"));
+      return;
+    }
+
     // Check if user is active
     if (user.status !== "active") {
-      console.log("User account is not active");
+      logger.warn("Login failed: User account is not active", { userId: user._id, status: user.status });
       res
         .status(401)
         .json(createErrorResponse("الحساب غير مفعل. يرجى التواصل مع الإدارة"));
       return;
     }
 
-    console.log("User is active, checking email verification");
     // Check if email is verified
     if (!user.isEmailVerified) {
-      console.log("User email is not verified");
+      logger.warn("Login failed: Email not verified", { userId: user._id });
       res
         .status(403)
         .json(
@@ -449,15 +437,9 @@ export const login = async (
       return;
     }
 
-    console.log("Email verified, checking admin verification");
-    console.log("User profile:", user.profile ? "exists" : "missing");
-    if (user.profile) {
-      console.log("Profile verification:", (user.profile as any).verification);
-    }
-
     // Check if profile is verified by admin (skip this check for admin and moderator users)
     if (user.role !== "admin" && user.role !== "moderator" && user.profile && !(user.profile as any).verification?.isVerified) {
-      console.log("User profile is not verified by admin");
+      logger.warn("Login failed: Profile not verified by admin", { userId: user._id });
       res
         .status(403)
         .json(
@@ -466,12 +448,10 @@ export const login = async (
       return;
     }
 
-    console.log("Admin verification passed, checking password");
     // Check password
     const isPasswordMatch = await user.comparePassword(password);
-    console.log("Password comparison result:", isPasswordMatch);
     if (!isPasswordMatch) {
-      console.log("Password does not match, incrementing login attempts");
+      logger.warn("Login failed: Password mismatch", { userId: user._id });
       // Update failed login attempts using the model's method
       await user.incLoginAttempts();
 
@@ -479,10 +459,9 @@ export const login = async (
       return;
     }
 
-    console.log("Password matches, checking if account is locked");
     // Check if account is locked
     if (user.isAccountLocked()) {
-      console.log("Account is locked");
+      logger.warn("Login failed: Account is locked", { userId: user._id });
       res
         .status(423)
         .json(
@@ -493,16 +472,13 @@ export const login = async (
       return;
     }
 
-    console.log("Account is not locked, resetting login attempts");
     // Reset login attempts on successful login
     await user.resetLoginAttempts();
     user.lastLoginAt = new Date();
 
-    console.log("Generating tokens");
     // Generate tokens
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
-    console.log("Tokens generated");
 
     // Save refresh token
     user.refreshTokens.push({
@@ -518,18 +494,16 @@ export const login = async (
     // Check for FCM token in request body and update user
     if (req.body.fcmToken) {
       user.fcmToken = req.body.fcmToken;
-      console.log("Updated FCM token for user:", user._id);
+      logger.info("Updated FCM token for user", { userId: user._id });
     }
 
-    console.log("Cleaning up old refresh tokens");
     // Clean up old refresh tokens
     user.refreshTokens = user.refreshTokens.filter(
       (tokenObj: any) => tokenObj.expiresAt > new Date()
     );
 
-    console.log("Saving user");
     await user.save();
-    console.log("User saved successfully");
+    logger.info("Login successful", { userId: user._id, email: user.email });
 
     res.status(200).json({
       success: true,
@@ -547,9 +521,8 @@ export const login = async (
         lastLogin: user.lastLoginAt,
       },
     });
-    console.log("Login response sent successfully");
   } catch (error) {
-    console.log("Login error occurred:", error);
+    logger.error("Login error occurred", { error, body: { username: req.body.username } });
     next(error);
   }
 };
