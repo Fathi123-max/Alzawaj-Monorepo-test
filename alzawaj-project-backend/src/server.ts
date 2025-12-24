@@ -32,7 +32,7 @@ console.log("Importing configurations and middleware...");
 import connectDB from "./config/database";
 import logger from "./config/logger";
 console.log("Logger and DB config imported.");
-import { errorHandler, notFound } from "./middleware/errorMiddleware";
+import { errorHandler, notFound, AppError } from "./middleware/errorMiddleware";
 console.log("Error middleware imported.");
 import { rateLimitConfig } from "./config/rateLimiting";
 console.log("Rate limiting config imported.");
@@ -134,6 +134,14 @@ connectDB()
 // Trust proxy (for deployment behind reverse proxy)
 app.set("trust proxy", 1);
 
+// Diagnostic log for all incoming requests - moved BEFORE CORS for better debugging
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (process.env.NODE_ENV === "production" || process.env.DEBUG === "true") {
+    logger.info(`📥 [${req.method}] ${req.url} - Origin: ${req.get('origin') || 'no-origin'} - IP: ${req.ip}`);
+  }
+  next();
+});
+
 // CORS configuration - MUST be before other middleware to handle preflight requests
 const corsOriginEnv = process.env.CORS_ORIGIN;
 let allowedOrigins: (string | RegExp)[] = [
@@ -149,8 +157,7 @@ if (corsOriginEnv) {
 const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
     logger.debug(`CORS: Incoming origin: ${origin}`);
-    logger.debug(`CORS: Allowed origins: ${JSON.stringify(allowedOrigins)}`);
-
+    
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) {
       logger.debug(`CORS: No origin provided - allowed.`);
@@ -172,8 +179,13 @@ const corsOptions: CorsOptions = {
       logger.debug(`CORS: Origin ${origin} allowed.`);
       callback(null, true);
     } else {
-      logger.error(`CORS: Origin ${origin} not allowed.`);
-      callback(new Error(`Not allowed by CORS: ${origin}`));
+      logger.error(`CORS: Origin ${origin} not allowed. Allowed: ${JSON.stringify(allowedOrigins)}`);
+      const corsError = new AppError(
+        `Origin ${origin} is not allowed by CORS. Please set the CORS_ORIGIN environment variable correctly on the backend.`,
+        403,
+        'CORS_NOT_ALLOWED'
+      );
+      callback(corsError as any);
     }
   },
   credentials: true,
@@ -188,10 +200,6 @@ app.use(cors(corsOptions));
 
 // Add a middleware to set the Access-Control-Allow-Private-Network header
 app.use((req: Request, res: Response, next: NextFunction) => {
-  // Diagnostic log for all incoming requests in production
-  if (process.env.NODE_ENV === "production") {
-    logger.info(`📥 Request Received: ${req.method} ${req.url} [Origin: ${req.get('origin') || 'no-origin'}]`);
-  }
   res.setHeader("Access-Control-Allow-Private-Network", "true");
   next();
 });
@@ -363,6 +371,7 @@ server.listen(PORT, () => {
     `🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`
   );
   logger.info(`📝 Process ID: ${process.pid}`);
+  logger.info(`🌐 Allowed CORS origins: ${JSON.stringify(allowedOrigins)}`);
 });
 
 export { app, server, io };

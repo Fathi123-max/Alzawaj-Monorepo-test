@@ -378,6 +378,14 @@ export const login = async (
 ): Promise<void> => {
   try {
     logger.info("Login attempt started", { body: { username: req.body.username } });
+    
+    // Check for critical environment variables before proceeding
+    if (!process.env.JWT_SECRET || !process.env.JWT_REFRESH_SECRET) {
+      logger.error("CRITICAL CONFIG ERROR: JWT_SECRET or JWT_REFRESH_SECRET is not set in environment variables");
+      res.status(500).json(createErrorResponse("خطأ في إعدادات الخادم. يرجى التواصل مع الإدارة"));
+      return;
+    }
+
     const { username, password }: LoginData = req.body;
 
     // Validate input data
