@@ -88,10 +88,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // This is a placeholder for future dark mode support
   };
 
-  if (!mounted) {
-    return <>{children}</>;
-  }
-
   const value: ThemeContextType = {
     theme,
     updateTheme,
@@ -102,7 +98,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ThemeContext.Provider value={value}>
-      {children}
+      <div style={{ visibility: mounted ? 'visible' : 'hidden' }}>
+        {children}
+      </div>
     </ThemeContext.Provider>
   );
 }

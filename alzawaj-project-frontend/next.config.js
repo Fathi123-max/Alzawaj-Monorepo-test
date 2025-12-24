@@ -98,13 +98,10 @@ const nextConfig = {
   // API proxy configuration for production and development
   async rewrites() {
     // Determine the backend URL based on environment variables
-    // 1. BACKEND_INTERNAL_URL (Internal IP/Host)
-    // 2. BACKEND_API_URL / NEXT_PUBLIC_BACKEND_API_URL (Common dev/local envs)
-    // 3. NEXT_PUBLIC_API_BASE_URL (Public backend URL)
-    let backendUrl = process.env["BACKEND_INTERNAL_URL"] || 
+    let backendUrl = process.env["NEXT_PUBLIC_API_BASE_URL"] ||
+                     process.env["BACKEND_INTERNAL_URL"] || 
                      process.env["BACKEND_API_URL"] ||
-                     process.env["NEXT_PUBLIC_BACKEND_API_URL"] ||
-                     process.env["NEXT_PUBLIC_API_BASE_URL"];
+                     process.env["NEXT_PUBLIC_BACKEND_API_URL"];
 
     if (!backendUrl) {
       // If no URL is provided, we default to localhost:5001
@@ -116,7 +113,9 @@ const nextConfig = {
     // Remove trailing slash to avoid double slashes
     backendUrl = backendUrl.replace(/\/$/, "");
 
-    console.log(`📡 Proxying API requests to: ${backendUrl}`);
+    if (process.env["NODE_ENV"] !== "production") {
+      console.log(`📡 [DEV] Proxying API requests to: ${backendUrl}`);
+    }
 
     return [
       // Proxy ALL /api requests to the backend service
