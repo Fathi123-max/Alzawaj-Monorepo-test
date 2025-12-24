@@ -1,8 +1,6 @@
 // Fixed API Proxy Route
-// This proxies all requests from the frontend /api/* to the actual backend server
 import { NextRequest, NextResponse } from "next/server";
 
-// Detect backend URL with the same priority as next.config.js
 const getTargetBackendUrl = () => {
   const url = process.env["NEXT_PUBLIC_API_BASE_URL"] ||
               process.env["BACKEND_INTERNAL_URL"] || 
@@ -10,7 +8,7 @@ const getTargetBackendUrl = () => {
               process.env["NEXT_PUBLIC_BACKEND_API_URL"] ||
               "http://localhost:5001";
   
-  return url.replace(/\/$/, ""); // Remove trailing slash
+  return url.replace(/\/$/, "");
 };
 
 const BACKEND_URL = getTargetBackendUrl();
@@ -22,18 +20,10 @@ async function handleRequest(
   try {
     const { path } = await params;
     const pathString = path.join("/");
-    
-    // Construct the destination URL
     const url = new URL(request.url);
     const searchParams = url.search;
-    
     const targetUrl = `${BACKEND_URL}/api/${pathString}${searchParams}`;
 
-    if (process.env["NODE_ENV"] !== "production") {
-      console.log(`[PROXY] ${request.method} -> ${targetUrl}`);
-    }
-
-    // Clone headers and remove host to avoid SSL/Routing issues
     const headers = new Headers(request.headers);
     headers.delete("host");
     headers.delete("connection");
@@ -41,26 +31,19 @@ async function handleRequest(
     const requestInit: RequestInit = {
       method: request.method,
       headers: headers,
-      // @ts-ignore
       cache: 'no-store'
     };
 
-    // Forward body for relevant methods
     if (["POST", "PUT", "PATCH", "DELETE"].includes(request.method)) {
       try {
         const body = await request.text();
         if (body) {
           requestInit.body = body;
         }
-      } catch (e) {
-        // No body or error reading it
-      }
+      } catch (e) {}
     }
 
-    // Perform the actual fetch to the backend
     const response = await fetch(targetUrl, requestInit);
-
-    // Get response body
     const contentType = response.headers.get("content-type");
     let responseData;
     
@@ -74,7 +57,6 @@ async function handleRequest(
       responseData = "No content";
     }
 
-    // Build the response
     return new NextResponse(
       typeof responseData === 'string' ? responseData : JSON.stringify(responseData), 
       {
@@ -86,8 +68,6 @@ async function handleRequest(
     );
 
   } catch (error) {
-    console.error("[PROXY ERROR]:", error);
-    
     return NextResponse.json(
       { 
         success: false, 
