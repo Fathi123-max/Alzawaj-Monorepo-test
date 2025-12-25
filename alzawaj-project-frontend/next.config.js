@@ -97,37 +97,20 @@ const nextConfig = {
 
   // API proxy configuration for production and development
   async rewrites() {
-    // Determine the backend URL based on environment variables
     let backendUrl = process.env["NEXT_PUBLIC_API_BASE_URL"] ||
                      process.env["BACKEND_INTERNAL_URL"] || 
                      process.env["BACKEND_API_URL"] ||
-                     process.env["NEXT_PUBLIC_BACKEND_API_URL"];
+                     process.env["NEXT_PUBLIC_BACKEND_API_URL"] ||
+                     "http://localhost:5001";
 
-    if (!backendUrl) {
-      // If no URL is provided, we default to localhost:5001
-      // In standalone Docker, this will likely fail unless using host networking
-      backendUrl = "http://localhost:5001";
-      console.warn("⚠️ No backend URL provided via environment variables. Defaulting to http://localhost:5001");
-    }
-
-    // Remove trailing slash to avoid double slashes
     backendUrl = backendUrl.replace(/\/$/, "");
-
-    if (process.env["NODE_ENV"] !== "production") {
-      console.log(`📡 [DEV] Proxying API requests to: ${backendUrl}`);
-    }
+    console.log(`📡 [PROXY] Forwarding /api requests to: ${backendUrl}`);
 
     return [
-      // Proxy ALL /api requests to the backend service
       {
         source: "/api/:path*",
         destination: `${backendUrl}/api/:path*`,
       },
-      // Ensure specific auth paths are also proxied correctly
-      {
-        source: "/auth/:path*",
-        destination: `${backendUrl}/api/auth/:path*`,
-      }
     ];
   },
 
