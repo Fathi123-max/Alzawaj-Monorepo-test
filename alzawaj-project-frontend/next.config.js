@@ -95,6 +95,20 @@ const nextConfig = {
     ];
   },
 
+  // API proxy configuration for production and development (Fallback)
+  async rewrites() {
+    const backendUrl = process.env["BACKEND_INTERNAL_URL"] || 
+                     process.env["BACKEND_API_URL"] || 
+                     "http://localhost:5001";
+
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${backendUrl.replace(/\/$/, "")}/api/:path*`,
+      },
+    ];
+  },
+
   // Output configuration for deployment
   output: "standalone",
 

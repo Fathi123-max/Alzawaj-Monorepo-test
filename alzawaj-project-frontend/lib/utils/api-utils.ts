@@ -3,35 +3,29 @@ export function getBackendApiUrl(): string {
   // 1. NEXT_PUBLIC_API_BASE_URL (Required for Browser after proxy removal)
   // 2. BACKEND_INTERNAL_URL (Best for SSR/Docker)
   // 3. BACKEND_API_URL / NEXT_PUBLIC_BACKEND_API_URL
-  let baseUrl =
-    process.env["NEXT_PUBLIC_API_BASE_URL"] ||
-    process.env["BACKEND_INTERNAL_URL"] ||
-    process.env["BACKEND_API_URL"] ||
-    process.env["NEXT_PUBLIC_BACKEND_API_URL"];
+  
+  const publicUrl = process.env["NEXT_PUBLIC_API_BASE_URL"];
+  const internalUrl = process.env["BACKEND_INTERNAL_URL"] || 
+                     process.env["BACKEND_API_URL"] || 
+                     process.env["NEXT_PUBLIC_BACKEND_API_URL"];
 
-  // Sanitize: remove whitespace
-  if (baseUrl) {
-    baseUrl = baseUrl.trim();
-  }
+  let baseUrl = publicUrl;
 
-  // If no URL is provided, determine based on environment
-  if (!baseUrl) {
-    if (typeof window !== "undefined") {
-      // Browserside: If no explicit public URL, we default to /api (local dev or unexpected proxy)
-      // but warn because we intend to remove the proxy.
-      console.warn("⚠️ NEXT_PUBLIC_API_BASE_URL is not set. Requests may fail if proxy is removed.");
-      return "/api";
-    }
+  // On the server (SSR), we can use the internal URL if the public one is missing
+  if (typeof window === "undefined" && !baseUrl) {
+    baseUrl = internalUrl;
     
-    // SSR: Use internal network or localhost
-    if (process.env["DOCKER_ENV"] === "true") {
-      baseUrl = "http://backend:5001";
-    } else {
-      baseUrl = "http://localhost:5001";
+    if (!baseUrl) {
+      baseUrl = process.env["DOCKER_ENV"] === "true" ? "http://backend:5001" : "http://localhost:5001";
     }
   }
 
-  let normalizedBase = baseUrl.replace(/\/$/, "");
+  // If still no URL, fallback to /api (this requires the proxy to be enabled as fallback)
+  if (!baseUrl) {
+    return "/api";
+  }
+
+  let normalizedBase = baseUrl.trim().replace(/\/$/, "");
   
   // Ensure the URL ends with /api if it doesn't already
   if (!normalizedBase.endsWith("/api")) {
