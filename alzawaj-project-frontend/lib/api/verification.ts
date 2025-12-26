@@ -3,12 +3,12 @@ import { ApiClient } from "./client";
 export const verificationApi = {
   request: (data: { email: string; name?: string }) =>
     ApiClient.post<{ success: boolean; message: string }>(
-      "/api/auth/verification/request",
+      "/auth/verification/request",
       data,
     ),
   confirm: (email: string) =>
     ApiClient.post<{ success: boolean; message: string }>(
-      "/api/auth/verification/confirm",
+      "/auth/verification/confirm",
       { email },
     ),
   confirmToken: (token: string) =>
@@ -16,9 +16,9 @@ export const verificationApi = {
       success: boolean;
       message: string;
       data?: { email: string };
-    }>("/api/auth/verify-email", { token }),
+    }>("/auth/verify-email", { token }),
   status: (email: string) =>
     ApiClient.get<{ email: string; verified: boolean; verifiedAt?: string }>(
-      `/api/auth/verification/status?email=${encodeURIComponent(email)}`,
+      `/auth/verification/status?email=${encodeURIComponent(email)}`,
     ),
 };

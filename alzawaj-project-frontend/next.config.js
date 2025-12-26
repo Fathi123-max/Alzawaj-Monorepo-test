@@ -95,25 +95,6 @@ const nextConfig = {
     ];
   },
 
-  // API proxy configuration for production and development
-  async rewrites() {
-    let backendUrl = process.env["NEXT_PUBLIC_API_BASE_URL"] ||
-                     process.env["BACKEND_INTERNAL_URL"] || 
-                     process.env["BACKEND_API_URL"] ||
-                     process.env["NEXT_PUBLIC_BACKEND_API_URL"] ||
-                     "http://localhost:5001";
-
-    backendUrl = backendUrl.replace(/\/$/, "");
-    console.log(`📡 [PROXY] Forwarding /api requests to: ${backendUrl}`);
-
-    return [
-      {
-        source: "/api/:path*",
-        destination: `${backendUrl}/api/:path*`,
-      },
-    ];
-  },
-
   // Output configuration for deployment
   output: "standalone",
 

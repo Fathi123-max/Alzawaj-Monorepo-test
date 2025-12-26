@@ -2,6 +2,7 @@
 // Handles all admin-related API calls based on the provided API documentation
 
 import { getStoredToken, getStoredUser } from "@/lib/utils/auth.utils";
+import { getBackendApiUrl } from "@/lib/utils/api-utils";
 import { MarriageRequest as MainMarriageRequest } from "@/lib/types";
 
 export interface AdminStats {
@@ -262,7 +263,7 @@ export interface PaginatedResponse<T> {
 }
 
 class AdminApiService {
-  private baseUrl = "/api/admin";
+  private baseUrl = "/admin";
 
   /**
    * Check if current user has admin access
@@ -332,8 +333,8 @@ class AdminApiService {
       );
     }
 
-    // Construct the full URL using baseUrl and endpoint
-    const url = `${this.baseUrl}${endpoint}`;
+    // Construct the full URL using getBackendApiUrl() and endpoint
+    const url = `${getBackendApiUrl()}${this.baseUrl}${endpoint}`;
     console.log(`🌐 Making request to: ${url}`);
     console.log(`🌐 Request options:`, options);
 

@@ -7,10 +7,8 @@ import { getBackendApiUrl } from "@/lib/utils/api-utils";
 
 // Create axios instance with default configuration
 const api: AxiosInstance = axios.create({
-  // In the browser, ALWAYS use relative /api path to go through the Next.js proxy.
-  // This bypasses port 5001 firewall issues and CORS problems.
-  // On the server (SSR), use the full backend URL.
-  baseURL: typeof window === "undefined" ? getBackendApiUrl() : "/api",
+  // Use the full backend URL for both SSR and Browser after proxy removal.
+  baseURL: getBackendApiUrl(),
   timeout: 60000,
   headers: {
     "Content-Type": "application/json",
@@ -86,7 +84,7 @@ api.interceptors.response.use(
         const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
         if (refreshToken) {
           const response = await axios.post(
-            `/api/auth/refresh-token`,
+            `${getBackendApiUrl()}/auth/refresh-token`,
             {
               refreshToken,
             },

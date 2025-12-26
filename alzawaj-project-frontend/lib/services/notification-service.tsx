@@ -4,6 +4,7 @@ import type { MessagePayload } from "firebase/messaging";
 import { app, getFCMToken } from "./firebase"; // Your Firebase app configuration
 import { useNotifications } from "../../providers/notification-provider";
 import { notificationsApi } from "../api";
+import { getBackendApiUrl } from "../utils/api-utils";
 
 /**
  * Register the token with your backend
@@ -29,7 +30,7 @@ export const registerTokenWithBackend = async (token: string): Promise<void> => 
       throw new Error("No auth token available for FCM token registration");
     }
 
-    const response = await fetch("/api/notifications/register-token", {
+    const response = await fetch(`${getBackendApiUrl()}/notifications/register-token`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -225,7 +226,7 @@ export const sendTestNotification = async (
   body: string,
 ): Promise<void> => {
   try {
-    const response = await fetch("/api/notifications/send", {
+    const response = await fetch(`${getBackendApiUrl()}/notifications/send`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

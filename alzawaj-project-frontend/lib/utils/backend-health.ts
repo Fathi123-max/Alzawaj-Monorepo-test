@@ -1,13 +1,11 @@
-// Backend health check utility
-
-const BACKEND_HEALTH_ENDPOINT = "/api/auth/test";
+import { getBackendApiUrl } from "./api-utils";
 
 /**
  * Check if the backend is available
  */
 export async function checkBackendHealth(): Promise<boolean> {
   try {
-    const response = await fetch(BACKEND_HEALTH_ENDPOINT, {
+    const response = await fetch(`${getBackendApiUrl()}/auth/test`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
