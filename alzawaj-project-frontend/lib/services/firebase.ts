@@ -66,7 +66,7 @@ let app: FirebaseApp | null = null;
 let messaging: any;
 
 // Check if Firebase Messaging is supported in the current environment
-const isFirebaseMessagingSupported = (): boolean => {
+export const isFirebaseMessagingSupported = (): boolean => {
   if (typeof window === "undefined") {
     return false; // Not in browser environment
   }

@@ -4,6 +4,7 @@ import React from "react";
 import { Bell, X } from "lucide-react";
 import { useNotifications } from "@/providers/notification-provider";
 import { requestNotificationPermission } from "@/lib/services/notification-service";
+import { isFirebaseMessagingSupported } from "@/lib/services/firebase";
 import { Button } from "@/components/ui/button";
 
 export function NotificationBanner() {
@@ -14,7 +15,7 @@ export function NotificationBanner() {
   if (
     notificationPermission === "granted" ||
     typeof window === "undefined" ||
-    !("Notification" in window)
+    !isFirebaseMessagingSupported()
   ) {
     return null;
   }

@@ -1,10 +1,12 @@
 // lib/services/notification-service.tsx (frontend)
 import { useEffect } from "react";
 import type { MessagePayload } from "firebase/messaging";
-import { app, getFCMToken } from "./firebase"; // Your Firebase app configuration
+import { app, getFCMToken, isFirebaseMessagingSupported } from "./firebase"; // Your Firebase app configuration
 import { useNotifications } from "../../providers/notification-provider";
 import { notificationsApi } from "../api";
 import { getBackendApiUrl } from "../utils/api-utils";
+import { STORAGE_KEYS } from "../constants";
+import { showToast } from "@/components/ui/toaster";
 
 /**
  * Register the token with your backend
@@ -23,7 +25,7 @@ export const registerTokenWithBackend = async (token: string): Promise<void> => 
     // Fallback to direct fetch if API client fails or behaves unexpectedly
     const authToken =
       typeof window !== "undefined"
-        ? localStorage.getItem("zawaj_auth_token")
+        ? localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
         : null;
 
     if (!authToken) {
@@ -71,50 +73,33 @@ export const registerTokenWithBackend = async (token: string): Promise<void> => 
 export const requestNotificationPermission = async (): Promise<
   string | null
 > => {
-  if (typeof window === "undefined" || !app) {
-    console.log("Firebase not initialized on server or missing app");
-    return null;
-  }
+  if (typeof window === "undefined") return null;
 
   try {
-    const { getMessaging, isSupported, getToken } = await import("firebase/messaging");
-
-    const messagingSupported = await isSupported();
-    if (!messagingSupported) {
+    const supported = isFirebaseMessagingSupported();
+    if (!supported) {
       console.log("Firebase Messaging is not supported in this browser");
+      showToast.warning("متصفحك لا يدعم الإشعارات الفورية.");
       return null;
     }
 
-    const messaging = getMessaging(app);
     const permission = await Notification.requestPermission();
 
     if (permission === "granted") {
-      let token: string | null = null;
-      try {
-        const vapidKey = process.env["NEXT_PUBLIC_FIREBASE_VAPID_KEY"];
-        if (vapidKey) {
-          token = await getToken(messaging, { vapidKey });
-        } else {
-          token = await getToken(messaging);
-        }
-      } catch (tokenErr) {
-        console.warn(
-          "Failed to get FCM token (this is normal in development):",
-          tokenErr,
-        );
-      }
+      const token = await getFCMToken();
 
       if (token) {
         await registerTokenWithBackend(token);
+        showToast.success("تم تفعيل الإشعارات بنجاح.");
       } else {
-        console.log(
-          "Notification permission granted, but no FCM token obtained",
-        );
+        console.log("Notification permission granted, but no FCM token obtained");
+        showToast.warning("فشل الحصول على رمز الإشعارات. يرجى المحاولة لاحقاً.");
       }
 
       return token;
     } else {
       console.log("Notification permission denied");
+      showToast.error("تم رفض صلاحية الإشعارات. يرجى تفعيلها من إعدادات المتصفح.");
       return null;
     }
   } catch (err) {
@@ -168,7 +153,7 @@ export const useNotificationSetup = (): void => {
       if (typeof window === "undefined") return;
 
       // Only proceed if authenticated
-      const token = localStorage.getItem("zawaj_auth_token");
+      const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
       if (!token) return;
 
       await requestNotificationPermission();
@@ -230,7 +215,7 @@ export const sendTestNotification = async (
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("zawaj_auth_token")}`,
+        Authorization: `Bearer ${localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)}`,
       },
       body: JSON.stringify({ title, body }),
     });
