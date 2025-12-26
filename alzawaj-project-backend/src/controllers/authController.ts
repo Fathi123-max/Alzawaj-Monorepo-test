@@ -11,6 +11,7 @@ import {
 import { emailService } from "../services/resendEmailService";
 import smsService from "../services/smsService";
 import logger from "../config/logger";
+import { AppError } from "../middleware/errorMiddleware";
 
 // Extend Request interface for authentication
 interface AuthenticatedRequest extends Request {
@@ -376,111 +377,88 @@ export const login = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
+  const { username, password } = req.body;
+  
   try {
-    logger.info("Login attempt started", { body: { username: req.body.username } });
+    logger.info("🔐 Login attempt started", { 
+      username, 
+      ip: req.ip, 
+      userAgent: req.get("User-Agent") 
+    });
     
     // Check for critical environment variables before proceeding
     if (!process.env.JWT_SECRET || !process.env.JWT_REFRESH_SECRET) {
-      logger.error("CRITICAL CONFIG ERROR: JWT_SECRET or JWT_REFRESH_SECRET is not set in environment variables");
-      res.status(500).json(createErrorResponse("خطأ في إعدادات الخادم. يرجى التواصل مع الإدارة"));
-      return;
+      logger.error("❌ CRITICAL CONFIG ERROR: JWT_SECRET or JWT_REFRESH_SECRET is not set");
+      return next(new AppError("خطأ في إعدادات الخادم. يرجى التواصل مع الإدارة", 500, "CONFIG_ERROR"));
     }
-
-    const { username, password }: LoginData = req.body;
 
     // Validate input data
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      logger.warn("Login validation failed", { errors: errors.array(), username });
-      res.status(400).json(
-        createErrorResponse(
-          "بيانات تسجيل الدخول غير صحيحة",
-          errors.array().map((err: any) => err.msg)
-        )
-      );
-      return;
+      logger.warn("⚠️ Login validation failed", { errors: errors.array(), username });
+      return next(new AppError("بيانات تسجيل الدخول غير صحيحة", 400, "VALIDATION_ERROR", errors.array()));
     }
 
     // Find user by email or phone
+    logger.debug(`🔍 Searching for user: ${username}`);
     const user = await User.findOne({
-      $or: [{ email: username }, { phone: username }],
+      $or: [{ email: username.toLowerCase() }, { phone: username }],
     })
       .select("+password")
       .populate("profile");
 
     if (!user) {
-      logger.warn("Login failed: User not found", { username });
-      res.status(401).json(createErrorResponse("بيانات الدخول غير صحيحة"));
-      return;
+      logger.warn("❌ Login failed: User not found", { username });
+      return next(new AppError("بيانات الدخول غير صحيحة", 401, "INVALID_CREDENTIALS"));
     }
 
-    logger.debug("User found, validating account state", { userId: user._id, email: user.email });
+    logger.debug(`✅ User found (ID: ${user._id}), checking state...`);
 
     // Additional check for password field
     if (!user.password) {
-      logger.error("ERROR: User found but password field is missing or empty", { userId: user._id });
-      res
-        .status(500)
-        .json(createErrorResponse("خطأ في النظام. يرجى التواصل مع الإدارة"));
-      return;
-    }
-
-    // Check if user is active
-    if (user.status !== "active") {
-      logger.warn("Login failed: User account is not active", { userId: user._id, status: user.status });
-      res
-        .status(401)
-        .json(createErrorResponse("الحساب غير مفعل. يرجى التواصل مع الإدارة"));
-      return;
-    }
-
-    // Check if email is verified
-    if (!user.isEmailVerified) {
-      logger.warn("Login failed: Email not verified", { userId: user._id });
-      res
-        .status(403)
-        .json(
-          createErrorResponse("يجب تأكيد البريد الإلكتروني قبل تسجيل الدخول")
-        );
-      return;
-    }
-
-    // Check if profile is verified by admin (skip this check for admin and moderator users)
-    if (user.role !== "admin" && user.role !== "moderator" && user.profile && !(user.profile as any).verification?.isVerified) {
-      logger.warn("Login failed: Profile not verified by admin", { userId: user._id });
-      res
-        .status(403)
-        .json(
-          createErrorResponse("حسابك قيد المراجعة. يرجى انتظار موافقة الإدارة")
-        );
-      return;
+      logger.error("❌ ERROR: User found but password field is missing or empty", { userId: user._id });
+      return next(new AppError("خطأ في النظام. يرجى التواصل مع الإدارة", 500, "DATA_INTEGRITY_ERROR"));
     }
 
     // Check password
+    logger.debug("🔑 Validating password...");
     const isPasswordMatch = await user.comparePassword(password);
     if (!isPasswordMatch) {
-      logger.warn("Login failed: Password mismatch", { userId: user._id });
-      // Update failed login attempts using the model's method
+      logger.warn("❌ Login failed: Password mismatch", { userId: user._id });
       await user.incLoginAttempts();
-
-      res.status(401).json(createErrorResponse("بيانات الدخول غير صحيحة"));
-      return;
+      return next(new AppError("بيانات الدخول غير صحيحة", 401, "INVALID_CREDENTIALS"));
     }
 
     // Check if account is locked
     if (user.isAccountLocked()) {
-      logger.warn("Login failed: Account is locked", { userId: user._id });
-      res
-        .status(423)
-        .json(
-          createErrorResponse(
-            "الحساب مقفل مؤقتاً بسبب محاولات تسجيل دخول فاشلة متكررة"
-          )
-        );
-      return;
+      logger.warn("🔒 Login failed: Account is locked", { userId: user._id });
+      return next(new AppError("الحساب مقفل مؤقتاً بسبب محاولات تسجيل دخول فاشلة متكررة", 423, "ACCOUNT_LOCKED"));
+    }
+
+    // Check if user is active
+    if (user.status !== "active") {
+      logger.warn("⚠️ Login failed: User account is not active", { userId: user._id, status: user.status });
+      const message = user.status === "pending" 
+        ? "الحساب قيد التفعيل. يرجى مراجعة بريدك الإلكتروني"
+        : "الحساب غير مفعل. يرجى التواصل مع الإدارة";
+      return next(new AppError(message, 403, "ACCOUNT_INACTIVE"));
+    }
+
+    // Check if email is verified
+    if (!user.isEmailVerified) {
+      logger.warn("📧 Login failed: Email not verified", { userId: user._id });
+      return next(new AppError("يجب تأكيد البريد الإلكتروني قبل تسجيل الدخول", 403, "EMAIL_NOT_VERIFIED"));
+    }
+
+    // Check if profile is verified by admin (skip this check for admin and moderator users)
+    const profile = user.profile as any;
+    if (user.role === "user" && profile && !profile.verification?.isVerified) {
+      logger.warn("🛡️ Login failed: Profile not verified by admin", { userId: user._id });
+      return next(new AppError("حسابك قيد المراجعة. يرجى انتظار موافقة الإدارة", 403, "PROFILE_NOT_VERIFIED"));
     }
 
     // Reset login attempts on successful login
+    logger.debug("✅ All checks passed. Preparing tokens...");
     await user.resetLoginAttempts();
     user.lastLoginAt = new Date();
 
@@ -502,7 +480,7 @@ export const login = async (
     // Check for FCM token in request body and update user
     if (req.body.fcmToken) {
       user.fcmToken = req.body.fcmToken;
-      logger.info("Updated FCM token for user", { userId: user._id });
+      logger.info("📱 Updated FCM token for user", { userId: user._id });
     }
 
     // Clean up old refresh tokens
@@ -511,7 +489,7 @@ export const login = async (
     );
 
     await user.save();
-    logger.info("Login successful", { userId: user._id, email: user.email });
+    logger.info("🎊 Login successful", { userId: user._id, email: user.email });
 
     res.status(200).json({
       success: true,
@@ -530,7 +508,7 @@ export const login = async (
       },
     });
   } catch (error) {
-    logger.error("Login error occurred", { error, body: { username: req.body.username } });
+    logger.error("🔥 System Login Error", { error, username });
     next(error);
   }
 };

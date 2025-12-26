@@ -82,7 +82,8 @@ const transports: winston.transport[] = [];
 // Console transport
 transports.push(
   new winston.transports.Console({
-    format: process.env.NODE_ENV === "development" ? consoleFormat : logFormat,
+    // Use human-readable format for console even in production for better visibility in Docker logs
+    format: consoleFormat,
   }),
 );
 
@@ -129,7 +130,8 @@ if (process.env.NODE_ENV !== "test") {
 
 // Create logger
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || "info",
+  // Set default level to debug for maximum visibility
+  level: process.env.LOG_LEVEL || "debug",
   format: logFormat,
   defaultMeta: {
     service: "zawag-api",

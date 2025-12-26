@@ -63,12 +63,15 @@ export const errorHandler = (
   // Mongoose duplicate key
   if (err.code === 11000) {
     let message = "البيانات مكررة";
-    let field = Object.keys(err.keyValue)[0];
-
-    if (field === "email") {
-      message = "البريد الإلكتروني مستخدم من قبل";
-    } else if (field === "phone") {
-      message = "رقم الهاتف مستخدم من قبل";
+    let field = "unknown";
+    
+    if (err.keyValue) {
+      field = Object.keys(err.keyValue)[0];
+      if (field === "email") {
+        message = "البريد الإلكتروني مستخدم من قبل";
+      } else if (field === "phone") {
+        message = "رقم الهاتف مستخدم من قبل";
+      }
     }
 
     error = {

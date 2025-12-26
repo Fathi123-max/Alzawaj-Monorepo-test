@@ -509,29 +509,47 @@ userSchema.methods.generateAuthToken = function (this: IUser): Promise<string> {
 };
 
 userSchema.methods.generateAccessToken = function (this: IUser): string {
-  console.log("Generating access token");
-  const secret: string = process.env.JWT_SECRET!;
+  const secret = process.env.JWT_SECRET;
   if (!secret) {
+    console.error("❌ CRITICAL ERROR: JWT_SECRET environment variable is not set during token generation");
     throw new Error("JWT_SECRET environment variable is not set");
   }
-  const userId: string = (this as any)._id.toString();
-  const payload: { id: string; role: string } = { id: userId, role: this.role };
-  const token = jwt.sign(payload, secret, { expiresIn: "15m" });
-  console.log("Access token generated");
-  return token;
+  
+  const userId = (this as any)._id.toString();
+  const payload = { id: userId, role: this.role };
+  
+  console.log(`🔑 Generating access token for user ID: ${userId}, Role: ${this.role}`);
+  
+  try {
+    const token = jwt.sign(payload, secret as string, { expiresIn: (process.env.JWT_EXPIRES_IN as any) || "7d" });
+    console.log("✅ Access token generated successfully");
+    return token;
+  } catch (err) {
+    console.error("❌ Error signing access token:", err);
+    throw err;
+  }
 };
 
 userSchema.methods.generateRefreshToken = function (this: IUser): string {
-  console.log("Generating refresh token");
-  const secret: string = process.env.JWT_REFRESH_SECRET!;
+  const secret = process.env.JWT_REFRESH_SECRET;
   if (!secret) {
+    console.error("❌ CRITICAL ERROR: JWT_REFRESH_SECRET environment variable is not set during token generation");
     throw new Error("JWT_REFRESH_SECRET environment variable is not set");
   }
-  const userId: string = (this as any)._id.toString();
-  const payload: { id: string } = { id: userId };
-  const token = jwt.sign(payload, secret, { expiresIn: "7d" });
-  console.log("Refresh token generated");
-  return token;
+  
+  const userId = (this as any)._id.toString();
+  const payload = { id: userId };
+  
+  console.log(`🔑 Generating refresh token for user ID: ${userId}`);
+  
+  try {
+    const token = jwt.sign(payload, secret as string, { expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN as any) || "30d" });
+    console.log("✅ Refresh token generated successfully");
+    return token;
+  } catch (err) {
+    console.error("❌ Error signing refresh token:", err);
+    throw err;
+  }
 };
 
 userSchema.methods.generateEmailVerificationToken = function (

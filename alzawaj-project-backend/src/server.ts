@@ -1,4 +1,6 @@
 import express, { Express, Request, Response, NextFunction } from "express";
+import fs from "fs";
+import path from "path";
 import mongoose from "mongoose";
 import cors, { CorsOptions } from "cors";
 import helmet from "helmet";
@@ -11,20 +13,32 @@ import dotenv from "dotenv";
 
 // Load environment variables only if we're not in Docker and if environment variables are not already set
 // In Docker, environment variables are provided through docker-compose.yml
-// Check if critical environment variables are present to determine if they're properly set
-const isEnvAlreadySet = !!process.env.MONGODB_URI && !!process.env.JWT_SECRET;
+// Check for critical environment variables to determine if they're properly set
+const REQUIRED_ENV_VARS = ["MONGODB_URI", "JWT_SECRET", "JWT_REFRESH_SECRET"];
+const missingEnvVars = REQUIRED_ENV_VARS.filter((v) => !process.env[v]);
 
-console.log("NODE_ENV:", process.env.NODE_ENV);
-console.log("MONGODB_URI:", process.env.MONGODB_URI);
-console.log("MONGODB_URI present:", !!process.env.MONGODB_URI);
-console.log("JWT_SECRET present:", !!process.env.JWT_SECRET);
-console.log("DOCKER_ENV:", process.env.DOCKER_ENV);
-console.log("isEnvAlreadySet:", isEnvAlreadySet);
+const isEnvAlreadySet = missingEnvVars.length === 0;
 
-// Only load .env.local if environment variables are not already properly set (non-Docker environment)
+// Only load environment variables if they are not already set (non-Docker environment)
 if (!isEnvAlreadySet) {
-  console.log("Loading .env.local...");
-  dotenv.config({ path: "../.env.local" });
+  const rootEnvPath = path.join(process.cwd(), "../.env");
+  const localEnvPath = path.join(process.cwd(), ".env");
+  const rootEnvLocalPath = path.join(process.cwd(), "../.env.local");
+  const localEnvLocalPath = path.join(process.cwd(), ".env.local");
+
+  if (fs.existsSync(localEnvPath)) {
+    console.log("📝 Loading .env from current directory...");
+    dotenv.config({ path: localEnvPath });
+  } else if (fs.existsSync(rootEnvPath)) {
+    console.log("📝 Loading .env from project root...");
+    dotenv.config({ path: rootEnvPath });
+  } else if (fs.existsSync(localEnvLocalPath)) {
+    console.log("📝 Loading .env.local from current directory...");
+    dotenv.config({ path: localEnvLocalPath });
+  } else if (fs.existsSync(rootEnvLocalPath)) {
+    console.log("📝 Loading .env.local from project root...");
+    dotenv.config({ path: rootEnvLocalPath });
+  }
 }
 
 console.log("Importing configurations and middleware...");
@@ -151,7 +165,10 @@ let allowedOrigins: (string | RegExp)[] = [
 
 if (corsOriginEnv) {
   // Split the environment variable by comma and trim whitespace
-  allowedOrigins = corsOriginEnv.split(",").map((origin) => origin.trim());
+  const origins = corsOriginEnv.split(",").map((origin) => origin.trim()).filter(Boolean);
+  if (origins.length > 0) {
+    allowedOrigins = origins;
+  }
 }
 
 const corsOptions: CorsOptions = {
@@ -230,18 +247,9 @@ app.use(compression());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// Logging
-if (process.env.NODE_ENV === "development") {
-  app.use(morgan("dev"));
-} else {
-  app.use(
-    morgan("combined", {
-      stream: {
-        write: (message: string) => logger.info(message.trim()),
-      },
-    })
-  );
-}
+// Logging middleware
+// Use 'dev' format for detailed colorized logs even in production
+app.use(morgan("dev"));
 
 // Rate limiting
 app.use(rateLimitConfig.general);
